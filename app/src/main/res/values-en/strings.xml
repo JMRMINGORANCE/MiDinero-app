@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MiDinero</string>
+    <string name="listener_label">MiDinero: payment detection</string>
+    <string name="shortcut_add_short">Add expense</string>
+    <string name="shortcut_add_long">Add an expense</string>
+    <string name="shortcut_stats_short">Insights</string>
+    <string name="shortcut_stats_long">See where your money goes</string>
+    <string name="widget_label">MiDinero: this month\'s spending</string>
+    <string name="widget_description">What you\'ve spent this month, what\'s left of your budget and a button to add</string>
+    <string name="tile_label">Add expense</string>
+    <string name="quick_widget_label">MiDinero: quick add</string>
+    <string name="quick_widget_description">Buttons to log an expense in your most used categories</string>
+    <string name="curve_widget_label">MiDinero: month curve</string>
+    <string name="curve_widget_description">The curve of what you\'ve spent this month</string>
+    <string name="today_widget_label">MiDinero: you can spend today</string>
+    <string name="today_widget_description">What you can spend today without going over budget</string>
+</resources>

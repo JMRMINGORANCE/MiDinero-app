@@ -1,0 +1,141 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      # La versión sale de gradle.properties (midinero.version), la misma que usa Gradle
+      - name: Leer la versión
+        run: echo "MIDINERO_VERSION=$(grep '^midinero.version=' gradle.properties | cut -d= -f2).$((${{ github.run_number }} + 200))" >> "$GITHUB_ENV"
+
+      # Firma opcional con una clave privada guardada en los secretos del repositorio.
+      - name: Preparar clave de firma
+        env:
+          KEYSTORE_BASE64: ${{ secrets.MIDINERO_KEYSTORE_BASE64 }}
+        if: env.KEYSTORE_BASE64 != ''
+        run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+
+      - name: Tests y compilación
+        env:
+          MIDINERO_KEYSTORE: ${{ secrets.MIDINERO_KEYSTORE_BASE64 != '' && format('{0}/release.keystore', runner.temp) || '' }}
+          MIDINERO_KEYSTORE_PASSWORD: ${{ secrets.MIDINERO_KEYSTORE_PASSWORD }}
+          MIDINERO_KEY_ALIAS: ${{ secrets.MIDINERO_KEY_ALIAS }}
+          MIDINERO_KEY_PASSWORD: ${{ secrets.MIDINERO_KEY_PASSWORD }}
+          # Fuera de main se hacen capturas de las pantallas para revisar el diseño
+          SCREENSHOTS: ${{ github.ref != 'refs/heads/main' && '1' || '' }}
+        # El .aab de Play solo se genera con la clave de subida (sin ella, bundleRelease falla a propósito).
+        run: ./gradlew testDebugUnitTest assembleRelease ${MIDINERO_KEYSTORE:+bundleRelease :wear:bundleRelease} --stacktrace
+
+      # Avisa si alguna pantalla cambia respecto a las capturas de la compilación anterior (no hace fallar nada).
+      - name: Comparar capturas con la compilación anterior
+        if: always() && github.ref != 'refs/heads/main' && github.event_name == 'push' && hashFiles('app/build/screenshots/*') != ''
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/prev"
+          if git fetch -q --depth 1 origin screenshots; then git archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/prev"; fi
+          pip install -q pillow
+          python3 .github/scripts/compare_screenshots.py "$RUNNER_TEMP/prev" app/build/screenshots
+
+      - name: Publicar capturas de pantalla
+        if: always() && github.ref != 'refs/heads/main' && github.event_name == 'push' && hashFiles('app/build/screenshots/*') != ''
+        run: |
+          cd app/build/screenshots
+          git init -q
+          git checkout -q -b screenshots
+          git add .
+          git -c user.name="github-actions[bot]" -c user.email="41898283+github-actions[bot]@users.noreply.github.com" commit -qm "Capturas de ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" screenshots
+
+      - name: Informe de tests
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-reports
+          path: |
+            app/build/reports/tests/
+            wear/build/reports/tests/
+
+      - name: Revisión de código (lint)
+        run: |
+          ./gradlew lintDebug
+          echo "=== Avisos de lint"; tail -n 300 app/build/reports/lint-results-debug.txt || true
+          echo "=== Avisos de lint (reloj)"; tail -n 200 wear/build/reports/lint-results-debug.txt || true
+
+      - name: Informe de lint
+        uses: actions/upload-artifact@v5
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-debug.html
+
+      # Imprime el esquema más reciente para poder guardarlo en el repositorio antes de la siguiente migración.
+      - name: Mostrar el último esquema
+        run: f=$(ls app/schemas/*/*.json | sort -V | tail -1); echo "=== $f"; cat "$f"
+
+      - name: Guardar esquemas de la base de datos
+        uses: actions/upload-artifact@v5
+        with:
+          name: room-schemas
+          path: app/schemas/
+
+      - name: Preparar APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/MiDinero-${{ env.MIDINERO_VERSION }}.apk"
+          if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
+            cp app/build/outputs/bundle/release/app-release.aab "dist/MiDinero-${{ env.MIDINERO_VERSION }}.aab"
+            cp wear/build/outputs/bundle/release/wear-release.aab "dist/MiDinero-Reloj-${{ env.MIDINERO_VERSION }}.aab"
+          else
+            echo "::warning::Sin clave de subida en los secretos: no se generan los .aab para Google Play (mira PLAY_STORE.md)"
+          fi
+          cp wear/build/outputs/apk/release/wear-release.apk "dist/MiDinero-Reloj-${{ env.MIDINERO_VERSION }}.apk"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: MiDinero-apk
+          path: dist/*
+
+      - name: Publicar versión descargable
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: MiDinero ${{ env.MIDINERO_VERSION }}
+          body: |
+            MiDinero-<versión>.apk: la app del móvil, para instalar a mano.
+            MiDinero-Reloj-<versión>.apk: la app para el reloj Wear OS, para instalar a mano con ADB (mira RELOJ.md).
+            MiDinero-<versión>.aab y MiDinero-Reloj-<versión>.aab: los paquetes para subir a Google Play Console (móvil y Wear OS).
+            Novedades: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
+          files: dist/*
+
+      # Con la cuenta de servicio en los secretos, cada versión de main se sube sola a Play (mira PLAY_STORE.md)
+      - name: Subir a Google Play
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.PLAY_SERVICE_ACCOUNT_JSON != '' && hashFiles('dist/*.aab') != ''
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_TRACK: ${{ vars.PLAY_TRACK }}
+          PLAY_WEAR_TRACK: ${{ vars.PLAY_WEAR_TRACK }}
+        run: |
+          pip install -q google-auth requests
+          python3 .github/scripts/play_upload.py "dist/MiDinero-${MIDINERO_VERSION}.aab" "dist/MiDinero-Reloj-${MIDINERO_VERSION}.aab"

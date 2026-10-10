@@ -1,0 +1,41 @@
+MiDinero apunta tus gastos casi sin esfuerzo y te ayuda a no pasarte cada mes. Todo se guarda en tu móvil: sin cuentas, sin Internet y sin anuncios.
+
+<b>Apunta sin esfuerzo</b>
+• Detecta los pagos que haces con el móvil (Google Wallet / Google Pay y, si quieres, Samsung Wallet, Revolut, N26 y bancos españoles).
+• Los clasifica solo por el comercio y aprende cuando lo corriges.
+• Asigna la categoría desde el propio aviso del pago, sin abrir la app.
+• Gastos e ingresos manuales con autocompletado, o escribe «12,50 café ayer» y listo.
+• Widget, mosaico de ajustes rápidos y accesos directos.
+• Importa los movimientos del CSV de tu banco sin duplicados.
+• Adjunta la foto del ticket para garantías y devoluciones.
+
+<b>Cargos fijos</b>
+• Alquiler, Netflix, Spotify, la cuota del coche o tu nómina: se apuntan solos el día que toca.
+• Semanales, mensuales, trimestrales o anuales, con cuotas que terminan solas y aviso el día antes.
+
+<b>Presupuestos que avisan a tiempo</b>
+• Presupuesto del mes y límites por categoría, con avisos antes de pasarte.
+• Te dice si vas demasiado rápido y cuánto puedes gastar al día.
+• Límites sugeridos según lo que sueles gastar.
+• Tu mes puede empezar el día que cobras.
+
+<b>Entiende en qué se va</b>
+• Comparación con el mes anterior, previsión a fin de mes y evolución de 6 meses.
+• Reparto por categoría, días de la semana y comercios donde más gastas.
+• Ingresos, ahorro y resumen semanal.
+
+<b>Viajes, amigos y metas</b>
+• Viajes y eventos con su propio presupuesto: lo que pagas esos días se apunta solo.
+• Gastos en dólares, libras y otras monedas convertidos a euros.
+• Comparte un gasto con amigos y lleva quién te debe.
+• Metas de ahorro con cuánto apartar cada mes.
+
+<b>En tu reloj Wear OS</b>
+• Lo que puedes gastar hoy en la esfera, una tarjeta y una complicación.
+• Apunta gastos desde la muñeca con el teclado o por voz.
+
+<b>Tus datos, tuyos</b>
+• Copia de seguridad automática en la carpeta que elijas y exportación a Excel.
+• Busca cualquier gasto de cualquier mes, por texto o por importe.
+• Bloqueo con huella o PIN, ocultar importes y pantalla privada.
+• MiDinero no tiene permiso de Internet: no envía tus datos a ningún servidor.

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpetas que MiDinero puede compartir con otras apps: la cámara (foto temporal), los tickets y los informes. -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+    <files-path name="receipts" path="receipts/" />
+    <cache-path name="reports" path="reports/" />
+</paths>

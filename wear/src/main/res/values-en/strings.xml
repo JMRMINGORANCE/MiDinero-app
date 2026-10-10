@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_label">MiDinero · today</string>
+    <string name="tile_description">What you can spend today and how the month is going</string>
+    <string name="complication_label">You can spend today</string>
+    <string name="listener_label">MiDinero: watch payments</string>
+</resources>

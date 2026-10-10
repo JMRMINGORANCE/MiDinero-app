@@ -1,0 +1,20 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.kotlin/
+
+# Firma y credenciales: nunca en el repositorio
+*.keystore
+*.jks
+*.p12
+*.pem
+keystore.properties
+*service-account*.json
+
+# Python
+__pycache__/
+*.pyc

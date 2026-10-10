@@ -1,0 +1,42 @@
+MiDinero logs your spending with almost no effort and helps you stay within budget every month. Everything is stored on your phone: no account, no Internet and no ads.
+
+<b>Log without effort</b>
+• Detects the payments you make with your phone (Google Wallet / Google Pay and, if you like, Samsung Wallet, Revolut, N26 and Spanish banks).
+• Sorts them by merchant and learns when you correct it.
+• Assign the category right from the payment notification, without opening the app.
+• Add expenses and income by hand with autocomplete, or type “12.50 coffee yesterday” and you're done.
+• Widget, Quick Settings tile and shortcuts.
+• Import transactions from your bank's CSV without duplicates.
+• Attach a photo of the receipt for warranties and returns.
+
+<b>Recurring charges</b>
+• Rent, Netflix, Spotify, your car payment or your salary: logged automatically on the due date.
+• Weekly, monthly, quarterly or yearly, with instalments that end by themselves and a reminder the day before.
+
+<b>Budgets that warn you in time</b>
+• A monthly budget and limits per category, with alerts before you go over.
+• Tells you if you're spending too fast and how much you can spend per day.
+• Suggested limits based on what you usually spend.
+• Your month can start on payday.
+
+<b>See where it goes</b>
+• Comparison with last month, month-end forecast and 6-month trend.
+• Breakdown by category, day of the week and top merchants.
+• Income, savings and a weekly summary.
+
+<b>Trips, friends and goals</b>
+• Trips and events with their own budget: what you pay on those days is logged there automatically.
+• Expenses in dollars, pounds and other currencies converted to euros.
+• Share an expense with friends and keep track of who owes you.
+• Savings goals with how much to put aside each month.
+
+<b>On your Wear OS watch</b>
+• What you can spend today on the watch face, a tile and a complication.
+• Log expenses from your wrist with the keypad or by voice.
+
+<b>Your data, yours</b>
+• Automatic backup to the folder you choose, and export to Excel.
+• Search any expense from any month, by text or amount.
+• Lock with fingerprint or PIN, hide amounts and private screen.
+• MiDinero has no Internet permission: it never sends your data to any server.
+• In Spanish and English.

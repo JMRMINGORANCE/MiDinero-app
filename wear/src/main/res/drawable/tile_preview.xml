@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vista previa de la tarjeta (tile) en el selector del reloj: anillo lima con el monedero -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="192dp"
+    android:height="192dp"
+    android:viewportWidth="192"
+    android:viewportHeight="192">
+    <path android:fillColor="#000000" android:pathData="M96,96m-96,0a96,96 0,1 1,192 0a96,96 0,1 1,-192 0" />
+    <path android:strokeColor="#33FFFFFF" android:strokeWidth="9" android:strokeLineCap="round"
+        android:pathData="M31.6,160.4A91,91 0,1 1,160.4 160.4" />
+    <path android:strokeColor="#D4F54A" android:strokeWidth="9" android:strokeLineCap="round"
+        android:pathData="M31.6,160.4A91,91 0,0 1,96 5" />
+    <path android:fillColor="#99FFFFFF" android:pathData="M62,66h68v6h-68z" />
+    <path android:fillColor="#D4F54A" android:pathData="M52,84h88v22h-88z" />
+    <path android:fillColor="#99FFFFFF" android:pathData="M70,118h52v6h-52z" />
+    <path android:fillColor="#D4F54A" android:pathData="M96,160m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0" />
+</vector>

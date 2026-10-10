@@ -1,0 +1,494 @@
+# Comercio (nombre exacto del catálogo)	dominio de su web	fuentes (opcional, ver fetch_logos.py)
+# Fuente «-»: revisado a mano, ninguna fuente da el logo correcto; se queda con sus siglas.
+Mercadona	mercadona.es
+Carrefour	carrefour.es	simpleicons:carrefour:004E9F
+Lidl	lidl.es
+Aldi	aldi.es
+Dia	dia.es
+Eroski	eroski.es
+Alcampo	alcampo.es
+Hipercor	hipercor.es
+Supercor	supercor.es
+Consum	consum.es
+Bonpreu	bonpreuesclat.cat
+Caprabo	caprabo.com
+Ahorramas	ahorramas.com
+Gadis	gadis.es
+Froiz	froiz.com
+Covirán	coviran.es
+Spar	spar.es
+Condis	condis.es
+BM Supermercados	bmsupermercados.es
+Masymas	masymas.com
+Hiperber	hiperber.com
+El Árbol	elarbol.es
+Lupa	superlupa.com
+Family Cash	familycash.es
+Makro	makro.es
+Costco	costco.es
+Ametller Origen	ametllerorigen.com
+Veritas	veritas.es
+Primaprix	primaprix.es
+Sánchez Romero	sanchez-romero.com
+Glovo	glovoapp.com
+Just Eat	just-eat.es
+Uber Eats	ubereats.com
+Deliveroo	deliveroo.es
+Telepizza	telepizza.es
+Domino's Pizza	dominospizza.es
+Pizza Hut	pizzahut.es
+Papa John's	papajohns.es
+Too Good To Go	toogoodtogo.com
+McDonald's	mcdonalds.es
+Burger King	burgerking.es
+KFC	kfc.es
+Starbucks	starbucks.es
+100 Montaditos	spain.100montaditos.com
+VIPS	vips.es
+Foster's Hollywood	fostershollywood.es
+Goiko	goiko.com
+La Tagliatella	latagliatella.es
+Ginos	ginos.es
+Rodilla	rodilla.es
+Tim Hortons	timhortons.es
+Five Guys	fiveguys.es
+Taco Bell	tacobell.es
+Subway	subway.com	wikidata
+Pans & Company	pansandcompany.com
+Café de Indias	cafedeindias.es	play=Café de Indias
+Granier	granier.eu	-
+Santagloria	santagloria.com
+Tony Roma's	tonyromas.es
+Lizarran	lizarran.es
+Udon	udon.es
+Honest Greens	honestgreens.com
+Popeyes	popeyes.es
+Dunkin'	dunkin.es
+Manolo Bakes	manolobakes.com
+Llaollao	llaollaoweb.com
+Casa Tarradellas	casatarradellas.es
+Repsol	repsol.es
+Moeve	moeveglobal.com
+BP	bp.com
+Galp	galp.com
+Shell	shell.es
+Petronor	petronor.eus
+Ballenoil	ballenoil.es
+Plenoil	plenoil.es	-
+Petroprix	petroprix.com
+Avia	aviaenergias.es
+Disa	disagrupo.es	wikidata
+Esclatoil	esclatoil.com
+Tamoil	tamoil.es
+Iberdrola recarga	iberdrola.es	same:Iberdrola
+Zunder	zunder.com
+Tesla Supercharger	tesla.com
+Netflix	netflix.com
+Spotify	spotify.com
+HBO Max	max.com
+Disney+	disneyplus.com
+Prime Video	primevideo.com
+Apple	apple.com
+Google One	one.google.com
+YouTube Premium	youtube.com
+Google Play	play.google.com
+DAZN	dazn.com
+Filmin	filmin.es
+Movistar Plus+	movistarplus.es
+SkyShowtime	skyshowtime.com
+Atresplayer	atresplayer.com
+Audible	audible.es
+Kindle Unlimited	amazon.es
+Storytel	storytel.com
+ChatGPT	chatgpt.com
+Claude	claude.ai
+Patreon	patreon.com
+Tidal	tidal.com
+Deezer	deezer.com
+Twitch	twitch.tv
+Xbox Game Pass	xbox.com
+PlayStation Plus	playstation.com
+Nintendo Switch Online	nintendo.com
+Microsoft 365	microsoft.com
+Adobe	adobe.com
+Dropbox	dropbox.com
+Duolingo	duolingo.com
+Tinder	tinder.com
+Canva	canva.com
+Crunchyroll	crunchyroll.com
+Renfe	renfe.com
+Iryo	iryo.eu
+Ouigo	ouigo.com
+Alsa	alsa.es
+Avanza	avanzagrupo.com	-
+BlaBlaCar	blablacar.es
+Cabify	cabify.com
+Uber	uber.com
+Bolt	bolt.eu
+FreeNow	free-now.com
+Metro de Madrid	metromadrid.es
+TMB	tmb.cat
+EMT	emtmadrid.es
+Metrovalencia	metrovalencia.es
+Metro Bilbao	metrobilbao.eus
+Tussam	tussam.es
+Iberia	iberia.com
+Vueling	vueling.com
+Ryanair	ryanair.com
+Air Europa	aireuropa.com
+easyJet	easyjet.com
+Volotea	volotea.com
+Binter	bintercanarias.com
+Aena	aena.es
+Empark	empark.com
+Saba	saba.es	play=Saba parking
+Parclick	parclick.es
+ElParking	elparking.com
+Via-T	viat.es
+Bicing	bicing.barcelona
+BiciMAD	bicimad.com
+Lime	li.me
+Cooltra	cooltra.com
+Zity	zity.eco	play=Zity by Mobilize
+Free2Move	free2move.com
+Norauto	norauto.es
+Feu Vert	feuvert.es
+Midas	midas.es
+Booking.com	booking.com
+Airbnb	airbnb.es
+Amazon	amazon.es
+AliExpress	aliexpress.com
+Shein	shein.com
+Temu	temu.com
+El Corte Inglés	elcorteingles.es
+Zara	zara.com
+Bershka	bershka.com
+Pull&Bear	pullandbear.com
+Stradivarius	stradivarius.com
+Massimo Dutti	massimodutti.com
+Lefties	lefties.com
+Mango	mango.com
+H&M	hm.com
+Kiabi	kiabi.es
+C&A	c-and-a.com
+Springfield	springfield.com	-
+Decathlon	decathlon.es
+Sprinter	sprinter.es
+JD Sports	jdsports.es
+Nike	nike.com
+Adidas	adidas.es
+MediaMarkt	mediamarkt.es
+PcComponentes	pccomponentes.com
+Worten	worten.es
+Fnac	fnac.es
+Apple Store	apple.com
+Xiaomi	mi.com
+Game	game.es
+Druni	druni.es
+Primor	primor.eu
+Sephora	sephora.es
+Douglas	douglas.es
+Rituals	rituals.com
+Kiko Milano	kikocosmetics.com
+Mercadona Online	mercadona.es
+Flying Tiger	flyingtiger.com
+Tedi	tedi.com
+Casa del Libro	casadellibro.com
+Toys R Us	toysrus.es
+Tiendanimal	tiendanimal.es
+Kiwoko	kiwoko.com
+Vinted	vinted.es
+Wallapop	wallapop.com
+eBay	ebay.es
+Zalando	zalando.es
+Carrefour Online	carrefour.es	simpleicons:carrefour:004E9F
+IKEA	ikea.com
+Leroy Merlin	leroymerlin.es
+Bricomart	bricomart.es
+Brico Depôt	bricodepot.es
+Bauhaus	bauhaus.es
+AKI	aki.es
+JYSK	jysk.es
+Maisons du Monde	maisonsdumonde.com
+Conforama	conforama.es
+Endesa	endesa.com	wikidata
+Iberdrola	iberdrola.es
+Naturgy	naturgy.es
+TotalEnergies	totalenergies.es
+Holaluz	holaluz.com
+Repsol Luz y Gas	repsol.es
+Canal de Isabel II	canaldeisabelsegunda.es	play=Canal de Isabel II
+Aigües de Barcelona	aiguesdebarcelona.cat
+Movistar	movistar.es
+Vodafone	vodafone.es
+Orange	orange.es
+Yoigo	yoigo.com
+MásMóvil	masmovil.es
+Digi	digimobil.es
+Pepephone	pepephone.com
+O2	o2online.es
+Simyo	simyo.es
+Jazztel	jazztel.com
+Finetwork	finetwork.com
+Securitas Direct	securitasdirect.es
+Mapfre	mapfre.es
+Mutua Madrileña	mutua.es
+Línea Directa	lineadirecta.com
+Sanitas	sanitas.es	wikidata
+Adeslas	segurcaixaadeslas.es
+DKV	dkv.es
+Asisa	asisa.es
+Quirónsalud	quironsalud.com
+Vithas	vithas.es
+HM Hospitales	hmhospitales.com
+Vitaldent	vitaldent.com
+Dentix	dentix.es
+Multiópticas	multiopticas.com
+General Óptica	generaloptica.es
+Specsavers	specsavers.es
+Visionlab	visionlab.es
+Anicura	anicura.es
+Promofarma	promofarma.com
+Atida Mifarma	atida.com
+Cinesa	cinesa.es
+Yelmo Cines	yelmocines.es
+Kinépolis	kinepolis.es
+Ocine	ocine.es
+Ticketmaster	ticketmaster.es
+Entradas.com	entradas.com
+Fever	feverup.com
+Steam	steampowered.com
+PlayStation Store	playstation.com
+Nintendo eShop	nintendo.com
+Xbox	xbox.com
+Epic Games	epicgames.com
+Basic-Fit	basic-fit.com
+McFit	mcfit.com
+Anytime Fitness	anytimefitness.es
+Holmes Place	holmesplace.com
+Viva Gym	vivagym.es
+Altafit	altafitgymclub.com
+Metropolitan	clubmetropolitan.net
+Loterías	loteriasyapuestas.es	wikidata
+ONCE	juegosonce.es
+Parque Warner	parquewarner.com
+PortAventura	portaventuraworld.com
+La Sirena	lasirena.es	-
+Cash Fresh	cashfresh.es
+Dialprix	dialprix.es
+HiperDino	hiperdino.es
+Plusfresc	plusfresc.cat
+Vegalsa	vegalsa.es
+Unide	unide.es
+Coaliment	coaliment.com
+Amazon Fresh	amazon.es
+Frutas Eloy	frutaseloy.com
+Carnicas Serrano	carnicasserrano.com	play=Cárnicas Serrano
+Pescanova	pescanova.es
+Carl's Jr.	carlsjr.es
+Wendy's	wendys.es
+Krispy Kreme	krispykreme.es
+Costa Coffee	costacoffee.es
+Café & Té	cafeyte.com
+Viena Capellanes	viena.es
+La Sureña	cervecerialasurena.com	play=La Sureña cervecerías
+Lateral	lateral.com
+Ribs	ribs.es
+Muerde la Pasta	muerdelapasta.com
+Wok to Walk	woktowalk.com
+Sushi Shop	sushishop.com
+Bocatta	bocatta.com	play=Bocatta
+Panaria	panaria.es
+Pastelería Mallorca	pasteleria-mallorca.com
+Bacoa	bacoa.es
+La Pepita	lapepitaburger.com
+Vicio	vicio.com
+Tommy Mel's	tommymels.com	-
+Hard Rock Cafe	hardrockcafe.com
+Areas	areas.com
+Alsea	alsea.net
+Sodexo	sodexo.es
+Serunion	serunion.com
+Eurest	eurest.es
+Wetaca	wetaca.com
+Pedidos Ya	pedidosya.com
+Uniqlo	uniqlo.com
+Desigual	desigual.com
+Women'secret	womensecret.com
+Tezenis	tezenis.com
+Calzedonia	calzedonia.com
+Intimissimi	intimissimi.com
+Parfois	parfois.com
+Bimba y Lola	bimbaylola.com
+Tous	tous.com
+Pandora	pandora.net
+Sfera	sfera.com
+Scalpers	scalperscompany.com
+El Ganso	elganso.com
+Lacoste	lacoste.com
+Levi's	levi.com
+Guess	guess.eu
+Tommy Hilfiger	tommy.com
+Victoria's Secret	victoriassecret.com
+Skechers	skechers.es
+Deichmann	deichmann.com
+Merkal	merkal.com
+Mustang	mustang.es
+Salsa Jeans	salsajeans.com
+Hawkers	hawkersco.com
+Mr. Wonderful	mrwonderfulshop.es
+Forum Sport	forumsport.com
+Intersport	intersport.es
+Tradeinn	tradeinn.com
+Base Deportes	basedeportes.com	play=Base Deportes
+Samsung	samsung.com
+Coolmod	coolmod.com
+PC Box	pcbox.com
+Back Market	backmarket.es
+Phone House	phonehouse.es
+Yves Rocher	yves-rocher.es
+The Body Shop	thebodyshop.com
+Lush	lush.com
+Arenal Perfumerías	arenal.com
+Marco Aldany	marcoaldany.com
+Llongueras	llongueras.com
+Prénatal	prenatal.es	wikidata
+Bebitus	bebitus.com
+Zooplus	zooplus.es
+Miscota	miscota.es
+Kave Home	kavehome.com
+Obramat	obramat.es
+Carglass	carglass.es
+Leroy Merlin Online	leroymerlin.es
+Octopus Energy	octopusenergy.es
+Som Energia	somenergia.coop
+EDP	edpenergia.es
+Aldro Energía	aldroenergia.com	play=Aldro Energía
+Podo	mipodo.com
+Factor Energía	factorenergia.com
+Aqualia	aqualia.com
+Emasesa	emasesa.com	play=Emasesa
+Emaya	emaya.es	play=Emaya
+Avatel	avatel.es
+Adamo	adamo.es
+Parlem	parlem.com
+Euskaltel	euskaltel.com
+Lyca Mobile	lycamobile.es
+Lebara	lebara.es
+Virgin telco	virgintelco.es
+Hits Mobile	hitsmobile.es
+Suop	suop.es
+Allianz	allianz.es
+AXA	axa.es
+Generali	generali.es
+Zurich	zurich.es
+Reale Seguros	reale.es
+Santalucía	santalucia.es
+Ocaso	ocaso.es
+Caser	caser.es
+Verti	verti.es
+Direct Seguros	directseguros.es
+Génesis	genesis.es
+Hertz	hertz.es
+Avis	avis.es
+Europcar	europcar.es
+Sixt	sixt.es
+Enterprise	enterprise.es
+Goldcar	goldcar.es
+Record go	recordrentacar.com
+Centauro	centauro.net
+OK Mobility	okmobility.com
+Getaround	getaround.com
+Monbus	monbus.es
+Arriva	arriva.gal
+Baleària	balearia.com
+Trasmediterránea	trasmediterranea.es
+Naviera Armas	navieraarmas.com
+Fred. Olsen	fredolsen.es
+Indigo Parking	parkindigo.es
+Q-Park	q-park.es
+Interparking	interparking.es
+Trainline	thetrainline.com
+Omio	omio.es
+Metro de Sevilla	metro-sevilla.es
+Metro de Málaga	metromalaga.es
+Aurgi	aurgi.com
+Confortauto	confortauto.com
+Expedia	expedia.es
+eDreams	edreams.es
+Rumbo	rumbo.es
+Hotels.com	hotels.com
+NH Hotels	nh-hotels.com
+Barceló	barcelo.com
+Iberostar	iberostar.com
+RIU	riu.com
+Paradores	parador.es
+Civitatis	civitatis.com
+GetYourGuide	getyourguide.es
+Atrápalo	atrapalo.com
+Groupon	groupon.es
+Smartbox	smartbox.com
+Wonderbox	wonderbox.es
+Eventbrite	eventbrite.es
+Parques Reunidos	parquesreunidos.com	play=Parques Reunidos
+Aquópolis	aquopolis.es
+Cines Renoir	cinesrenoir.com
+Go Fit	go-fit.es
+DiR	dir.cat
+Forus	forus.es
+Synergym	synergym.es
+Fitness Park	fitnesspark.es
+Amazon Music	music.amazon.es
+Paramount+	paramountplus.com
+Rakuten TV	rakuten.tv
+Mubi	mubi.com
+Qobuz	qobuz.com
+SoundCloud	soundcloud.com
+Google Workspace	workspace.google.com	-
+Notion	notion.so
+Evernote	evernote.com
+1Password	1password.com
+NordVPN	nordvpn.com
+ExpressVPN	expressvpn.com
+Proton	proton.me
+Bumble	bumble.com
+Meetic	meetic.es
+Strava	strava.com
+Headspace	headspace.com
+Calm	calm.com
+Babbel	babbel.com
+Busuu	busuu.com
+LinkedIn	linkedin.com
+El País	elpais.com
+El Mundo	elmundo.es
+La Vanguardia	lavanguardia.com
+ABC	abc.es
+elDiario.es	eldiario.es
+Marca	marca.com
+Amazon Prime Gaming	gaming.amazon.com	-
+# Su web da un icono erróneo o ilegible: solo app de Google Play o Wikidata
+TGB The Good Burger	thegoodburger.com	play,wikidata
+Euromaster	euromaster.es	wikidata
+Oysho	oysho.com	wikidata
+Cortefiel	cortefiel.com	play,wikidata
+Foot Locker	footlocker.es	play,wikidata
+Imaginarium	imaginarium.es	wikidata
+Juguettos	juguettos.com	play,wikidata
+Misako	misako.com	play,wikidata
+Pedro del Hierro	pedrodelhierro.com	play,wikidata
+Deporvillage	deporvillage.com	play,wikidata
+Sklum	sklum.com	play=Sklum muebles
+Casa Shops	casashops.com	-
+Hiber	hiber.es	-
+R Cable	mundo-r.com	play,wikidata
+Telecable	telecable.es	wikidata
+Meliá	melia.com	play,wikidata
+EA Play	ea.com	simpleicons:ea:000000
+Ubisoft+	ubisoft.com	play,wikidata
+Pelayo	pelayo.com	play=Pelayo Seguros
+Mayoral	mayoral.com	play,wikidata
+Zara Home	zarahome.com	play,wikidata
+Lowi	lowi.es	play,wikidata
+Alain Afflelou	afflelou.es	play=Alain Afflelou ópticos
+Opticalia	opticalia.com	play,wikidata
+Primark	primark.com	play,wikidata

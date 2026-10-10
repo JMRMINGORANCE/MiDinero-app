@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MiDinero</string>
+    <string name="listener_label">MiDinero: detección de pagos</string>
+    <string name="shortcut_add_short">Añadir gasto</string>
+    <string name="shortcut_add_long">Añadir un gasto</string>
+    <string name="shortcut_stats_short">Análisis</string>
+    <string name="shortcut_stats_long">Ver en qué se va el dinero</string>
+    <string name="widget_label">MiDinero: gasto del mes</string>
+    <string name="widget_description">Lo gastado este mes, lo que queda del presupuesto y un botón para añadir</string>
+    <string name="tile_label">Añadir gasto</string>
+    <string name="quick_widget_label">MiDinero: añadir rápido</string>
+    <string name="quick_widget_description">Botones para apuntar un gasto en tus categorías más usadas</string>
+    <string name="curve_widget_label">MiDinero: curva del mes</string>
+    <string name="curve_widget_description">La curva de lo que llevas gastado este mes</string>
+    <string name="today_widget_label">MiDinero: hoy puedes gastar</string>
+    <string name="today_widget_description">Lo que puedes gastar hoy sin pasarte del presupuesto</string>
+</resources>
