@@ -292,7 +292,6 @@ object Backup {
             )
         }
         val tripIds = trips.map { it.id }.toSet()
-        val categoryIds = categories.map { it.id }.toSet()
         val customMerchants = root.optJSONArray("customMerchants").objects().mapNotNull { o ->
             val name = o.optString("name").trim().ifBlank { return@mapNotNull null }
             CustomMerchant(
