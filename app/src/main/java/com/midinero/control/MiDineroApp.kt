@@ -65,6 +65,8 @@ open class MiDineroApp : Application() {
                 prefs.topUpsCleaned = true
             }
         }
+        // Tus comercios (con su foto) a mano para las listas
+        appScope.launch { repository.customMerchants.collect { com.midinero.control.data.CustomMerchantsState.mutable.value = it } }
         RecurringWorker.schedule(this)
         BackupWorker.schedule(this)
         // El reloj recibe el resumen cada vez que cambian los gastos, las categorías o los ajustes.

@@ -27,6 +27,7 @@ import com.midinero.control.service.AppNotifications
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.midinero.control.domain.CustomMerchants
 import com.midinero.control.domain.TripStats
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -49,6 +50,7 @@ class ExpenseRepository(
     private val customRuleDao = db.ruleDao()
     private val debtDao = db.debtDao()
     private val tripDao = db.tripDao()
+    private val customMerchantDao = db.customMerchantDao()
     val receipts = ReceiptStore(context)
     private val detectionLock = Mutex()
     private val recurringLock = Mutex()
@@ -78,6 +80,7 @@ class ExpenseRepository(
     /** Igual, con tus reglas ya leídas (para clasificar muchos movimientos seguidos sin releerlas cada vez). */
     private suspend fun categorize(merchant: String, rules: List<CustomRule>): Long? {
         RuleMatcher.find(rules, merchant)?.categoryId?.let { return it }
+        CustomMerchants.find(customMerchantDao.getAll(), merchant)?.categoryId?.let { return it }
         // Lo aprendido se guarda con el nombre que ves: el limpio del catálogo o el texto original.
         for (name in listOfNotNull(MerchantCatalog.find(merchant)?.name, merchant).distinct()) {
             val key = Categorizer.merchantKey(name)
@@ -181,8 +184,9 @@ class ExpenseRepository(
             val rate = if (foreign) prefs.rateFor(payment.currency) ?: Currencies.byCode(payment.currency)?.approxEurRate ?: 1.0 else 1.0
             val eurCents = if (foreign) Currencies.toEurCents(payment.amountCents, rate) else payment.amountCents
             val customName = RuleMatcher.displayName(customRuleDao.getAll(), payment.merchant)
-            // Tus reglas de nombre mandan; si no hay, la marca conocida («MERCADONA 4432 VALENCIA» → «Mercadona»).
-            val merchantName = if (customName != payment.merchant) customName else MerchantCatalog.displayName(payment.merchant)
+            // Tus reglas de nombre mandan; luego tus comercios y, si no, la marca conocida («MERCADONA 4432 VALENCIA» → «Mercadona»).
+            val merchantName = if (customName != payment.merchant) customName
+                else CustomMerchants.find(customMerchantDao.getAll(), payment.merchant)?.name ?: MerchantCatalog.displayName(payment.merchant)
             // Una devolución se guarda en negativo: resta del gasto de su categoría y su mes
             val sign = if (payment.refund) -1 else 1
             val duplicate = expenseDao.detectedBetween(timestamp - 90_000, timestamp + 90_000).any { e ->
@@ -650,6 +654,30 @@ class ExpenseRepository(
 
     val customRules: Flow<List<CustomRule>> = customRuleDao.observeAll()
 
+    // ---------- Tus comercios ----------
+
+    val customMerchants: Flow<List<CustomMerchant>> = customMerchantDao.observeAll()
+
+    /** Guarda un comercio tuyo. Devuelve false si ya hay otro con ese nombre. */
+    suspend fun saveCustomMerchant(merchant: CustomMerchant): Boolean {
+        val name = merchant.name.trim()
+        if (name.isBlank()) return false
+        val clash = customMerchantDao.getAll().any { it.id != merchant.id && it.name.equals(name, ignoreCase = true) }
+        if (clash) return false
+        val clean = merchant.copy(name = name, aliases = CustomMerchants.cleanAliases(merchant.aliases))
+        if (clean.id == 0L) customMerchantDao.insert(clean) else customMerchantDao.update(clean)
+        // Con categoría, los gastos suyos que aún no tenían ninguna la toman (los que ya clasificaste no se tocan)
+        clean.categoryId?.let { categoryId ->
+            val ids = expenseDao.getUncategorizedSpending()
+                .filter { CustomMerchants.find(listOf(clean), it.merchant) != null }
+                .map { it.id }
+            if (ids.isNotEmpty()) expenseDao.setCategory(ids, categoryId)
+        }
+        return true
+    }
+
+    suspend fun deleteCustomMerchant(merchant: CustomMerchant) = customMerchantDao.delete(merchant)
+
     suspend fun saveCustomRule(rule: CustomRule) {
         if (rule.id == 0L) customRuleDao.insert(rule) else customRuleDao.update(rule)
     }
@@ -700,6 +728,7 @@ class ExpenseRepository(
             customRules = customRuleDao.getAll(),
             debts = debtDao.getAll(),
             trips = tripDao.getAll(),
+            customMerchants = customMerchantDao.getAll(),
             goals = goalDao.getGoals(),
             contributions = goalDao.getContributions(),
             settings = BackupSettings(
@@ -723,6 +752,7 @@ class ExpenseRepository(
             customRuleDao.insertAll(data.customRules)
             debtDao.insertAll(data.debts)
             tripDao.insertAll(data.trips)
+            customMerchantDao.insertAll(data.customMerchants)
             goalDao.insertGoals(data.goals)
             goalDao.insertContributions(data.contributions)
         }
@@ -749,6 +779,7 @@ class ExpenseRepository(
     }
 
     private suspend fun wipe() {
+        customMerchantDao.deleteAll()
         goalDao.deleteAllGoals()
         customRuleDao.deleteAll()
         debtDao.deleteAll()

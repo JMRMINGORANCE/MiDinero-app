@@ -238,3 +238,37 @@ data class Trip(
     val autoAssign: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
 )
+
+/**
+ * Comercio añadido por ti, con su foto (opcional). (v12)
+ * Los pagos cuyo texto contenga [name] o alguno de [aliases] se muestran con este nombre, su foto y, si la tiene, su categoría.
+ * La foto se guarda dentro de la base de datos (pequeña, WebP) para que viaje con las copias de seguridad.
+ */
+@Entity(
+    tableName = "custom_merchants",
+    foreignKeys = [
+        ForeignKey(
+            entity = Category::class,
+            parentColumns = ["id"],
+            childColumns = ["categoryId"],
+            onDelete = ForeignKey.SET_NULL,
+        )
+    ],
+    indices = [Index(value = ["name"], unique = true), Index("categoryId")],
+)
+data class CustomMerchant(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    /** Otros textos con los que aparece en los avisos del banco, separados por comas («BAR PACO SL, PACO TAPAS»). */
+    val aliases: String = "",
+    val categoryId: Long? = null,
+    val photo: ByteArray? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+) {
+    // ByteArray compara por referencia: se compara su contenido para que Compose y los tests vean cambios reales
+    override fun equals(other: Any?): Boolean = other is CustomMerchant && id == other.id && name == other.name &&
+        aliases == other.aliases && categoryId == other.categoryId && createdAt == other.createdAt &&
+        (photo?.contentEquals(other.photo) ?: (other.photo == null))
+
+    override fun hashCode(): Int = arrayOf(id, name, aliases, categoryId, createdAt, photo?.contentHashCode()).contentHashCode()
+}

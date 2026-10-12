@@ -324,6 +324,30 @@ interface RuleDao {
 }
 
 @Dao
+interface CustomMerchantDao {
+    @Query("SELECT * FROM custom_merchants ORDER BY name COLLATE NOCASE")
+    fun observeAll(): Flow<List<CustomMerchant>>
+
+    @Query("SELECT * FROM custom_merchants")
+    suspend fun getAll(): List<CustomMerchant>
+
+    @Insert
+    suspend fun insert(merchant: CustomMerchant): Long
+
+    @Update
+    suspend fun update(merchant: CustomMerchant)
+
+    @Delete
+    suspend fun delete(merchant: CustomMerchant)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(merchants: List<CustomMerchant>)
+
+    @Query("DELETE FROM custom_merchants")
+    suspend fun deleteAll()
+}
+
+@Dao
 interface DebtDao {
     @Query("SELECT * FROM debts ORDER BY settledAt IS NOT NULL, createdAt DESC")
     fun observeAll(): Flow<List<Debt>>

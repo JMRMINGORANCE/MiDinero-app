@@ -83,6 +83,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -166,11 +168,47 @@ fun CategoryBadge(category: Category?, size: Int = 44) {
     }
 }
 
-/** Distintivo de un comercio conocido (color de marca y siglas); si no lo es, el de su categoría. */
+/**
+ * Distintivo de un comercio: el tuyo con su foto si lo añadiste, el logo o las siglas de uno conocido y,
+ * si no, el de su categoría.
+ */
 @Composable
 fun MerchantBadge(merchant: String, category: Category?, size: Int = 44) {
+    val customs by com.midinero.control.data.CustomMerchantsState.list.collectAsState()
+    val custom = remember(merchant, customs) { com.midinero.control.domain.CustomMerchants.find(customs, merchant) }
     val known = remember(merchant) { MerchantCatalog.find(merchant) }
-    if (known != null) MerchantLogo(known, size) else CategoryBadge(category, size)
+    when {
+        custom != null && (custom.photo != null || known == null) -> CustomMerchantBadge(custom, category, size)
+        known != null -> MerchantLogo(known, size)
+        else -> CategoryBadge(category, size)
+    }
+}
+
+/** Foto de un comercio tuyo; sin foto, sus siglas sobre el color de su categoría. */
+@Composable
+fun CustomMerchantBadge(merchant: com.midinero.control.data.CustomMerchant, category: Category?, size: Int = 44) {
+    val shape = RoundedCornerShape((size * 0.34).dp)
+    val image = remember(merchant.photo) {
+        merchant.photo?.let { bytes -> runCatching { android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap() }.getOrNull() }
+    }
+    if (image != null) {
+        androidx.compose.foundation.Image(
+            bitmap = image,
+            contentDescription = null,
+            modifier = Modifier.size(size.dp).clip(shape).clearAndSetSemantics { },
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            filterQuality = androidx.compose.ui.graphics.FilterQuality.High,
+        )
+        return
+    }
+    val color = category?.let { parseHexColor(it.colorHex) } ?: MaterialTheme.colorScheme.primary
+    val mark = remember(merchant.name) { com.midinero.control.domain.CustomMerchants.initials(merchant.name) }
+    Box(
+        modifier = Modifier.size(size.dp).background(color.copy(alpha = 0.22f), shape).clearAndSetSemantics { },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(mark, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Black, fontSize = (size * if (mark.length == 1) 0.46 else 0.36).sp, maxLines = 1)
+    }
 }
 
 @Composable
@@ -766,6 +804,7 @@ fun CategoryDialog(
     var limitText by rememberSaveable { mutableStateOf(category?.monthlyLimitCents?.let { centsToInput(it) } ?: "") }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     var hidden by rememberSaveable { mutableStateOf(category?.hidden ?: false) }
+    var pickingEmoji by rememberSaveable { mutableStateOf(false) }
     var moveTo by rememberSaveable { mutableStateOf<Long?>(null) }
     val limit = parseUserAmount(limitText)
     val limitValid = limitText.isBlank() || limit != null
@@ -795,7 +834,8 @@ fun CategoryDialog(
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = emoji,
-                onValueChange = { if (it.length <= 8) emoji = it },
+                // Cualquier emoji del teclado (los compuestos, como 👨‍👩‍👧, ocupan varios caracteres)
+                onValueChange = { if (it.length <= 16) emoji = it },
                 label = { Text(tr("Icono", "Icon")) },
                 singleLine = true,
                 modifier = Modifier.width(90.dp),
@@ -816,6 +856,15 @@ fun CategoryDialog(
                 }
             }
         }
+        TextButton(onClick = { pickingEmoji = true }) {
+            Text(tr("Ver todos los iconos…", "See all icons…"))
+        }
+        Text(
+            tr("O toca «Icono» y escribe cualquier emoji con el teclado.", "Or tap “Icon” and type any emoji with the keyboard."),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (pickingEmoji) EmojiPickerSheet(onDismiss = { pickingEmoji = false }, onPick = { emoji = it; pickingEmoji = false })
         if (!isIncome) {
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(

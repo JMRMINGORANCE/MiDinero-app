@@ -249,6 +249,35 @@ fun MerchantDetailScreen(
             }
         }
         item {
+            val mine by vm.customMerchants.collectAsStateWithLifecycle()
+            val custom = remember(m.displayName, mine) {
+                mine.firstOrNull { it.name.equals(m.displayName, ignoreCase = true) } ?: com.midinero.control.domain.CustomMerchants.find(mine, m.displayName)
+            }
+            var editingMerchant by rememberSaveable { mutableStateOf(false) }
+            AppCard(Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    MerchantBadge(m.displayName, category)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(tr("Foto del comercio", "Merchant photo"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            if (custom?.photo != null) tr("La tuya", "Yours") else tr("Pon una foto de tu móvil", "Use a photo from your phone"),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    OutlinedButton(onClick = { editingMerchant = true }) { Text(if (custom?.photo != null) tr("Cambiar", "Change") else tr("Elegir", "Choose")) }
+                }
+            }
+            if (editingMerchant) CustomMerchantEditor(
+                existing = custom,
+                initialName = m.displayName,
+                categories = categories,
+                onDismiss = { editingMerchant = false },
+                onSave = { merchant, done -> vm.saveCustomMerchant(merchant, done) },
+                onDelete = custom?.let { { vm.deleteCustomMerchant(it) } },
+            )
+        }
+        item {
             AppCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     Text(tr("Últimos 6 meses", "Last 6 months"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)

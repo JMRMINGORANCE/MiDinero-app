@@ -26,6 +26,7 @@ data class BackupData(
     val customRules: List<CustomRule> = emptyList(),
     val debts: List<Debt> = emptyList(),
     val trips: List<Trip> = emptyList(),
+    val customMerchants: List<CustomMerchant> = emptyList(),
 )
 
 /**
@@ -129,6 +130,16 @@ object Backup {
                         .put("budgetCents", t.budgetCents ?: JSONObject.NULL)
                         .put("startDay", t.startDay).put("endDay", t.endDay ?: JSONObject.NULL)
                         .put("autoAssign", t.autoAssign).put("createdAt", t.createdAt)
+                )
+            }
+        })
+        .put("customMerchants", JSONArray().apply {
+            data.customMerchants.forEach { m ->
+                put(
+                    JSONObject()
+                        .put("id", m.id).put("name", m.name).put("aliases", m.aliases)
+                        .put("categoryId", m.categoryId ?: JSONObject.NULL).put("createdAt", m.createdAt)
+                        .put("photo", m.photo?.let { java.util.Base64.getEncoder().encodeToString(it) } ?: JSONObject.NULL)
                 )
             }
         })
@@ -281,9 +292,22 @@ object Backup {
             )
         }
         val tripIds = trips.map { it.id }.toSet()
+        val categoryIds = categories.map { it.id }.toSet()
+        val customMerchants = root.optJSONArray("customMerchants").objects().mapNotNull { o ->
+            val name = o.optString("name").trim().ifBlank { return@mapNotNull null }
+            CustomMerchant(
+                id = o.getLong("id"),
+                name = name,
+                aliases = o.optString("aliases"),
+                categoryId = o.optLongOrNull("categoryId")?.takeIf { it in categoryIds },
+                photo = if (o.isNull("photo")) null else runCatching { java.util.Base64.getDecoder().decode(o.getString("photo")) }.getOrNull(),
+                createdAt = o.optLong("createdAt"),
+            )
+        }.distinctBy { it.name.lowercase() }
         return BackupData(
             categories, expenses.map { if (it.tripId != null && it.tripId !in tripIds) it.copy(tripId = null) else it },
             rules, recurring, root.optLong("exportedAt"), settings, goals, contributions, customRules, debts, trips,
+            customMerchants,
         )
     }
 

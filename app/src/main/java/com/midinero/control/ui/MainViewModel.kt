@@ -252,6 +252,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteCustomRule(rule: CustomRule) = viewModelScope.launch { repo.deleteCustomRule(rule) }
 
+    // ---------- Tus comercios ----------
+
+    val customMerchants: StateFlow<List<com.midinero.control.data.CustomMerchant>> =
+        repo.customMerchants.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** [onResult] recibe false si ya hay otro comercio tuyo con ese nombre. */
+    fun saveCustomMerchant(merchant: com.midinero.control.data.CustomMerchant, onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch { onResult(repo.saveCustomMerchant(merchant)) }
+    }
+
+    fun deleteCustomMerchant(merchant: com.midinero.control.data.CustomMerchant) =
+        viewModelScope.launch { repo.deleteCustomMerchant(merchant) }
+
     fun categoryInsight(categoryId: Long): Flow<CategoryInsight> = _month
         .flatMapLatest { m -> repo.expensesBetween(m.minusMonths(5), m).map { Insights.category(categoryId, m, it) } }
         .flowOn(Dispatchers.Default)

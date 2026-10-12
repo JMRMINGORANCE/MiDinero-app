@@ -219,7 +219,7 @@ fun MoreScreen(
                 )
                 MenuRow(
                     Icons.Filled.Storefront, SectionColors.merchants, tr("Comercios que ya conoce", "Merchants it already knows"),
-                    tr("${MerchantCatalog.all.size} con su categoría", "${MerchantCatalog.all.size} with their category"),
+                    tr("${MerchantCatalog.all.size} con su categoría · añade los tuyos con foto", "${MerchantCatalog.all.size} with their category · add yours with a photo"),
                     onClick = { showMerchants = true }, divider = true,
                 )
                 MenuRow(
@@ -256,7 +256,7 @@ fun MoreScreen(
         }
     }
 
-    if (showMerchants) KnownMerchantsSheet(onDismiss = { showMerchants = false })
+    if (showMerchants) KnownMerchantsSheet(vm, onDismiss = { showMerchants = false })
 }
 
 @Composable

@@ -1,5 +1,12 @@
 # Cambios
 
+## 4.12
+
+- **Cualquier icono para tus categorías**: al crear o editar una, «Ver todos los iconos…» abre más de 200 emojis por temas con buscador en español e inglés («perro», «gym», «luz»…). También se puede escribir cualquier emoji con el teclado en el campo «Icono».
+- **Tus comercios con foto**: en Más → Comercios que ya conoce → «Tus comercios» → Añadir, pon el nombre, una foto de tu galería, cómo aparece en el banco (opcional) y su categoría (opcional). Sus pagos se muestran con tu foto en todas las listas, se guardan con ese nombre y, si le pusiste categoría, se clasifican solos (también los que estaban sin categoría).
+- **Tu foto en cualquier comercio**: toca uno de la lista de comercios conocidos, o abre un comercio en «Tus comercios» → «Foto del comercio», para cambiar su logo por una foto tuya.
+- Las fotos van dentro de la base de datos y de las copias de seguridad, así que no se pierden al restaurar ni al cambiar de móvil.
+
 ## 4.11
 
 - **Categorías personalizadas al momento**: el botón «+ Nueva» junto a las categorías crea una con su nombre, icono, color y (si quieres) límite, y la deja elegida. Está al apuntar o editar un gasto o ingreso, al tocar un pago sin categoría (en la lista o en su aviso), al cambiar la categoría de varios movimientos y en los editores de cargos fijos y de reglas. Siguen pudiéndose editar y borrar desde Límites.

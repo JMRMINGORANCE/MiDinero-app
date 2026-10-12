@@ -108,8 +108,21 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
     }
 }
 
+/** v11 -> v12: comercios propios con foto. */
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `custom_merchants` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                "`aliases` TEXT NOT NULL, `categoryId` INTEGER, `photo` BLOB, `createdAt` INTEGER NOT NULL, " +
+                "FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )"
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_custom_merchants_name` ON `custom_merchants` (`name`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_custom_merchants_categoryId` ON `custom_merchants` (`categoryId`)")
+    }
+}
+
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
-    MIGRATION_10_11,
+    MIGRATION_10_11, MIGRATION_11_12,
 )
 
