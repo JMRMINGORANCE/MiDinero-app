@@ -46,7 +46,8 @@ jobs:
           # Fuera de main se hacen capturas de las pantallas para revisar el diseño
           SCREENSHOTS: ${{ github.ref != 'refs/heads/main' && '1' || '' }}
         # El .aab de Play solo se genera con la clave de subida (sin ella, bundleRelease falla a propósito).
-        run: ./gradlew testDebugUnitTest assembleRelease ${MIDINERO_KEYSTORE:+bundleRelease :wear:bundleRelease} --stacktrace
+        # --continue: si falta la clave de firma, los tests y la compilación se ejecutan igual y se ven todos los fallos
+        run: ./gradlew testDebugUnitTest assembleRelease ${MIDINERO_KEYSTORE:+bundleRelease :wear:bundleRelease} --continue --stacktrace
 
       # Avisa si alguna pantalla cambia respecto a las capturas de la compilación anterior (no hace fallar nada).
       - name: Comparar capturas con la compilación anterior
