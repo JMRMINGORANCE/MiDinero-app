@@ -342,7 +342,7 @@ fun TripDetailScreen(vm: MainViewModel, tripId: Long, onBack: () -> Unit) {
                         timestamp = d.timestamp, isIncome = d.isIncome,
                         originalCurrency = d.originalCurrency, originalAmountCents = d.originalAmountCents,
                         tripId = d.tripId,
-                        receipt = d.receipt, accountId = d.accountId,
+                        receipt = d.receipt,
                     ),
                     d.learn,
                 )

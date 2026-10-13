@@ -1,1 +1,1 @@
-Month-end forecast, accounts with balances and transfers, read receipts with the camera, #tags, savings challenges, log with Google Assistant and new watch tiles and complications.
+Home suggests payments that repeat every month so you can add them to Recurring with one tap. Accounts and balances have been removed.

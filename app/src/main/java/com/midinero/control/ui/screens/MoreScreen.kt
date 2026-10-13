@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Icon
@@ -93,7 +92,6 @@ fun MoreScreen(
     onOpenMerchants: () -> Unit = {},
     onOpenCategories: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
-    onOpenAccounts: () -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenHelp: () -> Unit,
     goalsVm: GoalsViewModel = viewModel(),
@@ -221,11 +219,6 @@ fun MoreScreen(
                     Icons.Filled.Leaderboard, SectionColors.merchants, tr("Tus comercios", "Your merchants"),
                     tr("Dónde gastas más, cuántas veces y el ticket medio", "Where you spend most, how often and the average ticket"),
                     onClick = onOpenMerchants, divider = true,
-                )
-                MenuRow(
-                    Icons.Filled.AccountBalanceWallet, SectionColors.trips, tr("Cuentas y saldos", "Accounts and balances"),
-                    tr("Efectivo, banco, Revolut… y traspasos entre ellas", "Cash, bank, Revolut… and transfers between them"),
-                    onClick = onOpenAccounts, divider = true,
                 )
                 MenuRow(
                     Icons.Filled.EmojiEvents, SectionColors.goals, tr("Retos de ahorro", "Savings challenges"),

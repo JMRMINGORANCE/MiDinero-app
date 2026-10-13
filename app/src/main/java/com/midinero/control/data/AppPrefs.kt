@@ -195,11 +195,6 @@ class AppPrefs(context: Context) {
         edit { putString("unrecognized", arr.toString()) }
     }
 
-    /** Cuenta por defecto para los gastos nuevos y detectados (0 = ninguna). */
-    var defaultAccountId: Long
-        get() = prefs.getLong("default_account", 0)
-        set(value) = edit { putLong("default_account", value) }
-
     // ---------- Retos de ahorro ----------
 
     var challenges: List<com.midinero.control.domain.Challenge>

@@ -67,12 +67,6 @@ open class MiDineroApp : Application() {
         }
         // Tus comercios (con su foto) a mano para las listas
         appScope.launch { repository.customMerchants.collect { com.midinero.control.data.CustomMerchantsState.mutable.value = it } }
-        appScope.launch {
-            combine(repository.accounts, prefs.changes) { list, _ -> list }.collectLatest { list ->
-                com.midinero.control.data.AccountsState.mutable.value = list.filter { !it.archived }
-                com.midinero.control.data.AccountsState.defaultMutable.value = prefs.defaultAccountId
-            }
-        }
         // Retos de ahorro: se comprueban al cambiar los gastos (y cada día en RecurringWorker)
         appScope.launch {
             combine(repository.allExpenses, prefs.changes) { _, _ -> Unit }.collectLatest {

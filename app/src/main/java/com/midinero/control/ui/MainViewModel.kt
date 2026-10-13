@@ -278,34 +278,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         .flowOn(Dispatchers.Default)
 
-    // ---------- Cuentas ----------
-
-    val accounts: StateFlow<List<com.midinero.control.data.Account>> =
-        repo.accounts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    val accountBalances: StateFlow<List<com.midinero.control.domain.AccountBalance>> =
-        combine(repo.accounts, repo.allExpenses, repo.transfers) { a, e, t -> com.midinero.control.domain.Accounts.balances(a, e, t) }
-            .flowOn(Dispatchers.Default)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    val transfers: StateFlow<List<com.midinero.control.data.Transfer>> =
-        repo.transfers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    fun saveAccount(account: com.midinero.control.data.Account, makeDefault: Boolean) = viewModelScope.launch {
-        val id = repo.saveAccount(account)
-        // La primera cuenta pasa a ser la de por defecto
-        when {
-            makeDefault || prefs.defaultAccountId == 0L -> prefs.defaultAccountId = id
-            prefs.defaultAccountId == id -> prefs.defaultAccountId = 0
-        }
-    }
-
-    fun deleteAccount(account: com.midinero.control.data.Account) = viewModelScope.launch { repo.deleteAccount(account) }
-
-    fun addTransfer(transfer: com.midinero.control.data.Transfer) = viewModelScope.launch { repo.addTransfer(transfer) }
-
-    fun deleteTransfer(transfer: com.midinero.control.data.Transfer) = viewModelScope.launch { repo.deleteTransfer(transfer) }
-
     // ---------- Retos de ahorro ----------
 
     val challengeProgress: StateFlow<List<com.midinero.control.domain.ChallengeProgress>> =
@@ -402,7 +374,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         d.rate?.let { r -> d.originalCurrency?.let { prefs.setRate(it, r) } }
         addExpense(
             d.amountCents, d.merchant, d.note, d.categoryId, d.timestamp, d.isIncome, d.originalCurrency, d.originalAmountCents,
-            tripId = d.tripId, autoTrip = false, receipt = d.receipt, accountId = d.accountId,
+            tripId = d.tripId, autoTrip = false, receipt = d.receipt,
         )
     }
 
@@ -418,8 +390,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         tripId: Long? = null,
         autoTrip: Boolean = true,
         receipt: String? = null,
-        /** -1: la cuenta por defecto (apuntes rápidos); null: ninguna. */
-        accountId: Long? = -1L,
     ) {
         viewModelScope.launch {
             val trip = tripId ?: if (autoTrip && !isIncome) repo.autoTripFor(timestamp) else null
@@ -439,7 +409,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     originalAmountCents = originalAmountCents,
                     tripId = trip,
                     receipt = receipt,
-                    accountId = if (accountId == -1L) repo.defaultAccountId() else accountId,
                 )
             )
         }

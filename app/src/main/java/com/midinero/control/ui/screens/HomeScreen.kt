@@ -103,6 +103,7 @@ fun HomeScreen(
     val incomeCategories by vm.incomeCategories.collectAsStateWithLifecycle()
     val stats by vm.stats.collectAsStateWithLifecycle()
     val challenges by vm.challengeProgress.collectAsStateWithLifecycle()
+    val subscriptionCandidates by vm.subscriptionCandidates.collectAsStateWithLifecycle()
     val goals by goalsVm.goals.collectAsStateWithLifecycle()
     val tips by vm.tips.collectAsStateWithLifecycle()
     val debts by debtsVm.debts.collectAsStateWithLifecycle()
@@ -384,6 +385,23 @@ fun HomeScreen(
             val forecast = stats?.takeIf { it.month == month }?.let { com.midinero.control.domain.Forecast.of(it, monthlyBudget, recurring) }
             if (forecast != null) {
                 item { ForecastCard(forecast, onClick = onOpenLimits) }
+            }
+
+            // Pagos que se repiten cada mes y aún no están en Fijos: se ofrecen de uno en uno
+            subscriptionCandidates.firstOrNull()?.let { c ->
+                item(key = "subscription_${c.merchantKey}") {
+                    SubscriptionSuggestionCard(
+                        candidate = c,
+                        category = c.categoryId?.let { categoryById[it] },
+                        more = subscriptionCandidates.size - 1,
+                        onAdd = {
+                            vm.addSubscription(c)
+                            android.widget.Toast.makeText(context, tr("«${c.merchant}» añadido a Fijos", "“${c.merchant}” added to Recurring"), android.widget.Toast.LENGTH_SHORT).show()
+                        },
+                        onIgnore = { vm.ignoreSubscription(c) },
+                        onSeeAll = onOpenRecurring,
+                    )
+                }
             }
 
             // Retos de ahorro en marcha (los dos más avanzados)

@@ -355,3 +355,51 @@ fun ForecastCard(forecast: com.midinero.control.domain.MonthForecast, onClick: (
         }
     }
 }
+
+/** «¿Es un cargo fijo?»: un pago que se repite cada mes y aún no está en Fijos, para añadirlo con un toque. */
+@Composable
+fun SubscriptionSuggestionCard(
+    candidate: com.midinero.control.domain.SubscriptionCandidate,
+    category: com.midinero.control.data.Category?,
+    more: Int,
+    onAdd: () -> Unit,
+    onIgnore: () -> Unit,
+    onSeeAll: () -> Unit,
+) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text(tr("¿Es un cargo fijo?", "Is this a recurring charge?"), fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                MerchantBadge(candidate.merchant, category, size = 40)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(candidate.merchant, fontWeight = FontWeight.Medium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    Text(
+                        tr(
+                            "${formatCents(candidate.amountCents)} cada mes, hacia el día ${candidate.dayOfMonth} · ${candidate.occurrences} pagos",
+                            "${formatCents(candidate.amountCents)} every month, around day ${candidate.dayOfMonth} · ${candidate.occurrences} payments",
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Text(
+                tr(
+                    "Si lo añades a Fijos, se tiene en cuenta en la previsión del mes y te avisamos antes de cada cobro.",
+                    "If you add it to Recurring, it counts in the month forecast and you get a reminder before each charge.",
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (more > 0) androidx.compose.material3.TextButton(onClick = onSeeAll) { Text(tr("Ver ${more + 1}", "See ${more + 1}")) }
+                Spacer(Modifier.weight(1f))
+                androidx.compose.material3.TextButton(onClick = onIgnore) { Text(tr("No es fijo", "Not recurring")) }
+                androidx.compose.material3.Button(onClick = onAdd) { Text(tr("Añadir a Fijos", "Add to Recurring")) }
+            }
+        }
+    }
+}

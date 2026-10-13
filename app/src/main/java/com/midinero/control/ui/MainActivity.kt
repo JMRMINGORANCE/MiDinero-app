@@ -57,7 +57,6 @@ import com.midinero.control.service.AppNotifications
 import com.midinero.control.service.PaymentNotificationListener
 import com.midinero.control.ui.screens.CategoriesScreen
 import com.midinero.control.ui.screens.ChallengesScreen
-import com.midinero.control.ui.screens.AccountsScreen
 import com.midinero.control.ui.screens.CategoryDetailScreen
 import com.midinero.control.ui.screens.DebtsScreen
 import com.midinero.control.ui.screens.TripDetailScreen
@@ -308,7 +307,6 @@ class MainActivity : FragmentActivity() {
                 com.midinero.control.data.Expense(
                     amountCents = entry.amountCents, merchant = entry.merchant.replaceFirstChar { it.uppercase() },
                     categoryId = categoryId, timestamp = ts, isIncome = entry.isIncome,
-                    accountId = app.repository.defaultAccountId(),
                 )
             )
         }
@@ -561,7 +559,6 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         onOpenMerchants = { open("merchants") },
                         onOpenCategories = { open("categories") },
                         onOpenChallenges = { open("challenges") },
-                        onOpenAccounts = { open("accounts") },
                         onOpenSettings = { open(SETTINGS_ROUTE) },
                         onOpenHelp = { open("help") },
                     )
@@ -582,7 +579,6 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                 }
                 composable("categories") { CategoriesScreen(vm = vm, onBack = { nav.popBackStack() }) }
                 composable("challenges") { ChallengesScreen(vm = vm, onBack = { nav.popBackStack() }) }
-                composable("accounts") { AccountsScreen(vm = vm, onBack = { nav.popBackStack() }) }
                 composable("debts") { DebtsScreen(onBack = { nav.popBackStack() }) }
                 composable("help") { HelpScreen(onBack = { nav.popBackStack() }) }
                 composable("import") { ImportScreen(onBack = { nav.popBackStack() }) }

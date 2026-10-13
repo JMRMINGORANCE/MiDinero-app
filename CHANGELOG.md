@@ -1,5 +1,10 @@
 # Cambios
 
+## 4.16
+
+- **«¿Es un cargo fijo?» en Inicio**: cuando un pago se repite cada mes por un importe parecido (gimnasio, una suscripción, un seguro…) y aún no está en Fijos, aparece en «Tu plan» para añadirlo con un toque o descartarlo. Al añadirlo cuenta en la previsión del mes y avisa antes de cada cobro.
+- Se quitan las cuentas y saldos de la 4.15 (pantalla, selector «Pagado con» y cuenta por defecto). La base de datos no cambia y no se pierde nada.
+
 ## 4.15
 
 - **Previsión de fin de mes** en Inicio («Tu plan»): cuánto acabarás gastando al ritmo actual, si te pasarás del presupuesto y lo que te sobrará o faltará contando tus ingresos y los ingresos fijos que aún no han llegado.

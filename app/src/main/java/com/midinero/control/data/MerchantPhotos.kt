@@ -25,14 +25,6 @@ object TagsState {
     val suggestions: StateFlow<List<String>> = mutable
 }
 
-/** Tus cuentas activas y la de por defecto, para el selector del editor. */
-object AccountsState {
-    internal val mutable = MutableStateFlow<List<Account>>(emptyList())
-    val accounts: StateFlow<List<Account>> = mutable
-    internal val defaultMutable = MutableStateFlow(0L)
-    val defaultId: StateFlow<Long> = defaultMutable
-}
-
 /** Fotos de comercio: cuadradas, pequeñas (160 px) y en WebP, para guardarlas en la base de datos y en las copias. */
 object MerchantPhotos {
     const val SIZE = 160
