@@ -1,5 +1,15 @@
 # Cambios
 
+## 4.15
+
+- **Previsión de fin de mes** en Inicio («Tu plan»): cuánto acabarás gastando al ritmo actual, si te pasarás del presupuesto y lo que te sobrará o faltará contando tus ingresos y los ingresos fijos que aún no han llegado.
+- **Cuentas y saldos** (Más → Cuentas y saldos): efectivo, banco, Revolut, Bybit… con su saldo. Eliges en qué cuenta va cada gasto («Pagado con»), hay una cuenta por defecto para los nuevos y los detectados, y puedes pasar dinero entre cuentas sin que cuente como gasto.
+- **Leer el ticket con la cámara**: al adjuntar la foto a un gasto nuevo se rellenan solos el total, el comercio y la fecha; también con el botón «Leer ticket». Se hace en el propio móvil, sin Internet.
+- **Etiquetas**: escribe #etiquetas en la nota (#cumpleaños, #coche…). Se sugieren las que más usas, se buscan con «#etiqueta» y en Más → Etiquetas ves lo gastado en cada una.
+- **Retos de ahorro** (Más → Retos de ahorro): días sin gastos al mes, gastar menos de X € en una categoría o rachas sin gastar en algo. Se ven en Inicio y avisan al cumplirse.
+- **Asistente de Google**: «Ok Google, apunta 4 euros de café en MiDinero» lo apunta directamente.
+- **Reloj**: nueva tarjeta «Semana y límites» y tres complicaciones nuevas: lo que te queda esta semana, la categoría más cerca de su límite y el último gasto.
+
 ## 4.14
 
 - **Pagos con Google Wallet desde el reloj (Galaxy Watch y otros Wear OS)**: en el reloj el aviso del pago contactless lo publica Servicios de Google Play, no la app de Wallet, y la app del reloj lo descartaba. Ahora lo lee (solo los avisos de Play Services que llevan un importe) y el móvil lo apunta si tienes activada cualquiera de las dos opciones de Google en la detección.
