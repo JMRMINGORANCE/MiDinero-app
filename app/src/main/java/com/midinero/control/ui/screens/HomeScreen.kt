@@ -265,17 +265,6 @@ fun HomeScreen(
                 }
             }
 
-            // Previsión de fin de mes (solo en el mes actual y con algún gasto)
-            val forecast = stats?.takeIf { it.month == month }?.let { com.midinero.control.domain.Forecast.of(it, monthlyBudget, recurring) }
-            if (forecast != null) {
-                item { ForecastCard(forecast, onClick = onOpenLimits) }
-            }
-
-            // Retos de ahorro en marcha (los dos más avanzados)
-            val activeChallenges = challenges.filter { it.state != com.midinero.control.domain.ChallengeState.FAILED }.sortedByDescending { it.ratio }.take(2)
-            activeChallenges.forEach { p ->
-                item(key = "challenge_${p.challenge.id}") { ChallengeCard(p, categories, onClick = onOpenChallenges) }
-            }
 
             if (!detectionOn) {
                 item {
@@ -390,6 +379,18 @@ fun HomeScreen(
             }
 
             item { SectionHeader(title = tr("Tu plan", "Your plan")) }
+
+            // Previsión de fin de mes (solo en el mes actual y con algún gasto)
+            val forecast = stats?.takeIf { it.month == month }?.let { com.midinero.control.domain.Forecast.of(it, monthlyBudget, recurring) }
+            if (forecast != null) {
+                item { ForecastCard(forecast, onClick = onOpenLimits) }
+            }
+
+            // Retos de ahorro en marcha (los dos más avanzados)
+            val activeChallenges = challenges.filter { it.state != com.midinero.control.domain.ChallengeState.FAILED }.sortedByDescending { it.ratio }.take(2)
+            activeChallenges.forEach { p ->
+                item(key = "challenge_${p.challenge.id}") { ChallengeCard(p, categories, onClick = onOpenChallenges) }
+            }
 
             val activeRecurring = recurring.filter { it.active && !it.isIncome }
             item { RecurringPlanCard(activeRecurring, categoryById, onOpenRecurring) }
