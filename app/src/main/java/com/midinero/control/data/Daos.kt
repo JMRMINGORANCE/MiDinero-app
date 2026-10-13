@@ -348,6 +348,52 @@ interface CustomMerchantDao {
 }
 
 @Dao
+interface AccountDao {
+    @Query("SELECT * FROM accounts ORDER BY archived, sortOrder, name COLLATE NOCASE")
+    fun observeAll(): Flow<List<Account>>
+
+    @Query("SELECT * FROM accounts")
+    suspend fun getAll(): List<Account>
+
+    @Insert
+    suspend fun insert(account: Account): Long
+
+    @Update
+    suspend fun update(account: Account)
+
+    @Delete
+    suspend fun delete(account: Account)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(accounts: List<Account>)
+
+    @Query("DELETE FROM accounts")
+    suspend fun deleteAll()
+
+    @Query("SELECT * FROM transfers ORDER BY timestamp DESC")
+    fun observeTransfers(): Flow<List<Transfer>>
+
+    @Query("SELECT * FROM transfers")
+    suspend fun getTransfers(): List<Transfer>
+
+    @Insert
+    suspend fun insertTransfer(transfer: Transfer): Long
+
+    @Delete
+    suspend fun deleteTransfer(transfer: Transfer)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTransfers(transfers: List<Transfer>)
+
+    @Query("DELETE FROM transfers")
+    suspend fun deleteTransfers()
+
+    /** Al borrar una cuenta, sus movimientos se quedan sin cuenta. */
+    @Query("UPDATE expenses SET accountId = NULL WHERE accountId = :accountId")
+    suspend fun detachExpenses(accountId: Long)
+}
+
+@Dao
 interface DebtDao {
     @Query("SELECT * FROM debts ORDER BY settledAt IS NOT NULL, createdAt DESC")
     fun observeAll(): Flow<List<Debt>>

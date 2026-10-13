@@ -38,7 +38,7 @@ enum class ExpenseSource { MANUAL, GOOGLE_PAY, RECURRING, IMPORTED }
         )
     ],
     // merchant y recurringId: sugerencias, duplicados e historial de cargos fijos (v5)
-    indices = [Index("categoryId"), Index("timestamp"), Index("merchant"), Index("recurringId"), Index("tripId")],
+    indices = [Index("categoryId"), Index("timestamp"), Index("merchant"), Index("recurringId"), Index("tripId"), Index("accountId")],
 )
 data class Expense(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -62,6 +62,8 @@ data class Expense(
     val tripId: Long? = null,
     /** Nombre del fichero con la foto del ticket (en la carpeta privada de la app). (v9) */
     val receipt: String? = null,
+    /** Cuenta de la que sale (o a la que entra) el dinero; null = ninguna. (v13) */
+    val accountId: Long? = null,
 ) {
     /** Devolución de una compra: se guarda en negativo para que reste del gasto de su categoría y su mes. */
     val isRefund: Boolean get() = !isIncome && amountCents < 0
@@ -272,3 +274,36 @@ data class CustomMerchant(
 
     override fun hashCode(): Int = arrayOf(id, name, aliases, categoryId, createdAt, photo?.contentHashCode()).contentHashCode()
 }
+
+/**
+ * Dónde está tu dinero: efectivo, la tarjeta del banco, Revolut, Bybit… (v13)
+ * El saldo parte de [initialBalanceCents] en [balanceSince] y suma lo que se apunte en ella desde entonces.
+ */
+@Entity(tableName = "accounts")
+data class Account(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val emoji: String = "💳",
+    val initialBalanceCents: Long = 0,
+    val balanceSince: Long = System.currentTimeMillis(),
+    val archived: Boolean = false,
+    val sortOrder: Int = 0,
+)
+
+/** Paso de dinero de una cuenta a otra: no es gasto ni ingreso. (v13) */
+@Entity(
+    tableName = "transfers",
+    foreignKeys = [
+        ForeignKey(entity = Account::class, parentColumns = ["id"], childColumns = ["fromAccountId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = Account::class, parentColumns = ["id"], childColumns = ["toAccountId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("fromAccountId"), Index("toAccountId"), Index("timestamp")],
+)
+data class Transfer(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val fromAccountId: Long,
+    val toAccountId: Long,
+    val amountCents: Long,
+    val timestamp: Long,
+    val note: String = "",
+)

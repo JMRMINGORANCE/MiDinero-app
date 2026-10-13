@@ -183,7 +183,7 @@ fun SearchScreen(vm: MainViewModel, onBack: () -> Unit) {
                         amountCents = d.amountCents, merchant = d.merchant, note = d.note, categoryId = d.categoryId,
                         timestamp = d.timestamp, isIncome = d.isIncome,
                         originalCurrency = d.originalCurrency, originalAmountCents = d.originalAmountCents,
-                        tripId = d.tripId, receipt = d.receipt,
+                        tripId = d.tripId, receipt = d.receipt, accountId = d.accountId,
                     ),
                     d.learn,
                 )

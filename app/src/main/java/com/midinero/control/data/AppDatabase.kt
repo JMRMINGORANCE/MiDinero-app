@@ -35,7 +35,7 @@ class Converters {
     entities = [
         Category::class, Expense::class, MerchantRule::class, RecurringExpense::class,
         SavingsGoal::class, GoalContribution::class, CustomRule::class, Debt::class, Trip::class, IngestionReceipt::class,
-        CustomMerchant::class,
+        CustomMerchant::class, Account::class, Transfer::class,
     ],
     version = AppDatabase.VERSION,
     exportSchema = true,
@@ -52,10 +52,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun ingestionDao(): IngestionDao
     abstract fun tripDao(): TripDao
     abstract fun customMerchantDao(): CustomMerchantDao
+    abstract fun accountDao(): AccountDao
 
     companion object {
         /** Versión del esquema. Al subirla: añadir la migración en Migrations.kt y guardar el esquema en schemas/. */
-        const val VERSION = 12
+        const val VERSION = 13
 
         const val FILE_NAME = "midinero.db"
 

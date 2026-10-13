@@ -276,6 +276,7 @@ data class ExpenseDraft(
     val rate: Double? = null,
     val tripId: Long? = null,
     val receipt: String? = null,
+    val accountId: Long? = null,
 )
 
 /**
@@ -363,6 +364,10 @@ fun ExpenseEditorDialog(
         )
     }
     var merchant by rememberSaveable { mutableStateOf(expense?.merchant ?: initialMerchant) }
+    // Cuenta: la del movimiento o, si es nuevo, la de por defecto
+    val accountList by com.midinero.control.data.AccountsState.accounts.collectAsState()
+    val defaultAccount by com.midinero.control.data.AccountsState.defaultId.collectAsState()
+    var accountId by rememberSaveable { mutableStateOf(expense?.accountId ?: defaultAccount.takeIf { id -> id > 0 && accountList.any { it.id == id } }) }
     // Foto del comercio: se guarda como comercio tuyo y se recuerda en sus próximos pagos
     var editingMerchantPhoto by rememberSaveable { mutableStateOf(false) }
     val customMerchants by com.midinero.control.data.CustomMerchantsState.list.collectAsState()
@@ -434,6 +439,7 @@ fun ExpenseEditorDialog(
                     rate = if (foreign) rate else null,
                     tripId = if (isIncome) null else tripId,
                     receipt = receipt,
+                    accountId = accountId,
                 )
             )
         },
@@ -640,6 +646,19 @@ fun ExpenseEditorDialog(
             colors = softFieldColors(),
             modifier = Modifier.fillMaxWidth(),
         )
+        if (accountList.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            FieldLabel(if (isIncome) tr("Entra en", "Into") else tr("Pagado con", "Paid with"))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                accountList.forEach { a ->
+                    FilterChip(
+                        selected = accountId == a.id,
+                        onClick = { accountId = if (accountId == a.id) null else a.id },
+                        label = { Text("${a.emoji} ${a.name}") },
+                    )
+                }
+            }
+        }
         // Las etiquetas que más usas, para añadirlas con un toque
         val tagSuggestions by com.midinero.control.data.TagsState.suggestions.collectAsState()
         val noteTags = remember(note) { com.midinero.control.domain.Tags.of(note) }

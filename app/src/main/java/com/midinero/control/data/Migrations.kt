@@ -121,8 +121,30 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
     }
 }
 
+/** v12 -> v13: cuentas (efectivo, banco, Revolut…) con saldo y traspasos entre ellas. */
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `accounts` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                "`emoji` TEXT NOT NULL, `initialBalanceCents` INTEGER NOT NULL, `balanceSince` INTEGER NOT NULL, " +
+                "`archived` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL)"
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `transfers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fromAccountId` INTEGER NOT NULL, " +
+                "`toAccountId` INTEGER NOT NULL, `amountCents` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `note` TEXT NOT NULL, " +
+                "FOREIGN KEY(`fromAccountId`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                "FOREIGN KEY(`toAccountId`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transfers_fromAccountId` ON `transfers` (`fromAccountId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transfers_toAccountId` ON `transfers` (`toAccountId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transfers_timestamp` ON `transfers` (`timestamp`)")
+        db.execSQL("ALTER TABLE `expenses` ADD COLUMN `accountId` INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_expenses_accountId` ON `expenses` (`accountId`)")
+    }
+}
+
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
-    MIGRATION_10_11, MIGRATION_11_12,
+    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
 )
 

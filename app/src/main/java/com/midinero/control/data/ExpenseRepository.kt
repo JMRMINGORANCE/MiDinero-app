@@ -51,6 +51,7 @@ class ExpenseRepository(
     private val debtDao = db.debtDao()
     private val tripDao = db.tripDao()
     private val customMerchantDao = db.customMerchantDao()
+    private val accountDao = db.accountDao()
     val receipts = ReceiptStore(context)
     private val detectionLock = Mutex()
     private val recurringLock = Mutex()
@@ -211,6 +212,7 @@ class ExpenseRepository(
                 timestamp = timestamp,
                 source = ExpenseSource.GOOGLE_PAY,
                 rawText = rawText.take(500),
+                accountId = original?.accountId ?: defaultAccountId(),
             )
             val id = expenseDao.insert(expense)
             val saved = expense.copy(id = id)
@@ -654,6 +656,28 @@ class ExpenseRepository(
 
     val customRules: Flow<List<CustomRule>> = customRuleDao.observeAll()
 
+    // ---------- Cuentas y traspasos ----------
+
+    val accounts: Flow<List<Account>> = accountDao.observeAll()
+    val transfers: Flow<List<Transfer>> = accountDao.observeTransfers()
+
+    suspend fun saveAccount(account: Account): Long =
+        if (account.id == 0L) accountDao.insert(account) else { accountDao.update(account); account.id }
+
+    suspend fun deleteAccount(account: Account) = db.withTransaction {
+        accountDao.detachExpenses(account.id)
+        accountDao.delete(account)
+        if (prefs.defaultAccountId == account.id) prefs.defaultAccountId = 0
+    }
+
+    suspend fun addTransfer(transfer: Transfer) = accountDao.insertTransfer(transfer)
+
+    suspend fun deleteTransfer(transfer: Transfer) = accountDao.deleteTransfer(transfer)
+
+    /** Cuenta en la que se apuntan los gastos detectados y los nuevos si no eliges otra (null = ninguna). */
+    suspend fun defaultAccountId(): Long? =
+        prefs.defaultAccountId.takeIf { it > 0 }?.takeIf { id -> accountDao.getAll().any { it.id == id && !it.archived } }
+
     // ---------- Retos de ahorro ----------
 
     /** Avisa de los retos cumplidos que aún no se habían avisado. */
@@ -747,6 +771,8 @@ class ExpenseRepository(
             debts = debtDao.getAll(),
             trips = tripDao.getAll(),
             customMerchants = customMerchantDao.getAll(),
+            accounts = accountDao.getAll(),
+            transfers = accountDao.getTransfers(),
             goals = goalDao.getGoals(),
             contributions = goalDao.getContributions(),
             settings = BackupSettings(
@@ -772,6 +798,8 @@ class ExpenseRepository(
             debtDao.insertAll(data.debts)
             tripDao.insertAll(data.trips)
             customMerchantDao.insertAll(data.customMerchants)
+            accountDao.insertAll(data.accounts)
+            accountDao.insertTransfers(data.transfers)
             goalDao.insertGoals(data.goals)
             goalDao.insertContributions(data.contributions)
         }
@@ -799,6 +827,8 @@ class ExpenseRepository(
     }
 
     private suspend fun wipe() {
+        accountDao.deleteTransfers()
+        accountDao.deleteAll()
         customMerchantDao.deleteAll()
         goalDao.deleteAllGoals()
         customRuleDao.deleteAll()

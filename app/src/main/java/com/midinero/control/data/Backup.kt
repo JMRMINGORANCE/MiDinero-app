@@ -29,6 +29,8 @@ data class BackupData(
     val debts: List<Debt> = emptyList(),
     val trips: List<Trip> = emptyList(),
     val customMerchants: List<CustomMerchant> = emptyList(),
+    val accounts: List<Account> = emptyList(),
+    val transfers: List<Transfer> = emptyList(),
 )
 
 /**
@@ -66,6 +68,7 @@ object Backup {
                         .put("originalAmountCents", e.originalAmountCents ?: JSONObject.NULL)
                         .put("tripId", e.tripId ?: JSONObject.NULL)
                         .put("receipt", e.receipt ?: JSONObject.NULL)
+                        .put("accountId", e.accountId ?: JSONObject.NULL)
                 )
             }
         })
@@ -132,6 +135,23 @@ object Backup {
                         .put("budgetCents", t.budgetCents ?: JSONObject.NULL)
                         .put("startDay", t.startDay).put("endDay", t.endDay ?: JSONObject.NULL)
                         .put("autoAssign", t.autoAssign).put("createdAt", t.createdAt)
+                )
+            }
+        })
+        .put("accounts", JSONArray().apply {
+            data.accounts.forEach { a ->
+                put(
+                    JSONObject().put("id", a.id).put("name", a.name).put("emoji", a.emoji)
+                        .put("initialBalanceCents", a.initialBalanceCents).put("balanceSince", a.balanceSince)
+                        .put("archived", a.archived).put("sortOrder", a.sortOrder)
+                )
+            }
+        })
+        .put("transfers", JSONArray().apply {
+            data.transfers.forEach { t ->
+                put(
+                    JSONObject().put("id", t.id).put("fromAccountId", t.fromAccountId).put("toAccountId", t.toAccountId)
+                        .put("amountCents", t.amountCents).put("timestamp", t.timestamp).put("note", t.note)
                 )
             }
         })
@@ -208,6 +228,7 @@ object Backup {
                 originalAmountCents = o.optLongOrNull("originalAmountCents"),
                 tripId = o.optLongOrNull("tripId"),
                 receipt = if (o.isNull("receipt")) null else o.optString("receipt").ifBlank { null },
+                accountId = o.optLongOrNull("accountId"),
             )
         }
         val rules = root.optJSONArray("rules").objects()
@@ -296,6 +317,20 @@ object Backup {
             )
         }
         val tripIds = trips.map { it.id }.toSet()
+        val accounts = root.optJSONArray("accounts").objects().map { o ->
+            Account(
+                id = o.getLong("id"), name = o.getString("name"), emoji = o.optString("emoji").ifBlank { "💳" },
+                initialBalanceCents = o.optLong("initialBalanceCents"), balanceSince = o.optLong("balanceSince"),
+                archived = o.optBoolean("archived"), sortOrder = o.optInt("sortOrder"),
+            )
+        }
+        val accountIds = accounts.map { it.id }.toSet()
+        val transfers = root.optJSONArray("transfers").objects().map { o ->
+            Transfer(
+                id = o.getLong("id"), fromAccountId = o.getLong("fromAccountId"), toAccountId = o.getLong("toAccountId"),
+                amountCents = o.getLong("amountCents"), timestamp = o.getLong("timestamp"), note = o.optString("note"),
+            )
+        }.filter { it.fromAccountId in accountIds && it.toAccountId in accountIds }
         val customMerchants = root.optJSONArray("customMerchants").objects().mapNotNull { o ->
             val name = o.optString("name").trim().ifBlank { return@mapNotNull null }
             CustomMerchant(
@@ -308,9 +343,11 @@ object Backup {
             )
         }.distinctBy { it.name.lowercase() }
         return BackupData(
-            categories, expenses.map { if (it.tripId != null && it.tripId !in tripIds) it.copy(tripId = null) else it },
+            categories,
+            expenses.map { if (it.tripId != null && it.tripId !in tripIds) it.copy(tripId = null) else it }
+                .map { if (it.accountId != null && it.accountId !in accountIds) it.copy(accountId = null) else it },
             rules, recurring, root.optLong("exportedAt"), settings, goals, contributions, customRules, debts, trips,
-            customMerchants,
+            customMerchants, accounts, transfers,
         )
     }
 
