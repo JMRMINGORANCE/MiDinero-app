@@ -115,9 +115,12 @@ object WatchSync {
 
     fun refreshSurfaces(context: Context) {
         runCatching { TileService.getUpdater(context).requestUpdate(SpendTileService::class.java) }
-        runCatching {
-            ComplicationDataSourceUpdateRequester.create(context, ComponentName(context, TodayComplicationService::class.java))
-                .requestUpdateAll()
+        runCatching { TileService.getUpdater(context).requestUpdate(WeekTileService::class.java) }
+        listOf(
+            TodayComplicationService::class.java, WeekComplicationService::class.java,
+            CategoryComplicationService::class.java, LastExpenseComplicationService::class.java,
+        ).forEach { service ->
+            runCatching { ComplicationDataSourceUpdateRequester.create(context, ComponentName(context, service)).requestUpdateAll() }
         }
     }
 }

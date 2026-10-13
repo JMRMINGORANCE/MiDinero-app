@@ -5,4 +5,9 @@
     <string name="tile_description">Lo que puedes gastar hoy y cómo va el mes</string>
     <string name="complication_label">Hoy puedes gastar</string>
     <string name="listener_label">MiDinero: pagos en el reloj</string>
+    <string name="tile_week_label">MiDinero · semana</string>
+    <string name="tile_week_description">Lo que te queda esta semana y las categorías más cerca de su límite</string>
+    <string name="complication_week">Te queda esta semana</string>
+    <string name="complication_category">Categoría más cerca del límite</string>
+    <string name="complication_last">Último gasto</string>
 </resources>

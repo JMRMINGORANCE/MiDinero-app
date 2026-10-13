@@ -109,6 +109,12 @@ data class WatchState(
     val symbolFirst: Boolean = false,
     /** Si el reloj puede mandar avisos de pago vistos en él (la detección está activada en el móvil). */
     val detection: Boolean = false,
+    /** Semana en curso: «Te queda esta semana» (con presupuesto) o «Esta semana llevas». */
+    val weekLabel: String = "",
+    val weekValue: String = "",
+    /** Parte de lo de la semana gastada (puede pasar de 1) o -1 sin presupuesto. */
+    val weekRatio: Float = -1f,
+    val weekOver: Boolean = false,
 ) {
     val isEmpty: Boolean get() = updated == 0L
 
@@ -123,6 +129,7 @@ data class WatchState(
         .put("quick", JSONArray().apply { quick.forEach { put(it.toJson()) } })
         .put("acked", JSONArray().apply { acked.forEach { put(it) } })
         .put("symbol", currencySymbol).put("symbolFirst", symbolFirst).put("detection", detection)
+        .put("weekLabel", weekLabel).put("weekValue", weekValue).put("weekRatio", weekRatio.toDouble()).put("weekOver", weekOver)
         .toString()
 
     companion object {
@@ -157,6 +164,10 @@ data class WatchState(
                     currencySymbol = o.optString("symbol", "€"),
                     symbolFirst = o.optBoolean("symbolFirst"),
                     detection = o.optBoolean("detection"),
+                    weekLabel = o.optString("weekLabel"),
+                    weekValue = o.optString("weekValue"),
+                    weekRatio = o.optDouble("weekRatio", -1.0).toFloat(),
+                    weekOver = o.optBoolean("weekOver"),
                 )
             }.getOrDefault(WatchState())
         }

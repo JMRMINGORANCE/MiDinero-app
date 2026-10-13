@@ -11,6 +11,7 @@ import com.midinero.control.domain.Period
 import com.midinero.control.domain.currentPeriod
 import com.midinero.control.domain.dateOf
 import com.midinero.control.domain.dayIndex
+import com.midinero.control.domain.lengthInDays
 import com.midinero.control.domain.formatCents
 import com.midinero.control.domain.tr
 import com.midinero.control.link.WatchCategory
@@ -80,6 +81,13 @@ object WatchSnapshot {
             } to (pct >= 3)
         } else "" to false
 
+        // La semana (de lunes a hoy): con presupuesto, lo que le toca a la semana menos lo gastado en ella
+        val monday = today.with(java.time.DayOfWeek.MONDAY)
+        fun millis(d: LocalDate) = d.atStartOfDay(com.midinero.control.domain.zone).toInstant().toEpochMilli()
+        val spentWeek = repo.spentBetween(millis(monday), millis(today.plusDays(1)))
+        val weekBudget = if (budget > 0) budget * 7 / month.lengthInDays().coerceAtLeast(1) else 0L
+        val weekLeft = weekBudget - spentWeek
+
         // Importes ocultos: el reloj enseña la parte del presupuesto gastada en lugar de puntos
         val share = if (prefs.hideAmounts) com.midinero.control.domain.PrivateShare.label(spent, budget) else null
         return WatchState(
@@ -105,6 +113,14 @@ object WatchSnapshot {
             currencySymbol = "€",
             symbolFirst = Lang.english,
             detection = PaymentNotificationListener.isEnabled(app),
+            weekLabel = if (weekBudget > 0) tr("Te queda esta semana", "Left this week") else tr("Esta semana llevas", "Spent this week"),
+            weekValue = when {
+                share != null -> com.midinero.control.domain.PrivateShare.label(spentWeek, weekBudget) ?: "•••"
+                weekBudget > 0 -> formatCents(weekLeft.coerceAtLeast(0))
+                else -> formatCents(spentWeek)
+            },
+            weekRatio = if (weekBudget > 0) spentWeek.toFloat() / weekBudget else -1f,
+            weekOver = weekBudget > 0 && weekLeft < 0,
         )
     }
 

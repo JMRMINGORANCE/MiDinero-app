@@ -4,4 +4,9 @@
     <string name="tile_description">What you can spend today and how the month is going</string>
     <string name="complication_label">You can spend today</string>
     <string name="listener_label">MiDinero: watch payments</string>
+    <string name="tile_week_label">MiDinero · week</string>
+    <string name="tile_week_description">What\'s left this week and the categories closest to their limit</string>
+    <string name="complication_week">Left this week</string>
+    <string name="complication_category">Category closest to its limit</string>
+    <string name="complication_last">Last expense</string>
 </resources>
