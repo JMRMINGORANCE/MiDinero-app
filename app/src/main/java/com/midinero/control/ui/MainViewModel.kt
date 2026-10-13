@@ -278,6 +278,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         .flowOn(Dispatchers.Default)
 
+    // ---------- Retos de ahorro ----------
+
+    val challengeProgress: StateFlow<List<com.midinero.control.domain.ChallengeProgress>> =
+        combine(repo.allExpenses, prefs.changes) { all, _ -> com.midinero.control.domain.Challenges.evaluateAll(prefs.challenges, all) }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun addChallenge(type: com.midinero.control.domain.ChallengeType, target: Long, categoryId: Long?) {
+        prefs.challenges = prefs.challenges + com.midinero.control.domain.Challenge(java.util.UUID.randomUUID().toString(), type, target, categoryId)
+    }
+
+    fun deleteChallenge(id: String) {
+        prefs.challenges = prefs.challenges.filterNot { it.id == id }
+    }
+
     /** Gasto por etiqueta (#cumpleaños…) en todo el historial. */
     val tagTotals: Flow<List<com.midinero.control.domain.Tags.TagTotal>> = repo.allExpenses
         .map { com.midinero.control.domain.Tags.totals(it) }

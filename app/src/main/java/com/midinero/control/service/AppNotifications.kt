@@ -188,6 +188,11 @@ object AppNotifications {
         notify(context, tag = "weekly", id = 1, channel = CHANNEL_SUMMARY, title = tr("Tu resumen semanal", "Your weekly summary"), text = text, open = "stats")
     }
 
+    /** «¡Reto cumplido!» */
+    fun challengeAchieved(context: Context, key: String, title: String) {
+        notify(context, tag = "challenge", id = key.hashCode(), channel = CHANNEL_SUMMARY, title = tr("¡Reto cumplido! 🎉", "Challenge completed! 🎉"), text = title, open = "challenges")
+    }
+
     fun budgetAlert(context: Context, category: Category, spentCents: Long, limitCents: Long) {
         val over = spentCents - limitCents
         val title: String

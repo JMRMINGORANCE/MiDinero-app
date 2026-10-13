@@ -91,6 +91,7 @@ fun MoreScreen(
     onOpenSearch: () -> Unit,
     onOpenMerchants: () -> Unit = {},
     onOpenCategories: () -> Unit = {},
+    onOpenChallenges: () -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenHelp: () -> Unit,
     goalsVm: GoalsViewModel = viewModel(),
@@ -218,6 +219,11 @@ fun MoreScreen(
                     Icons.Filled.Leaderboard, SectionColors.merchants, tr("Tus comercios", "Your merchants"),
                     tr("Dónde gastas más, cuántas veces y el ticket medio", "Where you spend most, how often and the average ticket"),
                     onClick = onOpenMerchants, divider = true,
+                )
+                MenuRow(
+                    Icons.Filled.EmojiEvents, SectionColors.goals, tr("Retos de ahorro", "Savings challenges"),
+                    tr("Días sin gastos, gastar menos en algo, rachas…", "No-spend days, spend less on something, streaks…"),
+                    onClick = onOpenChallenges, divider = true,
                 )
                 MenuRow(
                     Icons.Filled.Tag, SectionColors.categories, tr("Etiquetas", "Tags"),

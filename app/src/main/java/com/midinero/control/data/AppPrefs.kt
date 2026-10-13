@@ -194,4 +194,37 @@ class AppPrefs(context: Context) {
         list.forEach { arr.put(JSONObject().put("app", it.app).put("title", it.title).put("text", it.text).put("time", it.time)) }
         edit { putString("unrecognized", arr.toString()) }
     }
+
+    // ---------- Retos de ahorro ----------
+
+    var challenges: List<com.midinero.control.domain.Challenge>
+        get() = runCatching { challengesFromJson(prefs.getString("challenges", "[]")!!) }.getOrDefault(emptyList())
+        set(value) = edit { putString("challenges", challengesToJson(value)) }
+
+    /** Logros ya avisados (para no repetir el aviso). */
+    var notifiedAchievements: Set<String>
+        get() = prefs.getStringSet("challenge_notified", emptySet())!!.toSet()
+        set(value) = edit { putStringSet("challenge_notified", value.toList().takeLast(200).toSet()) }
+
+    companion object {
+        fun challengesToJson(list: List<com.midinero.control.domain.Challenge>): String = JSONArray().apply {
+            list.forEach { c ->
+                put(JSONObject().put("id", c.id).put("type", c.type.name).put("target", c.target)
+                    .put("categoryId", c.categoryId ?: JSONObject.NULL).put("createdAt", c.createdAt))
+            }
+        }.toString()
+
+        fun challengesFromJson(text: String): List<com.midinero.control.domain.Challenge> {
+            val arr = JSONArray(text)
+            return (0 until arr.length()).mapNotNull { i ->
+                val o = arr.getJSONObject(i)
+                val type = runCatching { com.midinero.control.domain.ChallengeType.valueOf(o.getString("type")) }.getOrNull() ?: return@mapNotNull null
+                com.midinero.control.domain.Challenge(
+                    id = o.getString("id"), type = type, target = o.getLong("target"),
+                    categoryId = if (o.isNull("categoryId")) null else o.optLong("categoryId"),
+                    createdAt = o.optLong("createdAt"),
+                )
+            }
+        }
+    }
 }

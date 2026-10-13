@@ -654,6 +654,24 @@ class ExpenseRepository(
 
     val customRules: Flow<List<CustomRule>> = customRuleDao.observeAll()
 
+    // ---------- Retos de ahorro ----------
+
+    /** Avisa de los retos cumplidos que aún no se habían avisado. */
+    suspend fun checkChallenges() {
+        val list = prefs.challenges
+        if (list.isEmpty()) return
+        val expenses = expenseDao.getAll()
+        val categories = categoryDao.getAll().associateBy { it.id }
+        val notified = prefs.notifiedAchievements
+        val fresh = com.midinero.control.domain.Challenges.evaluateAll(list, expenses).filter { it.achievementKey != null && it.achievementKey !in notified }
+        if (fresh.isEmpty()) return
+        fresh.forEach { p ->
+            val title = com.midinero.control.domain.Challenges.title(p.challenge, p.challenge.categoryId?.let { categories[it]?.name })
+            com.midinero.control.service.AppNotifications.challengeAchieved(context, p.achievementKey!!, title)
+        }
+        prefs.notifiedAchievements = notified + fresh.mapNotNull { it.achievementKey }
+    }
+
     // ---------- Tus comercios ----------
 
     val customMerchants: Flow<List<CustomMerchant>> = customMerchantDao.observeAll()
@@ -737,6 +755,7 @@ class ExpenseRepository(
                 periodStartDay = prefs.periodStartDay,
                 weeklySummary = prefs.weeklySummary,
                 enabledPaymentApps = prefs.enabledPaymentApps,
+                challengesJson = AppPrefs.challengesToJson(prefs.challenges),
             ),
         )
     }
@@ -763,6 +782,7 @@ class ExpenseRepository(
             Period.startDay = st.periodStartDay
             prefs.weeklySummary = st.weeklySummary
             prefs.enabledPaymentApps = st.enabledPaymentApps
+            st.challengesJson?.let { json -> runCatching { prefs.challenges = AppPrefs.challengesFromJson(json) } }
         }
         ensureDefaults()
     }

@@ -430,6 +430,7 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         onAdd = { adding = true },
                         onOpenMovements = { go(Tab.EXPENSES.route) },
                         onOpenExpense = { id -> open("expenses?edit=$id") },
+                        onOpenChallenges = { open("challenges") },
                         onOpenGoals = { nav.navigate("goals") { launchSingleTop = true } },
                         onOpenDebts = { nav.navigate("debts") { launchSingleTop = true } },
                         onOpenTrips = { nav.navigate("trips") { launchSingleTop = true } },
@@ -518,6 +519,7 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         onOpenSearch = { open("search") },
                         onOpenMerchants = { open("merchants") },
                         onOpenCategories = { open("categories") },
+                        onOpenChallenges = { open("challenges") },
                         onOpenSettings = { open(SETTINGS_ROUTE) },
                         onOpenHelp = { open("help") },
                     )
@@ -537,6 +539,7 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                     TripDetailScreen(vm = vm, tripId = entry.arguments?.getLong("id") ?: 0L, onBack = { nav.popBackStack() })
                 }
                 composable("categories") { CategoriesScreen(vm = vm, onBack = { nav.popBackStack() }) }
+                composable("challenges") { ChallengesScreen(vm = vm, onBack = { nav.popBackStack() }) }
                 composable("debts") { DebtsScreen(onBack = { nav.popBackStack() }) }
                 composable("help") { HelpScreen(onBack = { nav.popBackStack() }) }
                 composable("import") { ImportScreen(onBack = { nav.popBackStack() }) }

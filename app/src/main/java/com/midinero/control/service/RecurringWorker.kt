@@ -23,6 +23,7 @@ class RecurringWorker(context: Context, params: WorkerParameters) : CoroutineWor
         runCatching { app.repository.remindUpcoming() }
         runCatching { sendWeeklySummary(app) }
         runCatching { app.repository.cleanReceipts() }
+        runCatching { app.repository.checkChallenges() }
         // El resumen del reloj cambia de día aunque no haya gastos nuevos («Hoy puedes gastar»).
         runCatching { com.midinero.control.watch.WatchBridge.publishSoon(app) }
         val error = generated.exceptionOrNull()
