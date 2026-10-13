@@ -22,6 +22,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -697,13 +699,15 @@ private fun WatchCard() {
             if (showGrant) {
                 Text(
                     tr(
-                        "En el reloj, abre MiDinero → ⚙ → «Pagos del reloj» y da el acceso a notificaciones. Algunos relojes, como los Galaxy Watch, no tienen esa pantalla: en ellos, si tu banco te avisa en el móvil de cada pago con tarjeta, MiDinero ya los apunta desde el móvil.",
-                        "On the watch, open MiDinero → ⚙ → “Watch payments” and grant notification access. Some watches, such as Galaxy Watches, don't have that screen: on them, if your bank notifies you on the phone of each card payment, MiDinero already logs them from the phone.",
+                        "En el reloj, abre MiDinero → ⚙ → «Pagos del reloj» y da el acceso a notificaciones. En la mayoría de relojes con Wear OS basta con eso.",
+                        "On the watch, open MiDinero → ⚙ → “Watch payments” and grant notification access. On most Wear OS watches that's all it takes.",
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp),
                 )
+                // Los Galaxy Watch no tienen esa pantalla: el permiso solo se puede dar por depuración (ADB)
+                if (isSamsungPhone()) GalaxyWatchGrantGuide()
             }
             if (watch != null) {
                 TextButton(onClick = {
@@ -712,6 +716,82 @@ private fun WatchCard() {
                 }) { Text(tr("Sincronizar ahora", "Sync now")) }
             }
         }
+    }
+}
+
+private const val WATCH_GRANT_COMMAND =
+    "cmd notification allow_listener com.midinero.control/com.midinero.control.wear.WatchPaymentListener"
+
+/** Bugjaeger (gratis y de pago): conecta el móvil al reloj por depuración inalámbrica y ejecuta el comando. */
+private val BUGJAEGER_PACKAGES = listOf("eu.sisik.hackendebug", "eu.sisik.hackendebug.full")
+
+private fun isSamsungPhone(): Boolean = android.os.Build.MANUFACTURER.equals("samsung", ignoreCase = true)
+
+/**
+ * Pasos para dar el acceso a notificaciones a MiDinero en un Galaxy Watch, que no tiene esa pantalla.
+ * MiDinero no se conecta al reloj por la red (no tiene permiso de Internet): lo hace Bugjaeger, una sola vez.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun GalaxyWatchGrantGuide() {
+    val context = LocalContext.current
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    Column(
+        Modifier.padding(top = 12.dp).fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(16.dp))
+            .padding(14.dp),
+    ) {
+        Text(tr("Solo para relojes Galaxy Watch", "Galaxy Watch only"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Text(
+            tr(
+                "Los Galaxy Watch no tienen la pantalla de acceso a notificaciones, así que el permiso se da una sola vez desde el móvil con la app Bugjaeger. Con cualquier otro reloj Wear OS no hace falta: se da en el propio reloj.",
+                "Galaxy Watches have no notification access screen, so the permission is granted once from the phone with the Bugjaeger app. With any other Wear OS watch this isn't needed: it's granted on the watch itself.",
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+        )
+        val steps = listOf(
+            tr("En el reloj: Ajustes → Información del reloj → Información de software y toca 7 veces «Versión de software».", "On the watch: Settings → About watch → Software information and tap “Software version” 7 times."),
+            tr("Ajustes → Opciones de desarrollador: activa «Depuración ADB» y «Depuración inalámbrica». Reloj y móvil, en la misma wifi.", "Settings → Developer options: turn on “ADB debugging” and “Wireless debugging”. Watch and phone on the same Wi-Fi."),
+            tr("En «Depuración inalámbrica» pulsa «Emparejar nuevo dispositivo». Abre Bugjaeger en el móvil y empareja con el código y la dirección que muestra el reloj.", "In “Wireless debugging” tap “Pair new device”. Open Bugjaeger on the phone and pair using the code and address the watch shows."),
+            tr("En Bugjaeger, abre la consola (Shell), pega el comando y ejecútalo.", "In Bugjaeger, open the console (Shell), paste the command and run it."),
+            tr("Abre MiDinero en el reloj para que se actualice el estado. Ya puedes desactivar la depuración: el permiso se mantiene al actualizar la app.", "Open MiDinero on the watch so the status updates. You can now turn debugging off: the permission stays when the app updates."),
+        )
+        steps.forEachIndexed { i, step ->
+            Row(Modifier.padding(vertical = 3.dp)) {
+                Text("${i + 1}.", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(20.dp))
+                Text(step, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text(
+            WATCH_GRANT_COMMAND,
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
+            modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest, RoundedCornerShape(10.dp))
+                .padding(10.dp),
+        )
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+            androidx.compose.material3.OutlinedButton(onClick = {
+                clipboard.setText(androidx.compose.ui.text.AnnotatedString(WATCH_GRANT_COMMAND))
+                android.widget.Toast.makeText(context, tr("Comando copiado", "Command copied"), android.widget.Toast.LENGTH_SHORT).show()
+            }) { Text(tr("Copiar comando", "Copy command")) }
+            androidx.compose.material3.OutlinedButton(onClick = { openBugjaeger(context) }) {
+                Text(if (bugjaegerLaunch(context) != null) tr("Abrir Bugjaeger", "Open Bugjaeger") else tr("Conseguir Bugjaeger", "Get Bugjaeger"))
+            }
+        }
+    }
+}
+
+private fun bugjaegerLaunch(context: Context): Intent? =
+    BUGJAEGER_PACKAGES.firstNotNullOfOrNull { context.packageManager.getLaunchIntentForPackage(it) }
+
+private fun openBugjaeger(context: Context) {
+    val launch = bugjaegerLaunch(context)?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    if (launch != null && runCatching { context.startActivity(launch) }.isSuccess) return
+    val id = BUGJAEGER_PACKAGES.first()
+    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$id".toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.onFailure {
+        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$id".toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     }
 }
 

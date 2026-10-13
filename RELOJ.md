@@ -55,6 +55,9 @@ publicación de [Releases](https://github.com/JMRMINGORANCE/MiDinero/releases) p
    adb shell cmd notification allow_listener com.midinero.control/com.midinero.control.wear.WatchPaymentListener
    ```
 
+   Sin ordenador: en un móvil Samsung, MiDinero → Ajustes → Reloj → «Pagos del reloj» muestra los pasos para
+   hacerlo con la app Bugjaeger desde el propio móvil, con el comando listo para copiar.
+
    En el móvil, la detección de pagos debe estar activada y la app de pago (Google Wallet / Samsung Wallet) marcada.
 
 Al terminar puedes desactivar la depuración en el reloj. Para actualizar, repite `adb install -r` con el APK nuevo.

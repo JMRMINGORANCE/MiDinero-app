@@ -6,6 +6,12 @@
     <!-- MiDinero funciona sin conexión: se elimina el permiso aunque alguna librería lo pida. -->
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
 
+    <!-- Para saber si Bugjaeger está instalado (guía del Galaxy Watch en Ajustes → Reloj) -->
+    <queries>
+        <package android:name="eu.sisik.hackendebug" />
+        <package android:name="eu.sisik.hackendebug.full" />
+    </queries>
+
     <application
         android:name=".MiDineroApp"
         android:allowBackup="true"

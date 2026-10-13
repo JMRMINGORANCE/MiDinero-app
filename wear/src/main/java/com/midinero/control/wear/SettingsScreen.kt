@@ -110,8 +110,8 @@ fun SettingsScreen(state: WatchState, initiallyEnabled: Boolean, now: Long, onSy
                     )
                     Text(
                         tr(
-                            "Algunos relojes, como los Galaxy Watch, no tienen la pantalla de acceso a notificaciones. En ellos, si tu banco te avisa en el móvil de cada pago con tarjeta, MiDinero ya los apunta desde el móvil.",
-                            "Some watches, such as Galaxy Watches, have no notification access screen. On them, if your bank notifies you on the phone of each card payment, MiDinero already logs them from the phone.",
+                            "Los Galaxy Watch no tienen la pantalla de acceso a notificaciones. En la app del móvil, Ajustes → Reloj → «Pagos del reloj» tienes los pasos para activarlo una sola vez.",
+                            "Galaxy Watches have no notification access screen. In the phone app, Settings → Watch → “Watch payments” shows the steps to turn it on once.",
                         ),
                         style = label(10.sp, W.Soft, FontWeight.Normal),
                         modifier = Modifier.padding(top = 4.dp),
