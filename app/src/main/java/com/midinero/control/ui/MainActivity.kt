@@ -56,6 +56,7 @@ import com.midinero.control.MiDineroApp
 import com.midinero.control.service.AppNotifications
 import com.midinero.control.service.PaymentNotificationListener
 import com.midinero.control.ui.screens.CategoriesScreen
+import com.midinero.control.ui.screens.ChallengesScreen
 import com.midinero.control.ui.screens.CategoryDetailScreen
 import com.midinero.control.ui.screens.DebtsScreen
 import com.midinero.control.ui.screens.TripDetailScreen
