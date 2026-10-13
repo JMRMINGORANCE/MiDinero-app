@@ -1,7 +1,145 @@
-0 nuevos, 16 sin logo
+139 nuevos, 23 sin logo
 
 # Nuevos
-
+bonÀrea	play:com.bonarea.appbonarea
+Alimerka	play:com.intermark.alimerka.online.mobile
+Supersol	https://www.google.com/s2/favicons?domain=supersol.es&sz=256
+E.Leclerc	https://www.google.com/s2/favicons?domain=e-leclerc.es&sz=256
+Hiperusera	https://www.google.com/s2/favicons?domain=hiperusera.es&sz=256
+TGI Fridays	play:com.appcapsule.ac4300137001
+La Mafia se sienta a la mesa	https://www.google.com/s2/favicons?domain=lamafia.es&sz=256
+Pizza Móvil	https://www.google.com/s2/favicons?domain=pizzamovil.es&sz=256
+Grosso Napoletano	https://www.google.com/s2/favicons?domain=grossonapoletano.com&sz=256
+Sibuya Urban Sushi Bar	https://www.google.com/s2/favicons?domain=sibuya.es&sz=256
+Pret A Manger	https://www.pret.com/apple-touch-icon.png
+Le Pain Quotidien	play:ar.com.loyaleat.lpq
+Häagen-Dazs	https://www.google.com/s2/favicons?domain=haagen-dazs.es&sz=256
+Ben & Jerry's	https://www.google.com/s2/favicons?domain=benjerry.es&sz=256
+Nando's	https://nandos.co.uk/apple-touch-icon.png
+Wagamama	wikidata:Q503715
+Chipotle	https://www.google.com/s2/favicons?domain=chipotle.com&sz=256
+Panda Express	https://www.google.com/s2/favicons?domain=pandaexpress.com&sz=256
+Tasty Poke Bar	https://www.google.com/s2/favicons?domain=tastypokebar.com&sz=256
+Mercado de San Miguel	https://www.google.com/s2/favicons?domain=mercadodesanmiguel.es&sz=256
+Esso	https://www.google.com/s2/favicons?domain=esso.es&sz=256
+Meroil	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.meroil.es&size=256
+Ionity	https://www.google.com/s2/favicons?domain=ionity.eu&sz=256
+Wenea	https://www.google.com/s2/favicons?domain=wenea.com&sz=256
+Endesa X Way	wikidata:Q104874542
+Perplexity	https://www.perplexity.ai/apple-touch-icon.png
+Midjourney	https://www.google.com/s2/favicons?domain=midjourney.com&sz=256
+GitHub	https://www.github.com/apple-touch-icon.png
+Figma	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.figma.com&size=256
+Slack	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.slack.com&size=256
+Zoom	play:us.zoom.videomeetings
+Medium	https://www.google.com/s2/favicons?domain=medium.com&sz=256
+The New York Times	https://www.google.com/s2/favicons?domain=nytimes.com&sz=256
+Substack	https://www.google.com/s2/favicons?domain=substack.com&sz=256
+Grammarly	play:com.grammarly.android.keyboard
+Bitdefender	https://www.google.com/s2/favicons?domain=bitdefender.es&sz=256
+Norton	https://www.google.com/s2/favicons?domain=norton.com&sz=256
+McAfee	play:com.wsandroid.suite
+Kaspersky	play:com.kasperskyesimstore.app
+Surfshark	https://www.google.com/s2/favicons?domain=surfshark.com&sz=256
+Hinge	play:co.hinge.app
+Badoo	https://www.badoo.com/apple-touch-icon.png
+Kobo	play:com.kobobooks.android
+Podimo	https://www.google.com/s2/favicons?domain=podimo.com&sz=256
+Kiosko y Más	https://www.kioskoymas.com/apple-touch-icon-precomposed.png
+Readly	https://www.readly.com/apple-touch-icon-precomposed.png
+MyFitnessPal	https://www.google.com/s2/favicons?domain=myfitnesspal.com&sz=256
+Freeletics	https://www.freeletics.com/apple-touch-icon.png
+Peloton	https://www.google.com/s2/favicons?domain=onepeloton.com&sz=256
+Wikiloc	https://www.google.com/s2/favicons?domain=wikiloc.com&sz=256
+Roblox	https://www.google.com/s2/favicons?domain=roblox.com&sz=256
+Riot Games	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.riotgames.com&size=256
+Battle.net	play:com.blizzard.messenger
+GOG	https://www.gog.com/apple-touch-icon.png
+Humble Bundle	https://www.google.com/s2/favicons?domain=humblebundle.com&sz=256
+Instant Gaming	https://www.instant-gaming.com/apple-touch-icon.png
+FGC	https://www.google.com/s2/favicons?domain=fgc.cat&sz=256
+Euskotren	play:eus.euskotren.app
+Bizkaibus	play:com.lantik.bizkaibusapp
+Dott	https://www.google.com/s2/favicons?domain=ridedott.com&sz=256
+Voi	https://www.google.com/s2/favicons?domain=voi.com&sz=256
+Yego	play:com.getyugo.app
+Acciona Mobility	play:com.charge.and.parking
+Lufthansa	play:com.lufthansa.android.lufthansa
+Air France	https://www.airfrance.es/apple-touch-icon.png
+KLM	https://www.klm.es/apple-touch-icon.png
+British Airways	https://www.google.com/s2/favicons?domain=britishairways.com&sz=256
+TAP Air Portugal	https://www.google.com/s2/favicons?domain=flytap.com&sz=256
+Wizz Air	https://www.google.com/s2/favicons?domain=wizzair.com&sz=256
+Transavia	https://www.google.com/s2/favicons?domain=transavia.com&sz=256
+Turkish Airlines	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.turkishairlines.com&size=256
+Emirates	https://www.google.com/s2/favicons?domain=emirates.com&sz=256
+Qatar Airways	play:com.m.qr
+Air Nostrum	wikidata:Q407694
+Norwegian	https://www.norwegian.com/apple-touch-icon.png
+EasyPark	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.easypark.com&size=256
+Bip&Drive	https://www.google.com/s2/favicons?domain=bipdrive.com&sz=256
+Applus+ ITV	play:com.fieldeas.applusglobal
+Amovens	https://www.google.com/s2/favicons?domain=amovens.com&sz=256
+Flixbus	https://www.google.com/s2/favicons?domain=flixbus.es&sz=256
+Etsy	play:com.etsy.android
+Miravia	https://www.google.com/s2/favicons?domain=miravia.es&sz=256
+Nespresso	play:com.nestle.nespresso.nespresso
+Ale-Hop	https://www.google.com/s2/favicons?domain=ale-hop.org&sz=256
+Søstrene Grene	https://www.google.com/s2/favicons?domain=sostrenegrene.com&sz=256
+Muji	play:com.nineyi.shop.s041566
+LEGO	https://www.lego.com/apple-touch-icon.png
+Notino	https://www.notino.es/apple-touch-icon.png
+Clarel	https://www.clarel.es/apple-touch-icon.png
+MAC Cosmetics	https://www.google.com/s2/favicons?domain=maccosmetics.es&sz=256
+Lookfantastic	https://www.google.com/s2/favicons?domain=lookfantastic.es&sz=256
+Huawei	https://www.google.com/s2/favicons?domain=huawei.com&sz=256
+Lenovo	play:com.lenovo.serviceit
+HP	play:com.hp.printercontrol
+Dell	https://www.dell.com/apple-touch-icon.png
+Google Store	https://www.google.com/s2/favicons?domain=store.google.com&sz=256
+Microsoft Store	https://www.google.com/s2/favicons?domain=microsoft.com&sz=256
+Abacus	https://www.google.com/s2/favicons?domain=abacus.coop&sz=256
+Puma	https://www.google.com/s2/favicons?domain=puma.com&sz=256
+New Balance	play:com.natagaris.wall.kaf
+Under Armour	play:app.under.armour.coupons.club
+The North Face	https://www.google.com/s2/favicons?domain=thenorthface.es&sz=256
+Asics	https://www.google.com/s2/favicons?domain=asics.com&sz=256
+Vans	https://www.google.com/s2/favicons?domain=vans.es&sz=256
+Converse	play:am.conversebank.conversebankmobile.release
+Timberland	https://www.google.com/s2/favicons?domain=timberland.es&sz=256
+COS	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.cos.com&size=256
+Ralph Lauren	https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=https://www.ralphlauren.es&size=256
+Calvin Klein	https://www.google.com/s2/favicons?domain=calvinklein.es&sz=256
+Hugo Boss	https://www.google.com/s2/favicons?domain=hugoboss.com&sz=256
+Jack & Jones	https://www.jackjones.com/apple-touch-icon.png
+Vero Moda	https://www.veromoda.com/apple-touch-icon.png
+Hollister	https://www.google.com/s2/favicons?domain=hollisterco.com&sz=256
+Abercrombie & Fitch	https://www.google.com/s2/favicons?domain=abercrombie.com&sz=256
+Westwing	https://www.westwing.es/apple-touch-icon.png
+ManoMano	https://www.google.com/s2/favicons?domain=manomano.es&sz=256
+Tien21	https://www.google.com/s2/favicons?domain=tien21.es&sz=256
+Euronics	https://www.google.com/s2/favicons?domain=euronics.es&sz=256
+Garmin	https://www.google.com/s2/favicons?domain=garmin.com&sz=256
+Fotoprix	https://www.fotoprix.com/apple-touch-icon.png
+Gana Energía	https://www.google.com/s2/favicons?domain=ganaenergia.com&sz=256
+Plenitude	https://www.google.com/s2/favicons?domain=eniplenitude.es&sz=256
+Energía XXI	play:es.awg.movilidadEOL.mr
+Amena	https://www.google.com/s2/favicons?domain=amena.com&sz=256
+Fiatc	play:com.fiatc
+Cigna	play:com.cigna.mobile.envoy
+Doctoralia	play:es.doctoralia
+Taquilla.com	https://www.google.com/s2/favicons?domain=taquilla.com&sz=256
+Tiqets	https://www.tiqets.com/apple-touch-icon.png
+Live Nation	https://www.google.com/s2/favicons?domain=livenation.es&sz=256
+Bet365	https://www.google.com/s2/favicons?domain=bet365.es&sz=256
+Codere	https://www.google.com/s2/favicons?domain=codere.es&sz=256
+Sportium	https://www.google.com/s2/favicons?domain=sportium.es&sz=256
+Bwin	https://www.google.com/s2/favicons?domain=bwin.es&sz=256
+Luckia	play:com.luckia.apuestas.casino
+Zoo Aquarium de Madrid	https://www.google.com/s2/favicons?domain=zoomadrid.com&sz=256
+Bioparc	https://www.google.com/s2/favicons?domain=bioparcvalencia.es&sz=256
+Museo del Prado	wikidata:Q160112
+Sagrada Família	https://www.google.com/s2/favicons?domain=sagradafamilia.org&sz=256
 
 # Sin logo
 Café de Indias	cafedeindias.es
@@ -20,3 +158,10 @@ Parques Reunidos	parquesreunidos.com
 Sklum	sklum.com
 Pelayo	pelayo.com
 Alain Afflelou	afflelou.es
+Supermercados El Jamón	supermercadoseljamon.com
+Supermercados Familia	supermercadosfamilia.com
+Valcarce	valcarce.es
+Nubico	nubico.es
+Bodybell	bodybell.com
+Clínica Baviera	clinicabaviera.com
+Alhambra de Granada	alhambra-patronato.es
