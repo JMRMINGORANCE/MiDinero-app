@@ -148,7 +148,10 @@ class MainActivity : FragmentActivity() {
         Language.apply(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        if (savedInstanceState == null) openRequest.value = intent?.getStringExtra(AppNotifications.EXTRA_OPEN)
+        if (savedInstanceState == null) {
+            openRequest.value = intent?.getStringExtra(AppNotifications.EXTRA_OPEN)
+            handleAssistant(intent)
+        }
         stoppedAt = savedInstanceState?.getLong(KEY_STOPPED_AT) ?: 0L
         // Al girar la pantalla se conserva el estado: no se vuelve a pedir la huella.
         locked.value = savedInstanceState?.getBoolean(KEY_LOCKED)
@@ -279,6 +282,42 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         openRequest.value = intent.getStringExtra(AppNotifications.EXTRA_OPEN)
+        handleAssistant(intent)
+    }
+
+    /**
+     * Asistente de Google: «apunta 4 euros de café» se apunta directamente (con su categoría automática);
+     * si no se entiende, o se pidió solo «apuntar gasto», se abre el editor.
+     */
+    private fun handleAssistant(intent: Intent?) {
+        intent ?: return
+        val text = intent.getStringExtra("assistant_text")?.trim()
+        val feature = intent.getStringExtra("assistant_feature")
+        if (text.isNullOrEmpty() && feature == null) return
+        val entry = text?.let { com.midinero.control.domain.AssistantPhrase.toEntry(it) }
+        if (entry == null) {
+            openRequest.value = "expenses?add=true"
+            if (!text.isNullOrEmpty()) android.widget.Toast.makeText(this, tr("No he entendido el importe: apúntalo aquí", "I didn't catch the amount: log it here"), android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+        val time = if (entry.date == java.time.LocalDate.now()) java.time.LocalTime.now() else java.time.LocalTime.NOON
+        val ts = entry.date.atTime(time).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        app.appScope.launch {
+            val categoryId = if (entry.isIncome) null else app.repository.categorize(entry.merchant)
+            app.repository.addExpense(
+                com.midinero.control.data.Expense(
+                    amountCents = entry.amountCents, merchant = entry.merchant.replaceFirstChar { it.uppercase() },
+                    categoryId = categoryId, timestamp = ts, isIncome = entry.isIncome,
+                    accountId = app.repository.defaultAccountId(),
+                )
+            )
+        }
+        android.widget.Toast.makeText(
+            this,
+            tr("Apuntado: ${com.midinero.control.domain.formatCents(entry.amountCents)} · ${entry.merchant}", "Logged: ${com.midinero.control.domain.formatCents(entry.amountCents)} · ${entry.merchant}"),
+            android.widget.Toast.LENGTH_LONG,
+        ).show()
+        openRequest.value = "expenses"
     }
 }
 

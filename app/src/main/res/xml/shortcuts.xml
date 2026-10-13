@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- Asistente de Google: «Ok Google, apunta 4 euros de café en MiDinero» -->
+    <capability
+        android:name="custom.actions.intent.LOG_EXPENSE"
+        app:queryPatterns="@array/assistant_log_expense">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.midinero.control"
+            android:targetClass="com.midinero.control.ui.MainActivity">
+            <parameter
+                android:name="text"
+                android:key="assistant_text"
+                android:mimeType="https://schema.org/Text" />
+        </intent>
+    </capability>
+    <!-- «Ok Google, abre apuntar gasto en MiDinero» -->
+    <capability android:name="actions.intent.OPEN_APP_FEATURE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.midinero.control"
+            android:targetClass="com.midinero.control.ui.MainActivity">
+            <parameter
+                android:name="feature"
+                android:key="assistant_feature" />
+        </intent>
+    </capability>
     <shortcut
         android:shortcutId="add_expense"
         android:enabled="true"

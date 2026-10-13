@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Frases del Asistente de Google para apuntar un gasto ($text es lo que dices después) -->
+    <string-array name="assistant_log_expense">
+        <item>apunta $text</item>
+        <item>anota $text</item>
+        <item>apunta un gasto de $text</item>
+        <item>añade un gasto de $text</item>
+        <item>he gastado $text</item>
+        <item>registra $text</item>
+    </string-array>
+</resources>

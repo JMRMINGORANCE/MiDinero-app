@@ -110,6 +110,8 @@ room {
 dependencies {
     implementation("com.google.android.gms:play-services-wearable:20.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0")
+    // Leer los tickets: reconocimiento de texto con el modelo dentro de la app (sin Internet ni Play Services)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     val composeBom = platform("androidx.compose:compose-bom:2025.06.00")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")

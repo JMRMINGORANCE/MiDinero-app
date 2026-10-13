@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="assistant_log_expense">
+        <item>log $text</item>
+        <item>add an expense of $text</item>
+        <item>I spent $text</item>
+        <item>record $text</item>
+    </string-array>
+</resources>

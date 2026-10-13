@@ -106,6 +106,7 @@ import com.midinero.control.data.ExpenseSource
 import com.midinero.control.domain.centsToInput
 import com.midinero.control.domain.dateOf
 import com.midinero.control.domain.formatCents
+import com.midinero.control.domain.shortLabel
 import com.midinero.control.domain.label
 import com.midinero.control.domain.parseUserAmount
 import com.midinero.control.domain.zone
@@ -335,13 +336,31 @@ fun ExpenseEditorDialog(
     var importingReceipt by remember { mutableStateOf(false) }
     var viewingReceipt by remember { mutableStateOf(false) }
     var receiptError by remember { mutableStateOf(false) }
+    // Lectura del ticket (importe, comercio y fecha): se aplica más abajo, donde están esos campos
+    var readingReceipt by remember { mutableStateOf(false) }
+    var receiptReading by remember { mutableStateOf<com.midinero.control.domain.ReceiptReading?>(null) }
+    var receiptReadFailed by remember { mutableStateOf(false) }
+    fun readReceipt(name: String) {
+        val file = receiptStore.file(name) ?: return
+        readingReceipt = true
+        receiptReadFailed = false
+        scope.launch {
+            val r = com.midinero.control.data.ReceiptOcr.read(context.applicationContext, file)
+            readingReceipt = false
+            if (r == null) receiptReadFailed = true else receiptReading = r
+        }
+    }
     fun importReceipt(uri: android.net.Uri) {
         importingReceipt = true
         scope.launch {
             val name = receiptStore.import(uri)
             importingReceipt = false
             receiptError = name == null
-            if (name != null) receipt = name
+            if (name != null) {
+                receipt = name
+                // Gasto nuevo sin importe: se lee el ticket para rellenarlo
+                if (expense == null) readReceipt(name)
+            }
         }
     }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -380,6 +399,16 @@ fun ExpenseEditorDialog(
     var note by rememberSaveable { mutableStateOf(expense?.note ?: initialNote) }
     var categoryId by rememberSaveable { mutableStateOf(expense?.categoryId ?: initialCategoryId) }
     var date by rememberSaveable { mutableStateOf(expense?.let { dateOf(it.timestamp) } ?: defaultDate) }
+    var receiptFilled by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(receiptReading) {
+        val r = receiptReading ?: return@LaunchedEffect
+        val parts = mutableListOf<String>()
+        if (r.amountCents != null && (amountText.isBlank() || expense != null)) { amountText = centsToInput(r.amountCents); parts += formatCents(r.amountCents) }
+        if (r.merchant != null && (merchant.isBlank() || expense != null)) { merchant = r.merchant; parts += r.merchant }
+        if (r.date != null) { date = r.date; parts += r.date.shortLabel() }
+        receiptFilled = parts.joinToString(" · ").ifBlank { null }
+        receiptReading = null
+    }
     var time by rememberSaveable {
         mutableStateOf(
             expense?.let { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalTime() }
@@ -680,8 +709,18 @@ fun ExpenseEditorDialog(
                     Text(tr("Ticket adjunto", "Receipt attached"), style = MaterialTheme.typography.bodyMedium)
                     Row {
                         TextButton(onClick = { viewingReceipt = true }) { Text(tr("Ver", "View")) }
+                        TextButton(onClick = { receipt?.let { readReceipt(it) } }, enabled = !readingReceipt) {
+                            Text(if (readingReceipt) tr("Leyendo…", "Reading…") else tr("Leer ticket", "Read receipt"))
+                        }
                         TextButton(onClick = { receipt = null }) { Text(tr("Quitar", "Remove")) }
                     }
+                    receiptFilled?.let {
+                        Text(tr("Leído del ticket: $it", "Read from the receipt: $it"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                    if (receiptReadFailed) Text(
+                        tr("No se ha podido leer el ticket. Prueba con una foto más recta y con buena luz.", "Couldn't read the receipt. Try a straighter, well-lit photo."),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
+                    )
                 }
             } else {
                 Text(tr("Ticket", "Receipt"), style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
