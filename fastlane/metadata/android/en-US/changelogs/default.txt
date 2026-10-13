@@ -1,1 +1,1 @@
-Tap a payment and give its merchant a photo from your gallery: it's remembered for its next payments. 146 more brands with their logo and category: supermarkets, restaurants, fuel, apps, airlines, shops, insurance and leisure.
+Google Wallet payments made with your watch (Galaxy Watch and other Wear OS) are now logged automatically. Watch notifications that can't be read show up in “Unrecognised notifications” to log with one tap.

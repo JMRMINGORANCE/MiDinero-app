@@ -34,6 +34,8 @@ import kotlinx.coroutines.tasks.await
  * En móviles sin Google Play Services no hace nada y el resto de la app funciona igual.
  */
 object WatchBridge {
+    private const val GOOGLE_PLAY_SERVICES = "com.google.android.gms"
+    private const val GOOGLE_WALLET = "com.google.android.apps.walletnfcrel"
     private const val WORK = "watch-sync"
     private const val ACKED = "watch_acked"
 
@@ -145,12 +147,22 @@ object WatchBridge {
 
     private suspend fun ingestNotice(app: MiDineroApp, notice: WatchNotice) {
         val enabled = app.prefs.enabledPaymentApps
-        // Samsung Wallet del reloj sigue a la opción de Samsung Wallet del móvil.
+        // Samsung Wallet del reloj sigue a la opción de Samsung Wallet del móvil; los pagos de Google Wallet del reloj
+        // los avisa Play Services, que cuenta si está activada cualquiera de las dos opciones de Google.
         val accepted = notice.packageName in enabled ||
-            (notice.packageName == "com.samsung.android.samsungpay.gear" && "com.samsung.android.spay" in enabled)
+            (notice.packageName == "com.samsung.android.samsungpay.gear" && "com.samsung.android.spay" in enabled) ||
+            (notice.packageName == GOOGLE_PLAY_SERVICES && GOOGLE_WALLET in enabled)
         if (!accepted) return
-        val payment = PaymentParser.parse(notice.title, notice.body) ?: return
-        val raw = listOf(com.midinero.control.domain.PaymentApps.nameOf(notice.packageName) + " ⌚", notice.title, notice.body)
+        val appName = if (notice.packageName == GOOGLE_PLAY_SERVICES) "Google Wallet" else com.midinero.control.domain.PaymentApps.nameOf(notice.packageName)
+        val payment = PaymentParser.parse(notice.title, notice.body)
+        if (payment == null) {
+            // Como en el móvil: los avisos con importe que no se entienden se guardan para revisarlos y apuntarlos a mano
+            if (com.midinero.control.domain.PaymentApps.looksLikeMoney("${notice.title} ${notice.body}")) {
+                app.prefs.addUnrecognized(com.midinero.control.data.UnrecognizedNotification("$appName ⌚", notice.title, notice.body, notice.time))
+            }
+            return
+        }
+        val raw = listOf("$appName ⌚", notice.title, notice.body)
             .joinToString(" | ")
         if (app.repository.addDetectedPayment(payment, raw, notice.time, "watch:${notice.id}") != null) {
             app.prefs.lastDetectionAt = System.currentTimeMillis()

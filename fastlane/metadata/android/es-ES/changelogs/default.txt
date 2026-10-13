@@ -1,1 +1,1 @@
-Toca un pago y pon una foto a su comercio desde la galería: se recuerda en sus próximos pagos. 146 marcas más con su logo y categoría: supermercados, restaurantes, gasolineras, apps, aerolíneas, tiendas, seguros y ocio.
+Los pagos con Google Wallet hechos con el reloj (Galaxy Watch y otros Wear OS) ya se apuntan solos. Los avisos del reloj que no se entienden aparecen en «Avisos no reconocidos» para apuntarlos con un toque.

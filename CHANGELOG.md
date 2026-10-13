@@ -1,5 +1,11 @@
 # Cambios
 
+## 4.14
+
+- **Pagos con Google Wallet desde el reloj (Galaxy Watch y otros Wear OS)**: en el reloj el aviso del pago contactless lo publica Servicios de Google Play, no la app de Wallet, y la app del reloj lo descartaba. Ahora lo lee (solo los avisos de Play Services que llevan un importe) y el móvil lo apunta si tienes activada cualquiera de las dos opciones de Google en la detección.
+- Los avisos de pago del reloj que no se entienden ya no se pierden: aparecen en «Avisos no reconocidos» (marcados con ⌚) para apuntarlos con un toque.
+- El lector de avisos del reloj pide volver a conectarse si el sistema lo para, y lee también los avisos con varias líneas.
+
 ## 4.13
 
 - **Foto del comercio desde el propio pago**: al tocar un pago, el icono junto al comercio se puede tocar para ponerle una foto de la galería; si no tiene logo aparece además «Poner foto a…». Se guarda como comercio tuyo (con un nombre limpio, «BAR PACO 1234 MADRID» → «Bar Paco»), así que sus próximos pagos ya salen con esa foto.
