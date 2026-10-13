@@ -263,6 +263,12 @@ fun HomeScreen(
                 }
             }
 
+            // Previsión de fin de mes (solo en el mes actual y con algún gasto)
+            val forecast = stats?.takeIf { it.month == month }?.let { com.midinero.control.domain.Forecast.of(it, monthlyBudget, recurring) }
+            if (forecast != null) {
+                item { ForecastCard(forecast, onClick = onOpenLimits) }
+            }
+
             if (!detectionOn) {
                 item {
                     InfoCard(

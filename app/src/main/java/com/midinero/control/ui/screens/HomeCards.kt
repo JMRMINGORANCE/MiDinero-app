@@ -1,5 +1,6 @@
 package com.midinero.control.ui.screens
 
+import com.midinero.control.ui.theme.MoneyStyle
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Image
@@ -299,6 +300,58 @@ internal fun ShareMonthSheet(onDismiss: () -> Unit, onImage: () -> Unit, onText:
                 tr("Para pegarlo en un mensaje", "To paste into a message"),
                 onClick = onText, divider = true,
             )
+        }
+    }
+}
+
+/** «Si sigues así»: cómo acabará el mes frente al presupuesto y lo que sobrará o faltará con tus ingresos. */
+@Composable
+fun ForecastCard(forecast: com.midinero.control.domain.MonthForecast, onClick: () -> Unit) {
+    AppCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(tr("Si sigues así", "If you keep this up"), fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(
+                    if (forecast.daysLeft == 1) tr("queda 1 día", "1 day left") else tr("quedan ${forecast.daysLeft} días", "${forecast.daysLeft} days left"),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                tr("Acabarás el mes gastando unos ${formatCents(forecast.projectedSpendCents)}", "You'll end the month spending about ${formatCents(forecast.projectedSpendCents)}"),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            forecast.vsBudgetCents?.let { diff ->
+                val over = diff > 0
+                Text(
+                    if (over) tr("${formatCents(diff)} por encima de tu presupuesto", "${formatCents(diff)} over your budget")
+                    else tr("${formatCents(-diff)} por debajo de tu presupuesto", "${formatCents(-diff)} under your budget"),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (over) BudgetColors.over else BudgetColors.ok,
+                )
+            }
+            forecast.balanceCents?.let { balance ->
+                Spacer(Modifier.height(10.dp))
+                val ok = balance >= 0
+                Text(
+                    if (ok) tr("Con tus ingresos te sobrarán", "With your income you'll have left") else tr("Con tus ingresos te faltarán", "With your income you'll be short"),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    (if (ok) "+" else "−") + formatCents(kotlin.math.abs(balance)),
+                    style = MaterialTheme.typography.headlineSmall.merge(MoneyStyle),
+                    fontWeight = FontWeight.Bold,
+                    color = if (ok) BudgetColors.ok else BudgetColors.over,
+                )
+                if (forecast.pendingIncomeCents > 0) Text(
+                    tr("Cuenta ${formatCents(forecast.pendingIncomeCents)} de ingresos fijos que aún no han llegado", "Includes ${formatCents(forecast.pendingIncomeCents)} of recurring income still to come"),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
