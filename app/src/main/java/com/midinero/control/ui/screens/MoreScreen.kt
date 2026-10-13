@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Icon
@@ -104,6 +105,7 @@ fun MoreScreen(
     val prefsVersion by vm.prefs.changes.collectAsStateWithLifecycle()
     val budget = remember(prefsVersion) { vm.prefs.monthlyBudgetCents }
     var showMerchants by rememberSaveable { mutableStateOf(false) }
+    var showTags by rememberSaveable { mutableStateOf(false) }
     val entrance = rememberEntrance()
 
     val activeRecurring = recurring.filter { it.active && !it.isIncome }
@@ -218,6 +220,11 @@ fun MoreScreen(
                     onClick = onOpenMerchants, divider = true,
                 )
                 MenuRow(
+                    Icons.Filled.Tag, SectionColors.categories, tr("Etiquetas", "Tags"),
+                    tr("Junta gastos con #etiquetas en la nota", "Group expenses with #tags in the note"),
+                    onClick = { showTags = true }, divider = true,
+                )
+                MenuRow(
                     Icons.Filled.Storefront, SectionColors.merchants, tr("Comercios que ya conoce", "Merchants it already knows"),
                     tr("${MerchantCatalog.all.size} con su categoría · añade los tuyos con foto", "${MerchantCatalog.all.size} with their category · add yours with a photo"),
                     onClick = { showMerchants = true }, divider = true,
@@ -257,6 +264,7 @@ fun MoreScreen(
     }
 
     if (showMerchants) KnownMerchantsSheet(vm, onDismiss = { showMerchants = false })
+    if (showTags) TagsSheet(vm, onDismiss = { showTags = false })
 }
 
 @Composable

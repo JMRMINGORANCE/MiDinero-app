@@ -16,8 +16,10 @@ data class SearchQuery(
     /** Primer y último día incluidos, si se ha buscado una fecha. */
     val fromDay: LocalDate? = null,
     val toDay: LocalDate? = null,
+    /** Etiquetas buscadas («#coche»): el movimiento tiene que llevarlas todas en la nota. */
+    val tags: List<String> = emptyList(),
 ) {
-    val isEmpty: Boolean get() = words.isEmpty() && minCents == null && maxCents == null && fromDay == null
+    val isEmpty: Boolean get() = words.isEmpty() && minCents == null && maxCents == null && fromDay == null && tags.isEmpty()
 
     fun matches(e: Expense, category: Category?): Boolean {
         if (minCents != null && e.amountCents < minCents) return false
@@ -26,6 +28,10 @@ data class SearchQuery(
             val d = dateOf(e.timestamp)
             if (fromDay != null && d.isBefore(fromDay)) return false
             if (toDay != null && d.isAfter(toDay)) return false
+        }
+        if (tags.isNotEmpty()) {
+            val has = Tags.of(e.note)
+            if (!tags.all { it in has }) return false
         }
         if (words.isEmpty()) return true
         val haystack = Categorizer.normalize(listOfNotNull(e.merchant, e.note, category?.name).joinToString(" "))
@@ -64,6 +70,7 @@ data class SearchQuery(
             var to: LocalDate? = null
             fun days(a: LocalDate, b: LocalDate) { from = a; to = b }
             val words = mutableListOf<String>()
+            val tags = mutableListOf<String>()
             var lower = " " + text.trim().lowercase(SPANISH) + " "
             phrases.sortedByDescending { it.first.length }.forEach { (p, tag) -> lower = lower.replace(" $p ", " $tag ") }
             // "> 50" se junta en un solo trozo antes de separar por espacios
@@ -108,6 +115,7 @@ data class SearchQuery(
                         days(ym.atDay(1), ym.atEndOfMonth())
                     }
                     t == "de" || t == "del" || t == "en" || t == "of" || t == "in" -> Unit
+                    t.startsWith("#") && t.length > 2 -> Tags.key(t).takeIf { it.isNotEmpty() }?.let { tags += it }
                     else -> when {
                     r != null -> {
                         min = parseUserAmount(r.groupValues[1])
@@ -131,7 +139,7 @@ data class SearchQuery(
                 min = max
                 max = tmp
             }
-            return SearchQuery(words, min, max, from, to)
+            return SearchQuery(words, min, max, from, to, tags)
         }
     }
 }

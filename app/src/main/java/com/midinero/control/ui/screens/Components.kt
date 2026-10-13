@@ -634,11 +634,23 @@ fun ExpenseEditorDialog(
             value = note,
             onValueChange = { note = it.take(300) },
             label = { Text(tr("Nota (opcional)", "Note (optional)")) },
+            supportingText = { Text(tr("Añade #etiquetas para juntar gastos: #cumpleaños, #coche…", "Add #tags to group expenses: #birthday, #car…")) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = MaterialTheme.shapes.medium,
             colors = softFieldColors(),
             modifier = Modifier.fillMaxWidth(),
         )
+        // Las etiquetas que más usas, para añadirlas con un toque
+        val tagSuggestions by com.midinero.control.data.TagsState.suggestions.collectAsState()
+        val noteTags = remember(note) { com.midinero.control.domain.Tags.of(note) }
+        val offered = tagSuggestions.filter { com.midinero.control.domain.Tags.key(it) !in noteTags }
+        if (offered.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                offered.forEach { t ->
+                    SuggestionChip(onClick = { note = com.midinero.control.domain.Tags.append(note, t).take(300) }, label = { Text("#$t") })
+                }
+            }
+        }
         Spacer(Modifier.height(8.dp))
         val receiptFile = receipt?.let { receiptStore.file(it) }
         Row(verticalAlignment = Alignment.CenterVertically) {

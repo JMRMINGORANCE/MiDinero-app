@@ -19,6 +19,12 @@ object CustomMerchantsState {
     val list: StateFlow<List<CustomMerchant>> = mutable
 }
 
+/** Las etiquetas (#cumpleaños…) que más usas, para ofrecerlas al apuntar. */
+object TagsState {
+    internal val mutable = MutableStateFlow<List<String>>(emptyList())
+    val suggestions: StateFlow<List<String>> = mutable
+}
+
 /** Fotos de comercio: cuadradas, pequeñas (160 px) y en WebP, para guardarlas en la base de datos y en las copias. */
 object MerchantPhotos {
     const val SIZE = 160

@@ -278,6 +278,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         .flowOn(Dispatchers.Default)
 
+    /** Gasto por etiqueta (#cumpleaños…) en todo el historial. */
+    val tagTotals: Flow<List<com.midinero.control.domain.Tags.TagTotal>> = repo.allExpenses
+        .map { com.midinero.control.domain.Tags.totals(it) }
+        .flowOn(Dispatchers.Default)
+
+    /** Movimientos con la etiqueta [key], del más reciente al más antiguo. */
+    fun taggedExpenses(key: String): Flow<List<Expense>> = repo.allExpenses
+        .map { all -> all.filter { key in com.midinero.control.domain.Tags.of(it.note) }.sortedByDescending { it.timestamp } }
+        .flowOn(Dispatchers.Default)
+
     fun merchantInsight(merchantKey: String): Flow<MerchantInsight> = repo.allExpenses
         .map { Insights.merchant(merchantKey, it) }
         .flowOn(Dispatchers.Default)
