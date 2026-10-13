@@ -178,6 +178,9 @@ object PaymentParser {
             .replace(Regex("""\s+"""), " ")
             .replace(Regex("""(?i)\s*(con|with)\s+(visa|mastercard|tarjeta|card).*$"""), "")
             .replace(Regex("""[•*]{2,}\s*\d{2,4}"""), "")
+            // "… at Lidl was successful", "… en Zara ha sido aprobado": el final no es parte del comercio
+            .replace(Regex("""(?i)\s+(was|has been|is)\s+(successful|approved|completed|declined)\b.*$"""), "")
+            .replace(Regex("""(?i)\s+(ha sido|se ha|fue)\s+(aprobad[oa]|realizad[oa]|completad[oa]|autorizad[oa]|exitos[oa])\b.*$"""), "")
             // "Pagado en MERCADONA", "Compra en Zara", "Payment at Starbucks" -> solo el comercio
             .replace(leadingVerb, "")
             .replace(leadingRefund, "")

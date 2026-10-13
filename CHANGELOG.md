@@ -5,6 +5,7 @@
 - **Pagos con Google Wallet desde el reloj (Galaxy Watch y otros Wear OS)**: en el reloj el aviso del pago contactless lo publica Servicios de Google Play, no la app de Wallet, y la app del reloj lo descartaba. Ahora lo lee (solo los avisos de Play Services que llevan un importe) y el móvil lo apunta si tienes activada cualquiera de las dos opciones de Google en la detección.
 - Los avisos de pago del reloj que no se entienden ya no se pierden: aparecen en «Avisos no reconocidos» (marcados con ⌚) para apuntarlos con un toque.
 - **Guía para Galaxy Watch** (solo en móviles Samsung): en Ajustes → Reloj → «Pagos del reloj», los pasos para dar el acceso a notificaciones una sola vez con Bugjaeger, con el comando listo para copiar y un botón para abrir o instalar Bugjaeger. Deja claro que en el resto de relojes Wear OS no hace falta. MiDinero sigue sin permiso de Internet.
+- **Tarjetas cripto**: Bleap, Bybit y Bybit EU en la lista de apps de pago de la detección (desactivadas al principio: actívalas en Ajustes → Detección de pagos). Los avisos tipo «… at Lidl was successful» o «… en Zara ha sido aprobado» ya guardan solo el comercio.
 - El lector de avisos del reloj pide volver a conectarse si el sistema lo para, y lee también los avisos con varias líneas.
 
 ## 4.13

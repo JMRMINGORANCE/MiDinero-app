@@ -1,1 +1,1 @@
-Google Wallet payments made with your watch (Galaxy Watch and other Wear OS) are now logged automatically. Watch notifications that can't be read show up in “Unrecognised notifications” to log with one tap.
+Google Wallet payments made with your watch are now logged automatically, with a guide to turn it on for Galaxy Watch. New cards in detection: Bleap, Bybit and Bybit EU.

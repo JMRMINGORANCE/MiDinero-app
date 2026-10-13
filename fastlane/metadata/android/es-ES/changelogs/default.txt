@@ -1,1 +1,1 @@
-Los pagos con Google Wallet hechos con el reloj (Galaxy Watch y otros Wear OS) ya se apuntan solos. Los avisos del reloj que no se entienden aparecen en «Avisos no reconocidos» para apuntarlos con un toque.
+Los pagos con Google Wallet hechos con el reloj ya se apuntan solos, con una guía para activarlo en los Galaxy Watch. Nuevas tarjetas en la detección: Bleap, Bybit y Bybit EU.

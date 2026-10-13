@@ -22,6 +22,10 @@ object PaymentApps {
         PaymentApp("com.paypal.android.p2pmobile", "PayPal", false),
         PaymentApp("com.transferwise.android", "Wise", false),
         PaymentApp("com.imaginecurve.curve.prd", "Curve", false),
+        // Tarjetas cripto
+        PaymentApp("com.bleap", "Bleap", false),
+        PaymentApp("com.bybit.app", "Bybit", false),
+        PaymentApp("com.bybit.eu", "Bybit EU", false),
     )
 
     val defaultEnabled: Set<String> = all.filter { it.enabledByDefault }.map { it.packageName }.toSet()
