@@ -1,5 +1,7 @@
 package com.midinero.control.ui.screens
 
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Lightbulb
 import com.midinero.control.domain.KnownMerchant
 import com.midinero.control.domain.MerchantCatalog
@@ -361,6 +363,15 @@ fun ExpenseEditorDialog(
         )
     }
     var merchant by rememberSaveable { mutableStateOf(expense?.merchant ?: initialMerchant) }
+    // Foto del comercio: se guarda como comercio tuyo y se recuerda en sus próximos pagos
+    var editingMerchantPhoto by rememberSaveable { mutableStateOf(false) }
+    val customMerchants by com.midinero.control.data.CustomMerchantsState.list.collectAsState()
+    val customMerchant = remember(merchant, customMerchants) { com.midinero.control.domain.CustomMerchants.find(customMerchants, merchant) }
+    val canPhoto = !isIncome && merchant.isNotBlank()
+    val merchantPhotoName = remember(merchant, customMerchant) { customMerchant?.name ?: com.midinero.control.domain.CustomMerchants.suggestName(merchant) }
+    val hasPhotoOrLogo = remember(merchant, customMerchant) {
+        customMerchant?.photo != null || MerchantCatalog.find(merchant)?.let { MerchantLogos.get(context, it.name) } != null
+    }
     var note by rememberSaveable { mutableStateOf(expense?.note ?: initialNote) }
     var categoryId by rememberSaveable { mutableStateOf(expense?.categoryId ?: initialCategoryId) }
     var date by rememberSaveable { mutableStateOf(expense?.let { dateOf(it.timestamp) } ?: defaultDate) }
@@ -518,8 +529,17 @@ fun ExpenseEditorDialog(
             value = merchant,
             onValueChange = { merchant = it.take(80) },
             label = { Text(if (isIncome) tr("Concepto (ej. Nómina)", "Description (e.g. Salary)") else tr("¿Dónde o en qué?", "Where or on what?")) },
-            // Si es un comercio conocido, se ve su distintivo al escribirlo
-            leadingIcon = MerchantCatalog.find(merchant)?.let { known -> { MerchantLogo(known, size = 28) } },
+            // Su distintivo (tu foto, el logo o la categoría); al tocarlo se le pone foto
+            leadingIcon = if (canPhoto || MerchantCatalog.find(merchant) != null) {
+                {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(10.dp)).clickable(enabled = canPhoto) { editingMerchantPhoto = true }
+                            .semantics { if (canPhoto) contentDescription = tr("Poner foto al comercio", "Set merchant photo") },
+                    ) {
+                        MerchantBadge(merchant, shownCategories.firstOrNull { it.id == categoryId }, size = 28)
+                    }
+                }
+            } else null,
             shape = MaterialTheme.shapes.medium,
             colors = softFieldColors(),
             singleLine = true,
@@ -529,6 +549,25 @@ fun ExpenseEditorDialog(
             ),
             modifier = Modifier.fillMaxWidth().onFocusChanged { merchantFocused = it.isFocused },
         )
+        if (canPhoto && !merchantFocused && !hasPhotoOrLogo) {
+            TextButton(onClick = { editingMerchantPhoto = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
+                Icon(Icons.Filled.AddPhotoAlternate, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(tr("Poner foto a «${merchantPhotoName}»", "Set a photo for “${merchantPhotoName}”"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        if (editingMerchantPhoto) {
+            val repo = remember { (context.applicationContext as com.midinero.control.MiDineroApp).repository }
+            CustomMerchantEditor(
+                existing = customMerchant,
+                initialName = merchantPhotoName,
+                categories = categories,
+                initialCategoryId = categoryId.takeIf { !isIncome },
+                onDismiss = { editingMerchantPhoto = false },
+                onSave = { m, done -> scope.launch { done(repo.saveCustomMerchant(m)) } },
+                onDelete = customMerchant?.let { c -> { scope.launch { repo.deleteCustomMerchant(c) } } },
+            )
+        }
         if (merchantFocused && suggestions.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 suggestions.forEach { sug ->

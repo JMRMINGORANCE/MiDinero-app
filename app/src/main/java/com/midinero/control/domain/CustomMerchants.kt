@@ -24,6 +24,20 @@ object CustomMerchants {
     fun cleanAliases(text: String): String =
         text.split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinctBy { Categorizer.normalize(it) }.joinToString(", ")
 
+    /**
+     * Nombre para guardar un comercio a partir del texto de un pago: hasta el primer código o número y con
+     * mayúsculas normales («BAR PACO 1234 MADRID» → «Bar Paco»), para que valga también en sus próximos pagos.
+     */
+    fun suggestName(merchant: String): String {
+        val words = merchant.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val kept = words.takeWhile { w -> w.none { it.isDigit() } && w != "*" }.ifEmpty { words.take(1) }
+        val text = kept.joinToString(" ").trim('*', '-', ' ', ',', '.')
+        val shouting = text.count { it.isUpperCase() } > text.count { it.isLowerCase() }
+        return if (!shouting) text else text.lowercase().split(' ').joinToString(" ") { w ->
+            if (w.length <= 2 && w in setOf("de", "la", "el", "y", "e", "a", "en", "of")) w else w.replaceFirstChar { it.uppercase() }
+        }.replaceFirstChar { it.uppercase() }
+    }
+
     /** Siglas para el distintivo cuando no tiene foto («Bar Paco» → «BP»). */
     fun initials(name: String): String {
         val words = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() && it.first().isLetterOrDigit() }

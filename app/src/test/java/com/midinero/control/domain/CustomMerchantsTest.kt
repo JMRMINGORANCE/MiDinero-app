@@ -45,4 +45,16 @@ class CustomMerchantsTest {
         assertEquals(a.hashCode(), b.hashCode())
         assertTrue(a != paco)
     }
+
+    @Test
+    fun sugiereUnNombreLimpio() {
+        assertEquals("Bar Paco", CustomMerchants.suggestName("BAR PACO 1234 MADRID"))
+        assertEquals("Frutería la Esquina", CustomMerchants.suggestName("FRUTERÍA LA ESQUINA"))
+        assertEquals("Café Pepe", CustomMerchants.suggestName("Café Pepe"))
+        assertEquals("Panaderia Sol", CustomMerchants.suggestName("PANADERIA SOL * 0012"))
+        assertEquals("12345", CustomMerchants.suggestName("12345"))
+        // Con ese nombre se reconocen sus próximos pagos
+        val m = CustomMerchant(name = CustomMerchants.suggestName("BAR PACO 1234 MADRID"))
+        assertEquals(m, CustomMerchants.find(listOf(m), "BAR PACO 9876 MADRID"))
+    }
 }

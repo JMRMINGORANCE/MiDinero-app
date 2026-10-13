@@ -47,12 +47,13 @@ fun CustomMerchantEditor(
     onSave: (CustomMerchant, (Boolean) -> Unit) -> Unit,
     onDelete: (() -> Unit)?,
     initialName: String = "",
+    initialCategoryId: Long? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var name by rememberSaveable { mutableStateOf(existing?.name ?: initialName) }
     var aliases by rememberSaveable { mutableStateOf(existing?.aliases ?: "") }
-    var categoryId by rememberSaveable { mutableStateOf(existing?.categoryId) }
+    var categoryId by rememberSaveable { mutableStateOf(existing?.categoryId ?: initialCategoryId) }
     var photo by remember { mutableStateOf(existing?.photo) }
     var loading by remember { mutableStateOf(false) }
     var nameTaken by remember { mutableStateOf(false) }

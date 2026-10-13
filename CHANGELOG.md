@@ -1,5 +1,10 @@
 # Cambios
 
+## 4.13
+
+- **Foto del comercio desde el propio pago**: al tocar un pago, el icono junto al comercio se puede tocar para ponerle una foto de la galería; si no tiene logo aparece además «Poner foto a…». Se guarda como comercio tuyo (con un nombre limpio, «BAR PACO 1234 MADRID» → «Bar Paco»), así que sus próximos pagos ya salen con esa foto.
+- **146 marcas más** con su logo y su categoría: más supermercados (bonÀrea, Alimerka, E.Leclerc…), restaurantes (TGI Fridays, La Mafia, Pret A Manger…), gasolineras y recarga (Esso, Ionity, Wenea…), apps y suscripciones (Perplexity, GitHub, Slack, Zoom, NYT, antivirus, VPN…), aerolíneas y transporte (Lufthansa, KLM, Wizz Air, Flixbus, FGC…), tiendas (Etsy, Miravia, LEGO, Puma, The North Face…), luz y seguros, ocio y apuestas. Los gastos que tenías sin categoría de esas marcas se clasifican solos.
+
 ## 4.12
 
 - **Cualquier icono para tus categorías**: al crear o editar una, «Ver todos los iconos…» abre más de 200 emojis por temas con buscador en español e inglés («perro», «gym», «luz»…). También se puede escribir cualquier emoji con el teclado en el campo «Icono».
