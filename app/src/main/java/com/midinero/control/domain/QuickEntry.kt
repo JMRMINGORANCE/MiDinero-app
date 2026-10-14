@@ -13,7 +13,7 @@ data class QuickEntry(val amountCents: Long, val merchant: String, val date: Loc
  */
 object QuickEntryParser {
 
-    private val amountRegex = Regex("""(?<![\w.,])([+-]?)(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s?(?:€|eur|euros)?(?![\w])""", RegexOption.IGNORE_CASE)
+    private val amountRegex = Regex("""(?<![\w.,])([+-]?)(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s?(?:€|\$|eur|euros|usd|mxn|d[oó]lares|pesos)?(?![\w])""", RegexOption.IGNORE_CASE)
 
     private val weekdays = mapOf(
         "lunes" to DayOfWeek.MONDAY, "martes" to DayOfWeek.TUESDAY, "miercoles" to DayOfWeek.WEDNESDAY,

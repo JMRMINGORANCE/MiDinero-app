@@ -27,15 +27,15 @@ object SpokenEntry {
     private val thousands = setOf("mil", "thousand")
 
     fun normalize(spoken: String): String {
-        var s = spoken.trim().lowercase(java.util.Locale("es", "ES")).replace("€", " euros ")
+        var s = spoken.trim().lowercase(java.util.Locale("es", "ES")).replace("€", " euros ").replace("$", " euros ")
         if (s.none { it.isDigit() }) s = wordsToAmount(s)
         // «12 con 50», «12 euros con 50», «12 coma 5»
-        s = Regex("""(\d+)\s*(?:euros?)?\s+(con|coma|and|point)\s+(\d{1,2})\b(?:\s*(?:céntimos|centimos|cents?))?""").replace(s) { m ->
+        s = Regex("""(\d+)\s*(?:euros?|d[oó]lares?|pesos?|dollars?)?\s+(con|coma|and|point)\s+(\d{1,2})\b(?:\s*(?:céntimos|centimos|cents?))?""").replace(s) { m ->
             val decimals = m.groupValues[3]
             val cents = if (decimals.length == 1 && m.groupValues[2] in setOf("coma", "point")) decimals + "0" else decimals.padStart(2, '0')
             "${m.groupValues[1]},$cents"
         }
-        return s.replace(Regex("""\beuros?\b"""), " ").replace(Regex("""^\s*(\S+)\s+(?:en|de)\s+"""), "$1 ")
+        return s.replace(Regex("""\b(?:euros?|d[oó]lares?|pesos?|dollars?)\b"""), " ").replace(Regex("""^\s*(\S+)\s+(?:en|de)\s+"""), "$1 ")
             .replace(Regex("""\s+"""), " ").trim()
     }
 

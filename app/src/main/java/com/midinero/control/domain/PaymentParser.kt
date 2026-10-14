@@ -4,7 +4,7 @@ data class ParsedPayment(
     /** En céntimos de [currency]. */
     val amountCents: Long,
     val merchant: String,
-    val currency: String = Currencies.EUR,
+    val currency: String = Currencies.base,
     /** Devolución de una compra (el importe es lo devuelto, en positivo). */
     val refund: Boolean = false,
 )
@@ -22,12 +22,30 @@ object PaymentParser {
     // Miles con punto, espacio, espacio duro o coma («1.234,56», «1 234,56», «1,234.56» en inglés)
     private const val NUM = """\d{1,3}(?:[.,\s\u00A0]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?"""
 
-    /** «€», «EUR», «euros». */
-    private const val EUR = """(?:€|\bEUR(?:OS?)?\b)"""
+    /** Cómo se escribe la moneda principal en los avisos: «€», «EUR», «euros»; «$», «USD», «dólares»; «MX$», «pesos». */
+    private fun mainSymbol(code: String): String = when (code) {
+        // Un «$» pegado a letras es de otra moneda («US$», «MX$», «CA$»)
+        Currencies.USD -> """(?:US\$|(?<![A-Za-z])\$|\bUSD\b|\bd[oó]lares?\b|\bdollars?\b)"""
+        Currencies.MXN -> """(?:MX\$|MXN\$|(?<![A-Za-z])\$|\bMXN\b|\bpesos?\b)"""
+        else -> """(?:€|\bEUR(?:OS?)?\b)"""
+    }
 
-    private val amountAfter = Regex("""($NUM)\s?$EUR""", RegexOption.IGNORE_CASE)
-    // Sin cortar un número a medias («€1,234.56» no es 1,23 €)
-    private val amountBefore = Regex("""$EUR\s?($NUM)(?![.,]?\d)""", RegexOption.IGNORE_CASE)
+    private class Amounts(val after: Regex, val before: Regex)
+
+    private val amountsByCurrency = java.util.concurrent.ConcurrentHashMap<String, Amounts>()
+
+    private val amounts: Amounts
+        get() = amountsByCurrency.getOrPut(Currencies.base) {
+            val sym = mainSymbol(Currencies.base)
+            Amounts(
+                Regex("""($NUM)\s?$sym""", RegexOption.IGNORE_CASE),
+                // Sin cortar un número a medias («€1,234.56» no es 1,23 €)
+                Regex("""$sym\s?($NUM)(?![.,]?\d)""", RegexOption.IGNORE_CASE),
+            )
+        }
+
+    private val amountAfter: Regex get() = amounts.after
+    private val amountBefore: Regex get() = amounts.before
 
     /** "... en COMERCIO", "... at MERCHANT", "... a COMERCIO" */
     // Un punto solo corta el comercio si acaba la frase («… en MERCADONA. Tu saldo…»), no en «AMAZON.ES» ni «E.S. 1234».

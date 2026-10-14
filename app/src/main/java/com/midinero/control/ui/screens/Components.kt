@@ -314,7 +314,7 @@ fun ExpenseEditorDialog(
     val refundMode = expense?.isRefund == true
     var isIncome by rememberSaveable { mutableStateOf(expense?.isIncome ?: false) }
     val shownCategories = if (isIncome) incomeCategories else categories
-    var currency by rememberSaveable { mutableStateOf(expense?.originalCurrency ?: Currencies.EUR) }
+    var currency by rememberSaveable { mutableStateOf(expense?.originalCurrency ?: Currencies.base) }
     var amountText by rememberSaveable {
         mutableStateOf(expense?.let { centsToInput(kotlin.math.abs(it.originalAmountCents ?: it.amountCents)) } ?: initialAmountCents?.let { centsToInput(it) } ?: "")
     }
@@ -416,10 +416,10 @@ fun ExpenseEditorDialog(
     var merchantFocused by remember { mutableStateOf(false) }
     val amountFocus = remember { FocusRequester() }
 
-    val foreign = currency != Currencies.EUR
+    val foreign = currency != Currencies.base
     val typed = parseUserAmount(amountText)
     val rate = rateText.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 }
-    val amount = if (foreign) typed?.let { t -> rate?.let { Currencies.toEurCents(t, it) } } else typed
+    val amount = if (foreign) typed?.let { t -> rate?.let { Currencies.toBaseCents(t, it) } } else typed
     val tooBig = amount != null && amount > MAX_AMOUNT_CENTS
     val canSave = amount != null && amount > 0 && !tooBig && merchant.isNotBlank()
     val categoryChanged = !isIncome && expense != null && categoryId != null && categoryId != expense.categoryId
@@ -500,7 +500,7 @@ fun ExpenseEditorDialog(
             value = amountText,
             onValueChange = { amountText = it },
             isError = (amountText.isNotEmpty() && typed == null) || tooBig,
-            suffix = if (foreign) currency else "€",
+            suffix = if (foreign) currency else Currencies.symbol(),
             label = tr("Importe", "Amount"),
             focusRequester = amountFocus,
             supportingText = if (tooBig) tr("Importe demasiado alto", "Amount too high") else null,
@@ -520,14 +520,14 @@ fun ExpenseEditorDialog(
             DropdownMenu(expanded = currencyMenu, onDismissRequest = { currencyMenu = false }) {
                 DropdownMenuItem(
                     text = { Text(tr("EUR · Euro", "EUR · Euro")) },
-                    onClick = { currency = Currencies.EUR; rateText = ""; currencyMenu = false },
+                    onClick = { currency = Currencies.base; rateText = ""; currencyMenu = false },
                 )
                 Currencies.all.forEach { c ->
                     DropdownMenuItem(
                         text = { Text("${c.code} · ${c.name}") },
                         onClick = {
                             currency = c.code
-                            rateText = rateToInput(rateFor(c.code) ?: c.approxEurRate)
+                            rateText = rateToInput(rateFor(c.code) ?: Currencies.approxRate(c.code))
                             currencyMenu = false
                         },
                     )
@@ -538,7 +538,7 @@ fun ExpenseEditorDialog(
             OutlinedTextField(
                 value = rateText,
                 onValueChange = { rateText = it.filter { c -> c.isDigit() || c == ',' || c == '.' }.take(10) },
-                label = { Text(tr("Cambio: 1 $currency = … €", "Rate: 1 $currency = … €")) },
+                label = { Text(tr("Cambio: 1 $currency = … ${Currencies.symbol()}", "Rate: 1 $currency = … ${Currencies.symbol()}")) },
                 singleLine = true,
                 isError = rate == null,
                 supportingText = {
@@ -822,7 +822,7 @@ private fun RefundDialog(maxCents: Long, onDismiss: () -> Unit, onConfirm: (Long
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it.filter { c -> c.isDigit() || c == ',' || c == '.' }.take(12) },
-                    label = { Text(tr("Importe devuelto (€)", "Amount refunded (€)")) },
+                    label = { Text(tr("Importe devuelto (${com.midinero.control.domain.Currencies.symbol()})", "Amount refunded (${com.midinero.control.domain.Currencies.symbol()})")) },
                     singleLine = true,
                     isError = text.isNotBlank() && !valid,
                     supportingText = if (cents != null && cents > maxCents) { { Text(tr("Como mucho ${formatCents(maxCents)}", "At most ${formatCents(maxCents)}")) } } else null,
@@ -960,7 +960,7 @@ fun CategoryDialog(
             OutlinedTextField(
                 value = limitText,
                 onValueChange = { limitText = it.filter { c -> c.isDigit() || c == ',' || c == '.' } },
-                label = { Text(tr("Límite mensual (€)", "Monthly limit (€)")) },
+                label = { Text(tr("Límite mensual (${com.midinero.control.domain.Currencies.symbol()})", "Monthly limit (${com.midinero.control.domain.Currencies.symbol()})")) },
                 supportingText = { Text(tr("Déjalo vacío si no quieres límite", "Leave empty for no limit")) },
                 isError = !limitValid,
                 singleLine = true,

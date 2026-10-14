@@ -1,5 +1,9 @@
 # Cambios
 
+## 4.17
+
+- **Elige tu moneda** en Ajustes → Privacidad y aspecto → Moneda: euros (por defecto), dólares o pesos mexicanos. Todos los importes, el widget y el reloj usan esa moneda; los avisos de pago en ella se apuntan tal cual y los de otras monedas se convierten (con pesos, «$» son pesos y «US$» son dólares). Lo ya apuntado no se convierte: solo cambia cómo se muestra. La moneda viaja en las copias de seguridad.
+
 ## 4.16
 
 - **«¿Es un cargo fijo?» en Inicio**: cuando un pago se repite cada mes por un importe parecido (gimnasio, una suscripción, un seguro…) y aún no está en Fijos, aparece en «Tu plan» para añadirlo con un toque o descartarlo. Al añadirlo cuenta en la previsión del mes y avisa antes de cada cobro.

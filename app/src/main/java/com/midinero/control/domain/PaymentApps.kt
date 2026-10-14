@@ -33,5 +33,5 @@ object PaymentApps {
     fun nameOf(packageName: String): String = all.firstOrNull { it.packageName == packageName }?.name ?: packageName
 
     /** ¿Parece un aviso de dinero? (para guardar los que el parser no entiende y poder revisarlos) */
-    fun looksLikeMoney(text: String): Boolean = Regex("""\d\s?(€|EUR)|(€|EUR)\s?\d""", RegexOption.IGNORE_CASE).containsMatchIn(text)
+    fun looksLikeMoney(text: String): Boolean = Regex("""\d\s?(€|EUR|\$|USD|MXN)|(€|EUR|\$|USD|MXN)\s?\d""", RegexOption.IGNORE_CASE).containsMatchIn(text)
 }

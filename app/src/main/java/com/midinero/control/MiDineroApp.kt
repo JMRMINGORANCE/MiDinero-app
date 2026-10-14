@@ -51,6 +51,7 @@ open class MiDineroApp : Application() {
         com.midinero.control.domain.amountsHidden = { prefs.hideAmounts }
         Lang.english = Lang.resolve(prefs.language, resources.configuration.locales[0].language)
         Period.startDay = prefs.periodStartDay
+        com.midinero.control.domain.Currencies.base = prefs.mainCurrency
         repository = ExpenseRepository(AppDatabase.build(this, databaseName), this, prefs)
         AppNotifications.createChannels(this)
         appScope.launch {

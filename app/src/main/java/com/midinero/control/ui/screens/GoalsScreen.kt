@@ -245,7 +245,7 @@ private fun GoalDialog(
         OutlinedTextField(
             value = targetText,
             onValueChange = { targetText = it.filter { c -> c.isDigit() || c == ',' || c == '.' }.take(12) },
-            label = { Text(tr("Objetivo (€)", "Target (€)")) },
+            label = { Text(tr("Objetivo (${com.midinero.control.domain.Currencies.symbol()})", "Target (${com.midinero.control.domain.Currencies.symbol()})")) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth(),
@@ -316,7 +316,7 @@ private fun ContributionDialog(
         OutlinedTextField(
             value = text,
             onValueChange = { text = it.filter { c -> c.isDigit() || c == ',' || c == '.' }.take(12) },
-            label = { Text(tr("Importe (€)", "Amount (€)")) },
+            label = { Text(tr("Importe (${com.midinero.control.domain.Currencies.symbol()})", "Amount (${com.midinero.control.domain.Currencies.symbol()})")) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth(),

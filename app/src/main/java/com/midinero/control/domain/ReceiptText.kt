@@ -19,7 +19,7 @@ object ReceiptText {
     private val notMerchant = Regex("""(?i)(factura|ticket|simplificad|c\.?i\.?f|n\.?i\.?f|tel[eé]?f?|tlf|www\.|http|@|gracias|bienvenid|fecha|hora|caja|mesa|cajer|operador|\bc/|\bcalle\b|\bavda\b|\bav\.|\bpl\.|\d{5})""")
 
     fun parse(rows: List<String>, today: LocalDate = LocalDate.now()): ReceiptReading {
-        val clean = rows.map { it.replace('€', ' ').replace(Regex("""\s+"""), " ").trim() }.filter { it.isNotEmpty() }
+        val clean = rows.map { it.replace('€', ' ').replace('$', ' ').replace(Regex("""\s+"""), " ").trim() }.filter { it.isNotEmpty() }
         return ReceiptReading(total(clean), merchant(clean), date(clean, today))
     }
 

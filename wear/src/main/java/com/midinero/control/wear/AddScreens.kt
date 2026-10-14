@@ -80,11 +80,14 @@ fun typeKey(typed: String, key: Char): String = when {
 
 /** Lo tecleado tal cual se ve, con separadores y moneda («1.234,5 €»). */
 fun typedLabel(typed: String, english: Boolean = WatchStore.english): String {
-    if (typed.isEmpty()) return if (english) "€0" else "0 €"
+    val s = WatchStore.state.value
+    val symbol = s.currencySymbol.ifBlank { "€" }
+    val first = s.symbolFirst || (english && symbol == "€")
+    if (typed.isEmpty()) return if (first) "${symbol}0" else "0 $symbol"
     val whole = typed.substringBefore('.').ifEmpty { "0" }
     val grouped = whole.reversed().chunked(3).joinToString(if (english) "," else ".").reversed()
     val number = if ('.' in typed) grouped + (if (english) "." else ",") + typed.substringAfter('.') else grouped
-    return if (english) "€$number" else "$number €"
+    return if (first) "$symbol$number" else "$number $symbol"
 }
 
 /** Teclado numérico pensado para la pantalla redonda. */

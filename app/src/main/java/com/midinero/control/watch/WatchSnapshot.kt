@@ -110,8 +110,9 @@ object WatchSnapshot {
             categories = categoryTotals(spending, categories),
             quick = quickCategories(spending + previous.filter { !it.isIncome }, categories),
             acked = acked,
-            currencySymbol = "€",
-            symbolFirst = Lang.english,
+            currencySymbol = com.midinero.control.domain.Currencies.symbol(),
+            // «$12.50» delante; el euro, detrás en español («12,50 €»)
+            symbolFirst = Lang.english || com.midinero.control.domain.Currencies.base != com.midinero.control.domain.Currencies.EUR,
             detection = PaymentNotificationListener.isEnabled(app),
             weekLabel = if (weekBudget > 0) tr("Te queda esta semana", "Left this week") else tr("Esta semana llevas", "Spent this week"),
             weekValue = when {

@@ -1,1 +1,1 @@
-Home suggests payments that repeat every month so you can add them to Recurring with one tap. Accounts and balances have been removed.
+Pick your currency in Settings: euros, dollars or Mexican pesos. Amounts, widget, watch and payment notifications use it.

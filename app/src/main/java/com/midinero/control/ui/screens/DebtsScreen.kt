@@ -189,7 +189,7 @@ private fun DebtDialog(debt: Debt?, onDismiss: () -> Unit, onSave: (Debt) -> Uni
             OutlinedTextField(
                 amountText,
                 { amountText = it.filter { c -> c.isDigit() || c == ',' || c == '.' }.take(12) },
-                label = { Text(tr("Importe (€)", "Amount (€)")) },
+                label = { Text(tr("Importe (${com.midinero.control.domain.Currencies.symbol()})", "Amount (${com.midinero.control.domain.Currencies.symbol()})")) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),

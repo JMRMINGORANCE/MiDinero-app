@@ -11,17 +11,23 @@ import kotlin.math.roundToLong
 
 val SPANISH: Locale = Locale("es", "ES")
 
-private val currencyFormats = ThreadLocal.withInitial { HashMap<Locale, NumberFormat>() }
+private val currencyFormats = ThreadLocal.withInitial { HashMap<Pair<Locale, String>, NumberFormat>() }
 
-private fun currencyFormat(): NumberFormat = currencyFormats.get()!!.getOrPut(Lang.locale) {
-    NumberFormat.getCurrencyInstance(Lang.locale).apply { currency = java.util.Currency.getInstance("EUR") }
+/** Formato de la moneda principal ([Currencies.base]) en el idioma de la app: «12,50 €», «12,50 US$», «12,50 MX$». */
+private fun currencyFormat(): NumberFormat = currencyFormats.get()!!.getOrPut(Lang.locale to Currencies.base) {
+    NumberFormat.getCurrencyInstance(Lang.locale).apply {
+        currency = java.util.Currency.getInstance(Currencies.base)
+        // Los pesos y los dólares también se apuntan con céntimos
+        minimumFractionDigits = 2
+        maximumFractionDigits = 2
+    }
 }
 
 /** Si devuelve true, los importes se muestran ocultos ("•••• €"); lo controla la opción de privacidad. */
 @Volatile
 var amountsHidden: () -> Boolean = { false }
 
-const val HIDDEN_AMOUNT = "•••• €"
+val HIDDEN_AMOUNT: String get() = "•••• " + Currencies.symbol()
 
 /** 1250 -> "12,50 €" (o "•••• €" si el usuario ha ocultado los importes). */
 fun formatCents(cents: Long): String =
@@ -33,7 +39,7 @@ fun signedAmount(e: com.midinero.control.data.Expense): String =
 
 /** Convierte lo que escribe el usuario ("12,5", "12.50", "1.234,56") a céntimos. */
 fun parseUserAmount(input: String): Long? {
-    val cleaned = input.trim().replace("€", "").replace(" ", "")
+    val cleaned = input.trim().replace("€", "").replace("$", "").replace(" ", "")
     if (cleaned.isEmpty()) return null
     return parseAmountToCents(cleaned)?.takeIf { it > 0 }
 }

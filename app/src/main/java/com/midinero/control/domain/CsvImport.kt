@@ -35,7 +35,7 @@ object CsvImport {
 
     /** "-12,50", "−12,50 €", "1.234,56", "(12.50)", "12,50-" -> céntimos con signo. */
     fun parseAmount(raw: String): Long? {
-        var s = raw.trim().replace("€", "").replace("EUR", "", ignoreCase = true).replace(" ", "").replace(" ", "")
+        var s = raw.trim().replace("€", "").replace("$", "").replace("EUR", "", ignoreCase = true).replace("USD", "", ignoreCase = true).replace("MXN", "", ignoreCase = true).replace(" ", "").replace(" ", "")
         if (s.isEmpty()) return null
         var negative = false
         if (s.startsWith("(") && s.endsWith(")")) { negative = true; s = s.drop(1).dropLast(1) }

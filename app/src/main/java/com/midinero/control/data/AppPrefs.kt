@@ -153,10 +153,23 @@ class AppPrefs(context: Context) {
         get() = prefs.getString("recent_searches", null)?.split('\n')?.filter { it.isNotBlank() }.orEmpty()
         set(value) = edit { putString("recent_searches", value.joinToString("\n")) }
 
-    fun rateFor(code: String): Double? =
-        prefs.getString("rate_$code", null)?.toDoubleOrNull()
+    /** Último cambio usado para [code] frente a la moneda principal (los del euro se guardan como antes). */
+    private fun rateKey(code: String): String =
+        if (mainCurrency == com.midinero.control.domain.Currencies.EUR) "rate_$code" else "rate_${mainCurrency}_$code"
 
-    fun setRate(code: String, rate: Double) = edit { putString("rate_$code", rate.toString()) }
+    fun rateFor(code: String): Double? =
+        prefs.getString(rateKey(code), null)?.toDoubleOrNull()
+
+    fun setRate(code: String, rate: Double) = edit { putString(rateKey(code), rate.toString()) }
+
+    /** Moneda principal: «EUR» (por defecto), «USD» o «MXN». */
+    var mainCurrency: String
+        get() = prefs.getString("main_currency", null)?.takeIf { it in com.midinero.control.domain.Currencies.mainChoices }
+            ?: com.midinero.control.domain.Currencies.EUR
+        set(value) {
+            com.midinero.control.domain.Currencies.base = value
+            edit { putString("main_currency", value) }
+        }
 
     var enabledPaymentApps: Set<String>
         get() = prefs.getStringSet("payment_apps", null)?.toSet() ?: PaymentApps.defaultEnabled

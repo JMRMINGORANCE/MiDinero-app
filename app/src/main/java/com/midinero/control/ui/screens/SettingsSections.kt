@@ -161,6 +161,48 @@ internal fun AppearanceSection(vm: MainViewModel, onPickPeriod: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 16.dp),
                 track = MaterialTheme.colorScheme.surfaceContainerHigh,
             )
+            Text(
+                tr("Moneda", "Currency"),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
+            )
+            val mainCurrency = remember(prefsVersion) { vm.prefs.mainCurrency }
+            var pendingCurrency by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+            val currencies = listOf(
+                com.midinero.control.domain.Currencies.EUR to tr("Euros €", "Euros €"),
+                com.midinero.control.domain.Currencies.USD to tr("Dólares $", "Dollars $"),
+                com.midinero.control.domain.Currencies.MXN to tr("Pesos MX$", "Pesos MX$"),
+            )
+            SegmentedTabs(
+                currencies.map { it.second },
+                selected = currencies.indexOfFirst { it.first == mainCurrency }.coerceAtLeast(0),
+                onSelect = { i -> currencies[i].first.takeIf { it != mainCurrency }?.let { pendingCurrency = it } },
+                modifier = Modifier.padding(horizontal = 16.dp),
+                track = MaterialTheme.colorScheme.surfaceContainerHigh,
+            )
+            pendingCurrency?.let { code ->
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { pendingCurrency = null },
+                    title = { Text(tr("¿Usar ${com.midinero.control.domain.Currencies.mainName(code)}?", "Use ${com.midinero.control.domain.Currencies.mainName(code)}?")) },
+                    text = {
+                        Text(
+                            tr(
+                                "Todos los importes se mostrarán en esta moneda y los avisos de pago en ella se apuntarán tal cual; los de otras monedas se convierten. Lo que ya tengas apuntado no se convierte: solo cambia cómo se muestra.",
+                                "All amounts will be shown in this currency and payment notifications in it will be logged as they are; other currencies get converted. What you've already logged isn't converted: only how it's shown changes.",
+                            )
+                        )
+                    },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(onClick = {
+                            vm.prefs.mainCurrency = code
+                            pendingCurrency = null
+                            // Se redibuja todo con la moneda nueva
+                            activity?.recreate()
+                        }) { Text(tr("Cambiar", "Change")) }
+                    },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = { pendingCurrency = null }) { Text(tr("Cancelar", "Cancel")) } },
+                )
+            }
             Row(
                 Modifier.fillMaxWidth().clickable { onPickPeriod() }.padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,

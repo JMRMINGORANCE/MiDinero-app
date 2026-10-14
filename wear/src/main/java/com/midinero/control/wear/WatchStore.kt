@@ -100,7 +100,9 @@ fun formatMoney(cents: Long, english: Boolean = WatchStore.english): String {
     val decimal = if (english) '.' else ','
     val whole = units.toString().reversed().chunked(3).joinToString(group.toString()).reversed()
     val number = if (decimals == 0) whole else "$whole$decimal${decimals.toString().padStart(2, '0')}"
-    return if (english) "€$number" else "$number €"
+    val s = WatchStore.state.value
+    val symbol = s.currencySymbol.ifBlank { "€" }
+    return if (s.symbolFirst || (english && symbol == "€")) "$symbol$number" else "$number $symbol"
 }
 
 /** Versión corta para la complicación: sin céntimos («1.234 €»). */

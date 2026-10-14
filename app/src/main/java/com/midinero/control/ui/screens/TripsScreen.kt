@@ -462,7 +462,7 @@ private fun TripDialog(trip: Trip?, onDismiss: () -> Unit, onSave: (Trip, collec
         OutlinedTextField(
             value = budgetText,
             onValueChange = { budgetText = it.filter { c -> c.isDigit() || c == ',' || c == '.' }.take(10) },
-            label = { Text(tr("Presupuesto (€, opcional)", "Budget (€, optional)")) },
+            label = { Text(tr("Presupuesto (${com.midinero.control.domain.Currencies.symbol()}, opcional)", "Budget (${com.midinero.control.domain.Currencies.symbol()}, optional)")) },
             singleLine = true,
             isError = budgetText.isNotBlank() && budget == null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),

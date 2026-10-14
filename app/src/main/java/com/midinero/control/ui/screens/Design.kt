@@ -276,7 +276,7 @@ fun AmountField(
     onValueChange: (String) -> Unit,
     isError: Boolean,
     modifier: Modifier = Modifier,
-    suffix: String = "€",
+    suffix: String = com.midinero.control.domain.Currencies.symbol(),
     label: String = tr("Importe", "Amount"),
     focusRequester: FocusRequester? = null,
     supportingText: String? = null,

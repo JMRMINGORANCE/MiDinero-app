@@ -181,9 +181,9 @@ class ExpenseRepository(
             ensureDefaults()
             // Google Wallet a veces actualiza la misma notificación: ignorar repetidos en 3 minutos.
             // Pagos en otra moneda se guardan en euros al último cambio usado (o uno aproximado)
-            val foreign = payment.currency != Currencies.EUR
-            val rate = if (foreign) prefs.rateFor(payment.currency) ?: Currencies.byCode(payment.currency)?.approxEurRate ?: 1.0 else 1.0
-            val eurCents = if (foreign) Currencies.toEurCents(payment.amountCents, rate) else payment.amountCents
+            val foreign = payment.currency != Currencies.base
+            val rate = if (foreign) prefs.rateFor(payment.currency) ?: Currencies.approxRate(payment.currency) else 1.0
+            val eurCents = if (foreign) Currencies.toBaseCents(payment.amountCents, rate) else payment.amountCents
             val customName = RuleMatcher.displayName(customRuleDao.getAll(), payment.merchant)
             // Tus reglas de nombre mandan; luego tus comercios y, si no, la marca conocida («MERCADONA 4432 VALENCIA» → «Mercadona»).
             val merchantName = if (customName != payment.merchant) customName
@@ -191,7 +191,7 @@ class ExpenseRepository(
             // Una devolución se guarda en negativo: resta del gasto de su categoría y su mes
             val sign = if (payment.refund) -1 else 1
             val duplicate = expenseDao.detectedBetween(timestamp - 90_000, timestamp + 90_000).any { e ->
-                (e.originalCurrency ?: "EUR") == payment.currency &&
+                (e.originalCurrency ?: Currencies.base) == payment.currency &&
                     (e.originalAmountCents ?: e.amountCents) == sign * payment.amountCents &&
                     com.midinero.control.domain.DetectedDuplicates.sameMerchant(e.merchant, merchantName)
             } || (!payment.refund && merchantName.equals(tr("Pago con Google Pay", "Google Pay payment"), ignoreCase = true) &&
@@ -200,7 +200,7 @@ class ExpenseRepository(
             if (duplicate) return@withTransaction null
             val original = if (payment.refund) refundedPurchase(merchantName, eurCents, timestamp) else null
             val categoryId = original?.categoryId ?: categorize(payment.merchant)
-            val rateNote = if (foreign) tr("Cambio aproximado", "Approximate rate") + ": 1 ${payment.currency} = ${"%.4f".format(Lang.locale, rate).trimEnd('0').trimEnd('.', ',')} €" else ""
+            val rateNote = if (foreign) tr("Cambio aproximado", "Approximate rate") + ": 1 ${payment.currency} = ${"%.4f".format(Lang.locale, rate).trimEnd('0').trimEnd('.', ',')} ${Currencies.symbol()}" else ""
             val expense = Expense(
                 tripId = original?.tripId ?: autoTripFor(timestamp),
                 amountCents = sign * eurCents,
@@ -555,10 +555,10 @@ class ExpenseRepository(
             ids += "t$trip"
             listOf("Pret A Manger" to 1250L, "Transport for London" to 2400L, "Hotel Camden" to 32000L, "Dishoom" to 5600L)
                 .forEachIndexed { i, (name, pence) ->
-                    val rate = Currencies.byCode("GBP")!!.approxEurRate
+                    val rate = Currencies.approxRate("GBP")
                     expenseDao.insert(
                         Expense(
-                            amountCents = Currencies.toEurCents(pence, rate), merchant = name, categoryId = categorize(name),
+                            amountCents = Currencies.toBaseCents(pence, rate), merchant = name, categoryId = categorize(name),
                             timestamp = tripStart.plusDays(i.toLong()).atTime(13, 0).atZone(zone).toInstant().toEpochMilli(),
                             rawText = DEMO_MARKER, originalCurrency = "GBP", originalAmountCents = pence, tripId = trip,
                         )
@@ -759,6 +759,7 @@ class ExpenseRepository(
                 weeklySummary = prefs.weeklySummary,
                 enabledPaymentApps = prefs.enabledPaymentApps,
                 challengesJson = AppPrefs.challengesToJson(prefs.challenges),
+                mainCurrency = prefs.mainCurrency,
             ),
         )
     }
@@ -788,6 +789,7 @@ class ExpenseRepository(
             prefs.weeklySummary = st.weeklySummary
             prefs.enabledPaymentApps = st.enabledPaymentApps
             st.challengesJson?.let { json -> runCatching { prefs.challenges = AppPrefs.challengesFromJson(json) } }
+            st.mainCurrency?.let { prefs.mainCurrency = it }
         }
         ensureDefaults()
     }

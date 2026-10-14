@@ -13,6 +13,8 @@ data class BackupSettings(
     val enabledPaymentApps: Set<String>,
     /** Retos de ahorro (JSON de AppPrefs); null en copias antiguas. */
     val challengesJson: String? = null,
+    /** Moneda principal; null en copias antiguas (euros). */
+    val mainCurrency: String? = null,
 )
 
 /** Contenido completo de una copia de seguridad. */
@@ -175,7 +177,8 @@ object Backup {
                         .put("periodStartDay", st.periodStartDay)
                         .put("weeklySummary", st.weeklySummary)
                         .put("enabledPaymentApps", JSONArray(st.enabledPaymentApps.sorted()))
-                        .apply { st.challengesJson?.let { put("challenges", JSONArray(it)) } },
+                        .apply { st.challengesJson?.let { put("challenges", JSONArray(it)) } }
+                        .apply { st.mainCurrency?.let { put("mainCurrency", it) } },
                 )
             }
         }
@@ -260,6 +263,7 @@ object Backup {
                     ?.let { arr -> (0 until arr.length()).map { arr.getString(it) }.toSet() }
                     ?: com.midinero.control.domain.PaymentApps.defaultEnabled,
                 challengesJson = o.optJSONArray("challenges")?.toString(),
+                mainCurrency = o.optString("mainCurrency").takeIf { it in com.midinero.control.domain.Currencies.mainChoices },
             )
         }
         val goals = root.optJSONArray("goals").objects().map { o ->

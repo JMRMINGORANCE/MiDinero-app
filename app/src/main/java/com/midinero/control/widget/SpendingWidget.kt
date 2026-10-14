@@ -130,9 +130,13 @@ class SpendingWidget : GlanceAppWidget() {
     }
 
     companion object {
+        // El widget ignora «ocultar importes» por su cuenta (lo decide [hidden]); el formato es el de la moneda principal
         private fun euro(cents: Long): String =
-            NumberFormat.getCurrencyInstance(com.midinero.control.domain.Lang.locale).apply { currency = Currency.getInstance("EUR") }
-                .format(cents / 100.0)
+            NumberFormat.getCurrencyInstance(com.midinero.control.domain.Lang.locale).apply {
+                currency = Currency.getInstance(com.midinero.control.domain.Currencies.base)
+                minimumFractionDigits = 2
+                maximumFractionDigits = 2
+            }.format(cents / 100.0)
 
         /** Pide redibujar todos los widgets (tras cambiar datos o ajustes). */
         suspend fun refresh(context: Context) {

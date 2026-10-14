@@ -64,7 +64,7 @@ fun ChallengesScreen(vm: MainViewModel, onBack: () -> Unit) {
             }
             if (progress.isEmpty()) item {
                 Text(
-                    tr("Aún no tienes retos. Prueba con «8 días sin gastos este mes» o «menos de 60 € en comida a domicilio».", "No challenges yet. Try “8 no-spend days this month” or “under €60 on food delivery”."),
+                    tr("Aún no tienes retos. Prueba con «8 días sin gastos este mes» o «menos de 60 ${com.midinero.control.domain.Currencies.symbol()} en comida a domicilio».", "No challenges yet. Try “8 no-spend days this month” or “under 60 ${com.midinero.control.domain.Currencies.symbol()} on food delivery”."),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -172,7 +172,7 @@ private fun NewChallengeDialog(categories: List<Category>, onDismiss: () -> Unit
                         Text(
                             when (type) {
                                 ChallengeType.NO_SPEND_DAYS -> tr("Días sin gastos al mes", "No-spend days per month")
-                                ChallengeType.CATEGORY_CAP -> tr("Como mucho al mes (€)", "At most per month (€)")
+                                ChallengeType.CATEGORY_CAP -> tr("Como mucho al mes (${com.midinero.control.domain.Currencies.symbol()})", "At most per month (${com.midinero.control.domain.Currencies.symbol()})")
                                 ChallengeType.CATEGORY_STREAK -> tr("Días seguidos", "Days in a row")
                             }
                         )
