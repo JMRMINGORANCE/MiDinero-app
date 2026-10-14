@@ -25,6 +25,12 @@ object VehiclesState {
     val list: StateFlow<List<Vehicle>> = mutable
 }
 
+/** Repostajes (gastos de las categorías de combustible), para anotar al anterior los km que duró. */
+object FuelState {
+    internal val mutable = MutableStateFlow<List<Expense>>(emptyList())
+    val fills: StateFlow<List<Expense>> = mutable
+}
+
 /** Las etiquetas (#cumpleaños…) que más usas, para ofrecerlas al apuntar. */
 object TagsState {
     internal val mutable = MutableStateFlow<List<String>>(emptyList())

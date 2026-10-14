@@ -3,7 +3,7 @@
 ## 4.18
 
 - **Casa y coche** (nueva sección en Más), con una pantalla para cada cosa:
-  - **Combustible**: al apuntar un repostaje, añade los litros y los km desde el anterior (o los km del coche y se calculan solos). Ves lo gastado, el precio del litro, el consumo (l/100 km), el coste cada 100 km y un aviso si el consumo se dispara.
+  - **Combustible**: al apuntar un repostaje pones los litros servidos y el precio del litro sale solo con el importe. También los km que duró el repostaje anterior, que se anotan en esa entrada (o los km del coche y se calculan solos). Ves lo gastado, el precio del litro, el consumo (l/100 km), el coste cada 100 km y un aviso si el consumo se dispara.
   - **Luz**: kWh punta, llano, valle y excedentes de cada recibo, el precio real del kWh, el reparto por tramos y un botón para copiar el resumen y comparar tarifas en luzfija.es.
   - **Gas** (kWh) y **Agua** (m³): consumo y precio por unidad de cada recibo y de cada mes.
   - **Coches**: lo que te cuesta cada coche (combustible, mantenimientos, ITV, impuesto y seguro), los km y el coste por km. Avisa de la ITV y del cambio de aceite (11 meses después del último, por defecto).

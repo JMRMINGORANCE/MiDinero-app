@@ -26,7 +26,10 @@ import com.midinero.control.data.Vehicle
 import com.midinero.control.domain.ExpenseDetails
 import com.midinero.control.domain.ServiceType
 import com.midinero.control.domain.TrackerKind
+import com.midinero.control.domain.formatQuantity
+import com.midinero.control.domain.formatUnitPrice
 import com.midinero.control.domain.parseQuantity
+import com.midinero.control.domain.shortLabel
 import com.midinero.control.domain.quantityToInput
 import com.midinero.control.domain.tr
 
@@ -45,6 +48,7 @@ class DetailsInput(
     kwh: String = quantityToInput(initial.kwh),
     m3: String = quantityToInput(initial.m3),
     services: Set<ServiceType> = initial.services,
+    previousKm: String = "",
 ) {
     var liters by mutableStateOf(liters)
     var tripKm by mutableStateOf(tripKm)
@@ -57,6 +61,8 @@ class DetailsInput(
     var kwh by mutableStateOf(kwh)
     var m3 by mutableStateOf(m3)
     var services by mutableStateOf(services)
+    /** Km que duró el repostaje anterior (se guardan en ese, no en este). */
+    var previousKm by mutableStateOf(previousKm)
 
     /**
      * Los datos a guardar para un gasto de [kind]: los campos de ese panel sobre lo que ya tenía el gasto
@@ -86,12 +92,13 @@ class DetailsInput(
                 listOf(
                     it.initial.encode().orEmpty(), it.liters, it.tripKm, it.odometer, it.vehicleId?.toString().orEmpty(),
                     it.kwhPeak, it.kwhFlat, it.kwhValley, it.kwhExported, it.kwh, it.m3, it.services.joinToString(",") { s -> s.name },
+                    it.previousKm,
                 )
             },
             restore = { l ->
                 DetailsInput(
                     ExpenseDetails.parse(l[0]), l[1], l[2], l[3], l[4].toLongOrNull(), l[5], l[6], l[7], l[8], l[9], l[10],
-                    l[11].split(',').mapNotNull { ServiceType.of(it) }.toSet(),
+                    l[11].split(',').mapNotNull { ServiceType.of(it) }.toSet(), l.getOrElse(12) { "" },
                 )
             },
         )
@@ -110,7 +117,16 @@ fun rememberDetailsInput(details: String?, vehicles: List<Vehicle>): DetailsInpu
 /** Campos extra del editor según el panel de la categoría elegida. Todos opcionales. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DetailsFields(kind: TrackerKind, input: DetailsInput, vehicles: List<Vehicle>) {
+fun DetailsFields(
+    kind: TrackerKind,
+    input: DetailsInput,
+    vehicles: List<Vehicle>,
+    /** Importe del gasto, para calcular el precio del litro mientras se escribe. */
+    amountCents: Long? = null,
+    /** Repostaje anterior, al que se le anotan los km que duró (solo en uno nuevo). */
+    previous: com.midinero.control.data.Expense? = null,
+    editing: Boolean = false,
+) {
     FieldLabel(
         when (kind) {
             TrackerKind.FUEL -> tr("Repostaje (opcional)", "Refuel (optional)")
@@ -136,14 +152,34 @@ fun DetailsFields(kind: TrackerKind, input: DetailsInput, vehicles: List<Vehicle
     }
     when (kind) {
         TrackerKind.FUEL -> {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                NumberField(input.liters, { input.liters = it }, tr("Litros", "Litres"), Modifier.weight(1f))
-                NumberField(input.tripKm, { input.tripKm = it }, tr("Km desde el último", "Km since last"), Modifier.weight(1f))
+            val liters = parseQuantity(input.liters)?.takeIf { it > 0 }
+            NumberField(
+                input.liters, { input.liters = it }, tr("Litros servidos", "Litres filled"), Modifier.fillMaxWidth(),
+                hint = if (liters != null && amountCents != null && amountCents > 0)
+                    tr("Sale a ${formatUnitPrice(amountCents / liters)} el litro", "That's ${formatUnitPrice(amountCents / liters)} per litre")
+                else tr("Con el importe, el precio del litro sale solo", "With the amount, the price per litre is worked out"),
+            )
+            if (editing) {
+                NumberField(
+                    input.tripKm, { input.tripKm = it }, tr("Km que duró este repostaje", "Km this refuel lasted"), Modifier.fillMaxWidth(),
+                    hint = tr("Se rellena solo al apuntar el siguiente repostaje", "Filled in when you log the next refuel"),
+                )
+            } else if (previous != null) {
+                val prev = ExpenseDetails.parse(previous.details)
+                val desc = listOfNotNull(
+                    com.midinero.control.domain.dateOf(previous.timestamp).shortLabel(),
+                    prev.liters?.let { formatQuantity(it, 2) + " l" },
+                ).joinToString(", ")
+                NumberField(
+                    input.previousKm, { input.previousKm = it }, tr("Km que duró el repostaje anterior", "Km the previous refuel lasted"), Modifier.fillMaxWidth(),
+                    hint = tr("Se apuntan en el del $desc", "Saved on the one from $desc") +
+                        (prev.tripKm?.let { tr(" (ya tiene ${formatQuantity(it, 0)} km)", " (it has ${formatQuantity(it, 0)} km)") } ?: ""),
+                )
             }
             NumberField(
-                input.odometer, { input.odometer = it }, tr("Km que marca el coche", "Odometer (km)"), Modifier.fillMaxWidth(),
+                input.odometer, { input.odometer = it }, tr("Km que marca el coche (opcional)", "Odometer, km (optional)"), Modifier.fillMaxWidth(),
                 decimals = false,
-                hint = tr("Si lo apuntas, los km desde el último repostaje salen solos", "If you add it, the km since the last refuel are worked out"),
+                hint = tr("Si lo apuntas siempre, los km de cada repostaje salen solos", "If you always add it, each refuel's km are worked out"),
             )
         }
         TrackerKind.ELECTRICITY -> {

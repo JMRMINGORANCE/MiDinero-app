@@ -376,6 +376,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             d.amountCents, d.merchant, d.note, d.categoryId, d.timestamp, d.isIncome, d.originalCurrency, d.originalAmountCents,
             tripId = d.tripId, autoTrip = false, receipt = d.receipt, details = d.details,
         )
+        val prevId = d.previousFuelId
+        val prevKm = d.previousFuelKm
+        if (prevId != null && prevKm != null) viewModelScope.launch { repo.setFuelTripKm(prevId, prevKm) }
     }
 
     fun addExpense(

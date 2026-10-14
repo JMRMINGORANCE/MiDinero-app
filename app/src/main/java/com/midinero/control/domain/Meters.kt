@@ -81,19 +81,33 @@ object Meters {
     }
 
     /**
-     * Si un repostaje no tiene los km hechos pero sí los que marca el coche, se sacan de la diferencia
-     * con el repostaje anterior del mismo coche.
+     * Si un repostaje no tiene apuntados los km que le duró pero él y el siguiente del mismo coche tienen
+     * los km del cuentakilómetros, se sacan de la diferencia.
      */
     fun withDerivedKm(entries: List<MeterEntry>): List<MeterEntry> {
-        val lastOdo = HashMap<Long?, Long>()
-        return entries.map { e ->
-            val odo = e.details.odometerKm
-            val prev = lastOdo[e.details.vehicleId]
-            if (odo != null) lastOdo[e.details.vehicleId] = odo
-            if (e.details.tripKm == null && odo != null && prev != null && odo > prev) e.copy(details = e.details.copy(tripKm = (odo - prev).toDouble()))
-            else e
+        val result = entries.toMutableList()
+        val lastIndex = HashMap<Long?, Int>()
+        entries.forEachIndexed { i, e ->
+            val odo = e.details.odometerKm ?: return@forEachIndexed
+            lastIndex[e.details.vehicleId]?.let { p ->
+                val prev = result[p]
+                val prevOdo = prev.details.odometerKm!!
+                if (prev.details.tripKm == null && odo > prevOdo) result[p] = prev.copy(details = prev.details.copy(tripKm = (odo - prevOdo).toDouble()))
+            }
+            lastIndex[e.details.vehicleId] = i
         }
+        return result
     }
+
+    /**
+     * El repostaje anterior a [timestamp] (del mismo coche si se ha elegido uno), sin contar [excludeId]:
+     * al apuntar uno nuevo, a ese se le anotan los km que duró.
+     */
+    fun previousFill(fills: List<Expense>, timestamp: Long, vehicleId: Long?, excludeId: Long? = null): Expense? =
+        fills.asSequence()
+            .filter { it.id != excludeId && !it.isIncome && it.timestamp < timestamp }
+            .filter { vehicleId == null || ExpenseDetails.parse(it.details).vehicleId.let { v -> v == null || v == vehicleId } }
+            .maxByOrNull { it.timestamp }
 
     fun fuel(entries: List<MeterEntry>): FuelSummary {
         val fills = withDerivedKm(entries).map(::fill)

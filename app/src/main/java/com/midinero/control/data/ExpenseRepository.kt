@@ -687,6 +687,13 @@ class ExpenseRepository(
 
     suspend fun deleteVehicle(vehicle: Vehicle) = householdDao.deleteVehicle(vehicle)
 
+    /** Anota en un repostaje los km que le duró (se apunta al hacer el siguiente). */
+    suspend fun setFuelTripKm(expenseId: Long, km: Double) {
+        val e = expenseDao.getById(expenseId) ?: return
+        val d = com.midinero.control.domain.ExpenseDetails.parse(e.details).copy(tripKm = km)
+        householdDao.setDetails(expenseId, d.encode())
+    }
+
     /** Guarda un seguro; si es nuevo y trae precio, ese precio es el del periodo que acaba en su vencimiento. */
     suspend fun savePolicy(policy: Policy, currentPriceCents: Long? = null): Long {
         val clean = policy.copy(name = policy.name.trim(), company = policy.company.trim())

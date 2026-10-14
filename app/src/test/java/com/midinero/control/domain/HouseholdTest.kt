@@ -78,9 +78,25 @@ class HouseholdTest {
                 expense(2, 6000, 1, d0.plusDays(9), ExpenseDetails(liters = 40.0, odometerKm = 10650)),
             ),
         )
+        // Los km que duró el primero salen de la diferencia con el siguiente
         val fills = Meters.fuel(entries).fills
-        assertNull(fills[0].km)
-        assertEquals(650.0, fills[1].km!!, 0.001)
+        assertEquals(650.0, fills[0].km!!, 0.001)
+        assertNull(fills[1].km)
+    }
+
+    @Test
+    fun repostajeAnterior() {
+        val d0 = LocalDate.of(2025, 1, 1)
+        val a = expense(1, 6000, 1, d0, ExpenseDetails(liters = 40.0, vehicleId = 1))
+        val b = expense(2, 6000, 1, d0.plusDays(5), ExpenseDetails(liters = 40.0, vehicleId = 2))
+        val c = expense(3, 6000, 1, d0.plusDays(10), ExpenseDetails(liters = 40.0))
+        val fills = listOf(a, b, c)
+        val now = at(d0.plusDays(20))
+        assertEquals(3L, Meters.previousFill(fills, now, null)!!.id)
+        // Del coche 1: vale el suyo y el que no tiene coche
+        assertEquals(3L, Meters.previousFill(fills, now, 1)!!.id)
+        assertEquals(1L, Meters.previousFill(fills, now, 1, excludeId = 3)!!.id)
+        assertNull(Meters.previousFill(fills, at(d0), null))
     }
 
     @Test

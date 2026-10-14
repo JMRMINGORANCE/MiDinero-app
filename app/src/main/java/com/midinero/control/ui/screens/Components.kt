@@ -279,6 +279,9 @@ data class ExpenseDraft(
     val receipt: String? = null,
     /** Datos extra del panel de su categoría (litros, kWh…), ya codificados; null = ninguno. */
     val details: String? = null,
+    /** Repostaje anterior al que anotar los km que duró (solo al apuntar uno nuevo). */
+    val previousFuelId: Long? = null,
+    val previousFuelKm: Double? = null,
 )
 
 /**
@@ -444,6 +447,13 @@ fun ExpenseEditorDialog(
         if (expense == null) runCatching { amountFocus.requestFocus() }
     }
 
+    // Repostaje anterior (del mismo coche): al apuntar uno nuevo se le anotan los km que duró
+    val fuelFills by com.midinero.control.data.FuelState.fills.collectAsState()
+    val previousFill = if (expense == null && trackerKind == com.midinero.control.domain.TrackerKind.FUEL) {
+        val ts = date.atTime(time).atZone(zone).toInstant().toEpochMilli()
+        com.midinero.control.domain.Meters.previousFill(fuelFills, ts, detailsInput.vehicleId)
+    } else null
+
     EditorSheet(
         title = when {
             refundMode -> tr("Editar devolución", "Edit refund")
@@ -472,6 +482,8 @@ fun ExpenseEditorDialog(
                     tripId = if (isIncome) null else tripId,
                     receipt = receipt,
                     details = detailsInput.build(trackerKind),
+                    previousFuelId = if (trackerKind == com.midinero.control.domain.TrackerKind.FUEL) previousFill?.id else null,
+                    previousFuelKm = if (trackerKind == com.midinero.control.domain.TrackerKind.FUEL && previousFill != null) com.midinero.control.domain.parseQuantity(detailsInput.previousKm)?.takeIf { it > 0 } else null,
                 )
             )
         },
@@ -652,7 +664,7 @@ fun ExpenseEditorDialog(
                 )
             }
         }
-        trackerKind?.let { DetailsFields(it, detailsInput, vehicles) }
+        trackerKind?.let { DetailsFields(it, detailsInput, vehicles, amountCents = amount, previous = previousFill, editing = expense != null) }
         if (tripChoices.isNotEmpty() && !isIncome) {
             FieldLabel(tr("Viaje o evento", "Trip or event"))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

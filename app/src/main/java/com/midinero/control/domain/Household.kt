@@ -47,7 +47,7 @@ enum class ServiceType(val emoji: String, private val es: String, private val en
  */
 data class ExpenseDetails(
     val liters: Double? = null,
-    /** Km hechos desde el repostaje anterior. */
+    /** Km que ha durado este repostaje (hasta el siguiente). */
     val tripKm: Double? = null,
     /** Km que marca el coche. */
     val odometerKm: Long? = null,
