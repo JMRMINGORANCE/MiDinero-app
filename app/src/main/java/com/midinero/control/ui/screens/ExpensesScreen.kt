@@ -511,6 +511,7 @@ fun ExpensesScreen(
                         originalCurrency = d.originalCurrency, originalAmountCents = d.originalAmountCents,
                         tripId = d.tripId,
                         receipt = d.receipt,
+                        details = d.details,
                     ),
                     d.learn,
                 )

@@ -19,6 +19,12 @@ object CustomMerchantsState {
     val list: StateFlow<List<CustomMerchant>> = mutable
 }
 
+/** Tus coches, para elegir uno al apuntar un repostaje o un mantenimiento. */
+object VehiclesState {
+    internal val mutable = MutableStateFlow<List<Vehicle>>(emptyList())
+    val list: StateFlow<List<Vehicle>> = mutable
+}
+
 /** Las etiquetas (#cumpleaños…) que más usas, para ofrecerlas al apuntar. */
 object TagsState {
     internal val mutable = MutableStateFlow<List<String>>(emptyList())

@@ -1,1 +1,1 @@
-Pick your currency in Settings: euros, dollars or Mexican pesos. Amounts, widget, watch and payment notifications use it.
+New Home and car section: fuel (l/100 km, price per litre), electricity by period, gas, water, cars with MOT and oil reminders, and insurance with a reminder before renewal. Plus compare periods.

@@ -277,6 +277,8 @@ data class ExpenseDraft(
     val rate: Double? = null,
     val tripId: Long? = null,
     val receipt: String? = null,
+    /** Datos extra del panel de su categoría (litros, kWh…), ya codificados; null = ninguno. */
+    val details: String? = null,
 )
 
 /**
@@ -309,6 +311,8 @@ fun ExpenseEditorDialog(
     onCreateCategory: ((Category, (Long?) -> Unit) -> Unit)? = null,
     /** Apunta la devolución de este gasto por el importe (en positivo) que recibe. */
     onRefund: ((Long) -> Unit)? = null,
+    /** Para un gasto nuevo: datos extra con que empieza (el coche ya elegido, por ejemplo). */
+    initialDetails: String? = null,
 ) {
     // Una devolución se edita en positivo y se guarda en negativo
     val refundMode = expense?.isRefund == true
@@ -393,6 +397,10 @@ fun ExpenseEditorDialog(
     }
     var note by rememberSaveable { mutableStateOf(expense?.note ?: initialNote) }
     var categoryId by rememberSaveable { mutableStateOf(expense?.categoryId ?: initialCategoryId) }
+    // Datos extra (litros, kWh…) si la categoría va a un panel de casa y coche
+    val vehicles by com.midinero.control.data.VehiclesState.list.collectAsState()
+    val detailsInput = rememberDetailsInput(expense?.details ?: initialDetails, vehicles)
+    val trackerKind = if (isIncome) null else com.midinero.control.domain.TrackerKind.of(shownCategories.firstOrNull { it.id == categoryId }?.kind)
     var date by rememberSaveable { mutableStateOf(expense?.let { dateOf(it.timestamp) } ?: defaultDate) }
     var receiptFilled by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(receiptReading) {
@@ -463,6 +471,7 @@ fun ExpenseEditorDialog(
                     rate = if (foreign) rate else null,
                     tripId = if (isIncome) null else tripId,
                     receipt = receipt,
+                    details = detailsInput.build(trackerKind),
                 )
             )
         },
@@ -643,6 +652,7 @@ fun ExpenseEditorDialog(
                 )
             }
         }
+        trackerKind?.let { DetailsFields(it, detailsInput, vehicles) }
         if (tripChoices.isNotEmpty() && !isIncome) {
             FieldLabel(tr("Viaje o evento", "Trip or event"))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

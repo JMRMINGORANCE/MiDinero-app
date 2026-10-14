@@ -1,5 +1,17 @@
 # Cambios
 
+## 4.18
+
+- **Casa y coche** (nueva sección en Más), con una pantalla para cada cosa:
+  - **Combustible**: al apuntar un repostaje, añade los litros y los km desde el anterior (o los km del coche y se calculan solos). Ves lo gastado, el precio del litro, el consumo (l/100 km), el coste cada 100 km y un aviso si el consumo se dispara.
+  - **Luz**: kWh punta, llano, valle y excedentes de cada recibo, el precio real del kWh, el reparto por tramos y un botón para copiar el resumen y comparar tarifas en luzfija.es.
+  - **Gas** (kWh) y **Agua** (m³): consumo y precio por unidad de cada recibo y de cada mes.
+  - **Coches**: lo que te cuesta cada coche (combustible, mantenimientos, ITV, impuesto y seguro), los km y el coste por km. Avisa de la ITV y del cambio de aceite (11 meses después del último, por defecto).
+  - **Seguros**: precio de cada año y cuánto ha subido, y un aviso 45 días antes del vencimiento para pedir precio y negociar antes del plazo de baja (30 días).
+- Los datos extra se apuntan en el propio editor de gastos al elegir una categoría de esos paneles (también en los pagos detectados). La categoría Gasolina de serie ya viene enlazada; para luz, gas y agua eliges la tuya o la crea con un toque.
+- **Comparar periodos** (Más): el gasto entre las fechas que quieras, por categoría y mes a mes, frente a un año antes, el tramo anterior u otras fechas.
+- Todo viaja en las copias de seguridad. Nada de lo que ya tenías cambia.
+
 ## 4.17
 
 - **Elige tu moneda** en Ajustes → Privacidad y aspecto → Moneda: euros (por defecto), dólares o pesos mexicanos. Todos los importes, el widget y el reloj usan esa moneda; los avisos de pago en ella se apuntan tal cual y los de otras monedas se convierten (con pesos, «$» son pesos y «US$» son dólares). Lo ya apuntado no se convierte: solo cambia cómo se muestra. La moneda viaja en las copias de seguridad.

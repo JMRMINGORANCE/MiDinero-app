@@ -110,6 +110,30 @@ class MigrationTest {
         }
     }
 
+    /** Al pasar a la v14, la Gasolina de serie va al panel de combustible y los gastos conservan todo. */
+    @Test
+    fun migrate13To14() = runBlocking {
+        val name = "migrate-13-14.db"
+        createDatabase(name, 13).apply {
+            execSQL("INSERT INTO categories (id, name, emoji, colorHex, monthlyLimitCents, isDefault, isIncome, hidden, sortOrder) VALUES (4, 'Gasolina', '⛽', '#1971C2', NULL, 1, 0, 0, 0)")
+            execSQL("INSERT INTO categories (id, name, emoji, colorHex, monthlyLimitCents, isDefault, isIncome, hidden, sortOrder) VALUES (5, 'Ocio', '🎉', '#7048E8', NULL, 1, 0, 0, 0)")
+            execSQL("INSERT INTO expenses (id, amountCents, merchant, note, categoryId, timestamp, source, rawText, isIncome) VALUES (9, 6000, 'Repsol', '', 4, 1700000000000, 'MANUAL', '', 0)")
+            close()
+        }
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(*ALL_MIGRATIONS).allowMainThreadQueries().build()
+        try {
+            db.openHelper.writableDatabase
+            assertEquals("FUEL", db.categoryDao().getById(4)!!.kind)
+            assertNull(db.categoryDao().getById(5)!!.kind)
+            val e = db.expenseDao().getById(9)!!
+            assertEquals(6000L, e.amountCents)
+            assertNull(e.details)
+            assertEquals(0, db.householdDao().getVehicles().size)
+        } finally {
+            db.close()
+        }
+    }
+
     private companion object {
         const val DB = "migration-test.db"
     }

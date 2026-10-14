@@ -219,6 +219,11 @@ class AppPrefs(context: Context) {
         get() = prefs.getStringSet("challenge_notified", emptySet())!!.toSet()
         set(value) = edit { putStringSet("challenge_notified", value.toList().takeLast(200).toSet()) }
 
+    /** Vencimientos (seguros, ITV, aceite) de los que ya se ha avisado. */
+    var notifiedReminders: Set<String>
+        get() = prefs.getStringSet("due_notified", emptySet())!!.toSet()
+        set(value) = edit { putStringSet("due_notified", value.toList().takeLast(300).toSet()) }
+
     companion object {
         fun challengesToJson(list: List<com.midinero.control.domain.Challenge>): String = JSONArray().apply {
             list.forEach { c ->

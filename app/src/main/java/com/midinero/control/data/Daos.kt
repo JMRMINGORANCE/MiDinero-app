@@ -454,3 +454,77 @@ interface TripDao {
     suspend fun deleteAll()
 }
 
+
+/** Coches, seguros y precios de los seguros (paneles de casa y coche). */
+@Dao
+interface HouseholdDao {
+    @Query("SELECT * FROM vehicles ORDER BY archived, name COLLATE NOCASE")
+    fun observeVehicles(): Flow<List<Vehicle>>
+
+    @Query("SELECT * FROM vehicles")
+    suspend fun getVehicles(): List<Vehicle>
+
+    @Insert
+    suspend fun insertVehicle(vehicle: Vehicle): Long
+
+    @Update
+    suspend fun updateVehicle(vehicle: Vehicle)
+
+    @Delete
+    suspend fun deleteVehicle(vehicle: Vehicle)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertVehicles(vehicles: List<Vehicle>)
+
+    @Query("DELETE FROM vehicles")
+    suspend fun deleteVehicles()
+
+    @Query("SELECT * FROM policies ORDER BY archived, renewalEpochDay")
+    fun observePolicies(): Flow<List<Policy>>
+
+    @Query("SELECT * FROM policies")
+    suspend fun getPolicies(): List<Policy>
+
+    @Insert
+    suspend fun insertPolicy(policy: Policy): Long
+
+    @Update
+    suspend fun updatePolicy(policy: Policy)
+
+    @Delete
+    suspend fun deletePolicy(policy: Policy)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPolicies(policies: List<Policy>)
+
+    @Query("DELETE FROM policies")
+    suspend fun deletePolicies()
+
+    @Query("SELECT * FROM policy_prices ORDER BY startEpochDay")
+    fun observePolicyPrices(): Flow<List<PolicyPrice>>
+
+    @Query("SELECT * FROM policy_prices")
+    suspend fun getPolicyPrices(): List<PolicyPrice>
+
+    @Insert
+    suspend fun insertPolicyPrice(price: PolicyPrice): Long
+
+    @Update
+    suspend fun updatePolicyPrice(price: PolicyPrice)
+
+    @Delete
+    suspend fun deletePolicyPrice(price: PolicyPrice)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPolicyPrices(prices: List<PolicyPrice>)
+
+    @Query("DELETE FROM policy_prices")
+    suspend fun deletePolicyPrices()
+
+    /** Al borrar un coche, sus repostajes y mantenimientos se quedan (sin coche). */
+    @Query("UPDATE expenses SET details = :details WHERE id = :id")
+    suspend fun setDetails(id: Long, details: String?)
+
+    @Query("UPDATE categories SET kind = :kind WHERE id = :id")
+    suspend fun setCategoryKind(id: Long, kind: String?)
+}

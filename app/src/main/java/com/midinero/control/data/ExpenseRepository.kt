@@ -52,6 +52,7 @@ class ExpenseRepository(
     private val tripDao = db.tripDao()
     private val customMerchantDao = db.customMerchantDao()
     private val accountDao = db.accountDao()
+    private val householdDao = db.householdDao()
     val receipts = ReceiptStore(context)
     private val detectionLock = Mutex()
     private val recurringLock = Mutex()
@@ -673,6 +674,95 @@ class ExpenseRepository(
         prefs.notifiedAchievements = notified + fresh.mapNotNull { it.achievementKey }
     }
 
+    // ---------- Casa y coche ----------
+
+    val vehicles: Flow<List<Vehicle>> = householdDao.observeVehicles()
+    val policies: Flow<List<Policy>> = householdDao.observePolicies()
+    val policyPrices: Flow<List<PolicyPrice>> = householdDao.observePolicyPrices()
+
+    suspend fun saveVehicle(vehicle: Vehicle): Long {
+        val clean = vehicle.copy(name = vehicle.name.trim(), plate = vehicle.plate.trim().uppercase())
+        return if (clean.id == 0L) householdDao.insertVehicle(clean) else clean.id.also { householdDao.updateVehicle(clean) }
+    }
+
+    suspend fun deleteVehicle(vehicle: Vehicle) = householdDao.deleteVehicle(vehicle)
+
+    /** Guarda un seguro; si es nuevo y trae precio, ese precio es el del periodo que acaba en su vencimiento. */
+    suspend fun savePolicy(policy: Policy, currentPriceCents: Long? = null): Long {
+        val clean = policy.copy(name = policy.name.trim(), company = policy.company.trim())
+        if (clean.id != 0L) {
+            householdDao.updatePolicy(clean)
+            return clean.id
+        }
+        val id = householdDao.insertPolicy(clean)
+        if (currentPriceCents != null && currentPriceCents > 0) {
+            val start = java.time.LocalDate.ofEpochDay(clean.renewalEpochDay).minusYears(1).toEpochDay()
+            householdDao.insertPolicyPrice(PolicyPrice(policyId = id, startEpochDay = start, amountCents = currentPriceCents))
+        }
+        return id
+    }
+
+    suspend fun deletePolicy(policy: Policy) = householdDao.deletePolicy(policy)
+
+    /** Renueva un seguro: apunta el precio nuevo desde el vencimiento y pasa el vencimiento al año siguiente. */
+    suspend fun renewPolicy(policy: Policy, newPriceCents: Long, note: String = "") = db.withTransaction {
+        householdDao.insertPolicyPrice(PolicyPrice(policyId = policy.id, startEpochDay = policy.renewalEpochDay, amountCents = newPriceCents, note = note.trim()))
+        householdDao.updatePolicy(policy.copy(renewalEpochDay = java.time.LocalDate.ofEpochDay(policy.renewalEpochDay).plusYears(1).toEpochDay()))
+    }
+
+    suspend fun savePolicyPrice(price: PolicyPrice) {
+        if (price.id == 0L) householdDao.insertPolicyPrice(price) else householdDao.updatePolicyPrice(price)
+    }
+
+    suspend fun deletePolicyPrice(price: PolicyPrice) = householdDao.deletePolicyPrice(price)
+
+    suspend fun setCategoryKind(categoryId: Long, kind: com.midinero.control.domain.TrackerKind?) =
+        householdDao.setCategoryKind(categoryId, kind?.name)
+
+    /** Categoría para un panel: la que ya se llame así (y se le asigna el panel) o una nueva. Devuelve su id. */
+    suspend fun createKindCategory(kind: com.midinero.control.domain.TrackerKind): Long {
+        val name = kind.categoryName
+        categoryDao.getByName(name)?.let { existing ->
+            householdDao.setCategoryKind(existing.id, kind.name)
+            return existing.id
+        }
+        val color = when (kind) {
+            com.midinero.control.domain.TrackerKind.FUEL -> "#1971C2"
+            com.midinero.control.domain.TrackerKind.ELECTRICITY -> "#F08C00"
+            com.midinero.control.domain.TrackerKind.GAS -> "#E8590C"
+            com.midinero.control.domain.TrackerKind.WATER -> "#1098AD"
+            com.midinero.control.domain.TrackerKind.CAR -> "#495057"
+        }
+        val emoji = if (kind == com.midinero.control.domain.TrackerKind.CAR) "🔧" else kind.emoji
+        return categoryDao.insert(Category(name = name, emoji = emoji, colorHex = color, kind = kind.name).withNextSortOrder())
+    }
+
+    /** Avisa (una vez) de los seguros que renuevan, las ITV y los cambios de aceite que tocan. */
+    suspend fun checkReminders(today: java.time.LocalDate = java.time.LocalDate.now()) {
+        val vehicles = householdDao.getVehicles()
+        val policies = householdDao.getPolicies()
+        if (vehicles.isEmpty() && policies.isEmpty()) return
+        val categories = categoryDao.getAll()
+        val carEntries = com.midinero.control.domain.Meters.entries(com.midinero.control.domain.TrackerKind.CAR, categories, expenseDao.getSpending())
+        val notified = prefs.notifiedReminders
+        // Solo los que acaban de empezar a avisar: lo muy vencido no se notifica al instalar o restaurar una copia
+        val fresh = com.midinero.control.domain.Garage.reminders(vehicles, carEntries, policies)
+            .filter { it.isActive(today) && it.key !in notified && it.daysLeft(today) >= -7 }
+        if (fresh.isEmpty()) return
+        fresh.forEach { r ->
+            val title = when (r.kind) {
+                com.midinero.control.domain.ReminderKind.POLICY -> "🛡️ " + r.title
+                else -> r.title
+            }
+            val open = when (r.kind) {
+                com.midinero.control.domain.ReminderKind.POLICY -> "policies"
+                else -> "vehicles"
+            }
+            AppNotifications.dueReminder(context, r.key, title, r.message(today), open)
+        }
+        prefs.notifiedReminders = notified + fresh.map { it.key }
+    }
+
     // ---------- Tus comercios ----------
 
     val customMerchants: Flow<List<CustomMerchant>> = customMerchantDao.observeAll()
@@ -750,6 +840,9 @@ class ExpenseRepository(
             customMerchants = customMerchantDao.getAll(),
             accounts = accountDao.getAll(),
             transfers = accountDao.getTransfers(),
+            vehicles = householdDao.getVehicles(),
+            policies = householdDao.getPolicies(),
+            policyPrices = householdDao.getPolicyPrices(),
             goals = goalDao.getGoals(),
             contributions = goalDao.getContributions(),
             settings = BackupSettings(
@@ -778,6 +871,13 @@ class ExpenseRepository(
             customMerchantDao.insertAll(data.customMerchants)
             accountDao.insertAll(data.accounts)
             accountDao.insertTransfers(data.transfers)
+            householdDao.insertVehicles(data.vehicles)
+            householdDao.insertPolicies(data.policies)
+            householdDao.insertPolicyPrices(data.policyPrices)
+            // Copias de antes de los paneles: la Gasolina de serie va al panel de combustible, como al actualizar
+            if (data.categories.none { it.kind != null }) {
+                data.categories.firstOrNull { it.isDefault && !it.isIncome && it.emoji == "⛽" }?.let { householdDao.setCategoryKind(it.id, "FUEL") }
+            }
             goalDao.insertGoals(data.goals)
             goalDao.insertContributions(data.contributions)
         }
@@ -806,6 +906,9 @@ class ExpenseRepository(
     }
 
     private suspend fun wipe() {
+        householdDao.deletePolicyPrices()
+        householdDao.deletePolicies()
+        householdDao.deleteVehicles()
         accountDao.deleteTransfers()
         accountDao.deleteAll()
         customMerchantDao.deleteAll()

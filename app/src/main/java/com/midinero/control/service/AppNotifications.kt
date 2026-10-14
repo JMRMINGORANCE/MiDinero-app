@@ -25,6 +25,7 @@ object AppNotifications {
     private const val CHANNEL_BUDGET = "budget_alerts"
     private const val CHANNEL_RECURRING = "recurring_charges"
     private const val CHANNEL_SUMMARY = "weekly_summary"
+    private const val CHANNEL_REMINDERS = "due_reminders"
     const val TAG_PAYMENT = "payment"
     private const val TAG_RECURRING = "recurring"
     private const val TAG_BUDGET = "budget"
@@ -52,6 +53,11 @@ object AppNotifications {
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL_SUMMARY, tr("Resumen semanal", "Weekly summary"), NotificationManager.IMPORTANCE_LOW).apply {
                 description = tr("Cuánto gastaste la semana pasada, cada lunes", "How much you spent last week, every Monday")
+            }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(CHANNEL_REMINDERS, tr("Vencimientos", "Due dates"), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = tr("Renovación de seguros, ITV y cambio de aceite", "Insurance renewals, MOT and oil changes")
             }
         )
     }
@@ -191,6 +197,11 @@ object AppNotifications {
     /** «¡Reto cumplido!» */
     fun challengeAchieved(context: Context, key: String, title: String) {
         notify(context, tag = "challenge", id = key.hashCode(), channel = CHANNEL_SUMMARY, title = tr("¡Reto cumplido! 🎉", "Challenge completed! 🎉"), text = title, open = "challenges")
+    }
+
+    /** Seguro que renueva, ITV o cambio de aceite. */
+    fun dueReminder(context: Context, key: String, title: String, text: String, open: String) {
+        notify(context, tag = "due", id = key.hashCode(), channel = CHANNEL_REMINDERS, title = title, text = text, open = open)
     }
 
     fun budgetAlert(context: Context, category: Category, spentCents: Long, limitCents: Long) {

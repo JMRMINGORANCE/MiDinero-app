@@ -143,8 +143,37 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
     }
 }
 
+/** v13 -> v14: paneles de casa y coche (datos extra de los gastos, coches, seguros y sus precios). */
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `categories` ADD COLUMN `kind` TEXT")
+        db.execSQL("ALTER TABLE `expenses` ADD COLUMN `details` TEXT")
+        // La categoría Gasolina de serie va directa al panel de combustible
+        db.execSQL("UPDATE `categories` SET `kind` = 'FUEL' WHERE `isDefault` = 1 AND `isIncome` = 0 AND `emoji` = '⛽'")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `vehicles` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                "`emoji` TEXT NOT NULL, `plate` TEXT NOT NULL, `oilReminderMonths` INTEGER, `itvDueEpochDay` INTEGER, " +
+                "`itvNoticeDays` INTEGER NOT NULL, `archived` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL)"
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `policies` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                "`type` TEXT NOT NULL, `company` TEXT NOT NULL, `vehicleId` INTEGER, `renewalEpochDay` INTEGER NOT NULL, " +
+                "`noticeDays` INTEGER NOT NULL, `cancelDays` INTEGER NOT NULL, `note` TEXT NOT NULL, `archived` INTEGER NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL, " +
+                "FOREIGN KEY(`vehicleId`) REFERENCES `vehicles`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_policies_vehicleId` ON `policies` (`vehicleId`)")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `policy_prices` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `policyId` INTEGER NOT NULL, " +
+                "`startEpochDay` INTEGER NOT NULL, `amountCents` INTEGER NOT NULL, `note` TEXT NOT NULL, " +
+                "FOREIGN KEY(`policyId`) REFERENCES `policies`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_policy_prices_policyId` ON `policy_prices` (`policyId`)")
+    }
+}
+
 val ALL_MIGRATIONS = arrayOf(
     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
-    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
+    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14,
 )
 

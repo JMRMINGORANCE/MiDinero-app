@@ -559,6 +559,10 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         onOpenMerchants = { open("merchants") },
                         onOpenCategories = { open("categories") },
                         onOpenChallenges = { open("challenges") },
+                        onOpenPanel = { kind -> open("panel/${kind.name}") },
+                        onOpenVehicles = { open("vehicles") },
+                        onOpenPolicies = { open("policies") },
+                        onOpenCompare = { open("compare") },
                         onOpenSettings = { open(SETTINGS_ROUTE) },
                         onOpenHelp = { open("help") },
                     )
@@ -579,6 +583,18 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                 }
                 composable("categories") { CategoriesScreen(vm = vm, onBack = { nav.popBackStack() }) }
                 composable("challenges") { ChallengesScreen(vm = vm, onBack = { nav.popBackStack() }) }
+                composable("panel/{kind}") { entry ->
+                    val kind = com.midinero.control.domain.TrackerKind.of(entry.arguments?.getString("kind")) ?: com.midinero.control.domain.TrackerKind.FUEL
+                    com.midinero.control.ui.screens.MeterScreen(kind = kind, vm = vm, onBack = { nav.popBackStack() })
+                }
+                composable("vehicles") {
+                    com.midinero.control.ui.screens.VehiclesScreen(onBack = { nav.popBackStack() }, onOpenVehicle = { id -> nav.navigate("vehicle/$id") })
+                }
+                composable("vehicle/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
+                    com.midinero.control.ui.screens.VehicleDetailScreen(vehicleId = entry.arguments?.getLong("id") ?: 0L, vm = vm, onBack = { nav.popBackStack() })
+                }
+                composable("policies") { com.midinero.control.ui.screens.PoliciesScreen(onBack = { nav.popBackStack() }) }
+                composable("compare") { com.midinero.control.ui.screens.CompareScreen(onBack = { nav.popBackStack() }, onOpenCategory = ::openCategory) }
                 composable("debts") { DebtsScreen(onBack = { nav.popBackStack() }) }
                 composable("help") { HelpScreen(onBack = { nav.popBackStack() }) }
                 composable("import") { ImportScreen(onBack = { nav.popBackStack() }) }

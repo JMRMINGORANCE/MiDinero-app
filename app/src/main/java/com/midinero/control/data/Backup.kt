@@ -33,6 +33,9 @@ data class BackupData(
     val customMerchants: List<CustomMerchant> = emptyList(),
     val accounts: List<Account> = emptyList(),
     val transfers: List<Transfer> = emptyList(),
+    val vehicles: List<Vehicle> = emptyList(),
+    val policies: List<Policy> = emptyList(),
+    val policyPrices: List<PolicyPrice> = emptyList(),
 )
 
 /**
@@ -55,6 +58,7 @@ object Backup {
                         .put("monthlyLimitCents", c.monthlyLimitCents ?: JSONObject.NULL)
                         .put("isDefault", c.isDefault).put("isIncome", c.isIncome)
                         .put("hidden", c.hidden).put("sortOrder", c.sortOrder)
+                        .put("kind", c.kind ?: JSONObject.NULL)
                 )
             }
         })
@@ -71,6 +75,7 @@ object Backup {
                         .put("tripId", e.tripId ?: JSONObject.NULL)
                         .put("receipt", e.receipt ?: JSONObject.NULL)
                         .put("accountId", e.accountId ?: JSONObject.NULL)
+                        .put("details", e.details ?: JSONObject.NULL)
                 )
             }
         })
@@ -157,6 +162,34 @@ object Backup {
                 )
             }
         })
+        .put("vehicles", JSONArray().apply {
+            data.vehicles.forEach { v ->
+                put(
+                    JSONObject().put("id", v.id).put("name", v.name).put("emoji", v.emoji).put("plate", v.plate)
+                        .put("oilReminderMonths", v.oilReminderMonths ?: JSONObject.NULL)
+                        .put("itvDueEpochDay", v.itvDueEpochDay ?: JSONObject.NULL)
+                        .put("itvNoticeDays", v.itvNoticeDays).put("archived", v.archived).put("createdAt", v.createdAt)
+                )
+            }
+        })
+        .put("policies", JSONArray().apply {
+            data.policies.forEach { p ->
+                put(
+                    JSONObject().put("id", p.id).put("name", p.name).put("type", p.type).put("company", p.company)
+                        .put("vehicleId", p.vehicleId ?: JSONObject.NULL).put("renewalEpochDay", p.renewalEpochDay)
+                        .put("noticeDays", p.noticeDays).put("cancelDays", p.cancelDays).put("note", p.note)
+                        .put("archived", p.archived).put("createdAt", p.createdAt)
+                )
+            }
+        })
+        .put("policyPrices", JSONArray().apply {
+            data.policyPrices.forEach { p ->
+                put(
+                    JSONObject().put("id", p.id).put("policyId", p.policyId).put("startEpochDay", p.startEpochDay)
+                        .put("amountCents", p.amountCents).put("note", p.note)
+                )
+            }
+        })
         .put("customMerchants", JSONArray().apply {
             data.customMerchants.forEach { m ->
                 put(
@@ -212,6 +245,7 @@ object Backup {
                 isIncome = o.optBoolean("isIncome"),
                 hidden = o.optBoolean("hidden"),
                 sortOrder = o.optInt("sortOrder"),
+                kind = if (o.isNull("kind")) null else o.optString("kind").ifBlank { null },
             )
         }
         val categoryIds = categories.map { it.id }.toSet()
@@ -232,6 +266,7 @@ object Backup {
                 tripId = o.optLongOrNull("tripId"),
                 receipt = if (o.isNull("receipt")) null else o.optString("receipt").ifBlank { null },
                 accountId = o.optLongOrNull("accountId"),
+                details = if (o.isNull("details")) null else o.optString("details").ifBlank { null },
             )
         }
         val rules = root.optJSONArray("rules").objects()
@@ -346,12 +381,37 @@ object Backup {
                 createdAt = o.optLong("createdAt"),
             )
         }.distinctBy { it.name.lowercase() }
+        val vehicles = root.optJSONArray("vehicles").objects().map { o ->
+            Vehicle(
+                id = o.getLong("id"), name = o.getString("name"), emoji = o.optString("emoji").ifBlank { "🚗" },
+                plate = o.optString("plate"), oilReminderMonths = o.optLongOrNull("oilReminderMonths")?.toInt(),
+                itvDueEpochDay = o.optLongOrNull("itvDueEpochDay"), itvNoticeDays = o.optInt("itvNoticeDays", 30),
+                archived = o.optBoolean("archived"), createdAt = o.optLong("createdAt"),
+            )
+        }
+        val vehicleIds = vehicles.map { it.id }.toSet()
+        val policies = root.optJSONArray("policies").objects().map { o ->
+            Policy(
+                id = o.getLong("id"), name = o.getString("name"), type = o.optString("type").ifBlank { "OTHER" },
+                company = o.optString("company"), vehicleId = o.optLongOrNull("vehicleId")?.takeIf { it in vehicleIds },
+                renewalEpochDay = o.getLong("renewalEpochDay"), noticeDays = o.optInt("noticeDays", 45),
+                cancelDays = o.optInt("cancelDays", 30), note = o.optString("note"),
+                archived = o.optBoolean("archived"), createdAt = o.optLong("createdAt"),
+            )
+        }
+        val policyIds = policies.map { it.id }.toSet()
+        val policyPrices = root.optJSONArray("policyPrices").objects().map { o ->
+            PolicyPrice(
+                id = o.getLong("id"), policyId = o.getLong("policyId"), startEpochDay = o.getLong("startEpochDay"),
+                amountCents = o.getLong("amountCents"), note = o.optString("note"),
+            )
+        }.filter { it.policyId in policyIds }
         return BackupData(
             categories,
             expenses.map { if (it.tripId != null && it.tripId !in tripIds) it.copy(tripId = null) else it }
                 .map { if (it.accountId != null && it.accountId !in accountIds) it.copy(accountId = null) else it },
             rules, recurring, root.optLong("exportedAt"), settings, goals, contributions, customRules, debts, trips,
-            customMerchants, accounts, transfers,
+            customMerchants, accounts, transfers, vehicles, policies, policyPrices,
         )
     }
 

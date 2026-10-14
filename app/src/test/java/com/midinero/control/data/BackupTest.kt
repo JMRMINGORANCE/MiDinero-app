@@ -110,6 +110,31 @@ class BackupTest {
         assertEquals("hola", BackupCrypto.decrypt(b, "clave1"))
     }
 
+    @Test
+    fun `copia conserva coches, seguros y datos extra`() = runBlocking {
+        repo.ensureDefaults()
+        val fuel = db.categoryDao().getAll().single { it.kind == "FUEL" }
+        val light = repo.createKindCategory(com.midinero.control.domain.TrackerKind.ELECTRICITY)
+        val carId = repo.saveVehicle(Vehicle(name = "León", plate = "1234 abc", itvDueEpochDay = 20500))
+        val policyId = repo.savePolicy(Policy(name = "Seguro León", vehicleId = carId, renewalEpochDay = 20600), currentPriceCents = 41000)
+        repo.renewPolicy(db.householdDao().getPolicies().single(), 45000)
+        repo.addExpense(Expense(amountCents = 6000, merchant = "Repsol", categoryId = fuel.id, timestamp = 1_700_000_000_000, details = "l=40;km=600;car=$carId"))
+        repo.addExpense(Expense(amountCents = 8000, merchant = "Iberdrola", categoryId = light, timestamp = 1_700_000_100_000, details = "kp=100;kl=120;kv=180"))
+
+        val restoredData = Backup.fromJson(Backup.toJson(repo.exportBackup()))
+        repo.deleteAllData()
+        assertTrue(db.householdDao().getVehicles().isEmpty())
+        repo.restoreBackup(restoredData)
+
+        assertEquals("1234 ABC", db.householdDao().getVehicles().single().plate)
+        val policy = db.householdDao().getPolicies().single()
+        assertEquals(policyId, policy.id)
+        assertEquals(20600L + 365, policy.renewalEpochDay) // renovado: vence un año después
+        assertEquals(listOf(41000L, 45000L), db.householdDao().getPolicyPrices().sortedBy { it.startEpochDay }.map { it.amountCents })
+        assertEquals("ELECTRICITY", db.categoryDao().getById(light)!!.kind)
+        assertEquals(setOf("l=40;km=600;car=$carId", "kp=100;kl=120;kv=180"), db.expenseDao().getAll().mapNotNull { it.details }.toSet())
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `rechaza ficheros que no son copias`() {
         Backup.fromJson("""{"hola": 1}""")

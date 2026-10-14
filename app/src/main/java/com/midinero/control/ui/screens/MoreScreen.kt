@@ -20,6 +20,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Rule
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.automirrored.filled.CompareArrows
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Groups
@@ -75,6 +82,13 @@ object SectionColors {
     val settings = Color(0xFF5E6A70)
     val help = Color(0xFF1098AD)
     val categories = Color(0xFFAE3EC9)
+    val fuel = Color(0xFF1971C2)
+    val cars = Color(0xFF495057)
+    val electricity = Color(0xFFF08C00)
+    val gas = Color(0xFFE8590C)
+    val water = Color(0xFF1098AD)
+    val insurance = Color(0xFF2F9E44)
+    val compare = Color(0xFF7048E8)
 }
 
 /** Todo lo que no cabe en la barra de abajo, en tarjetas con su estado al día. */
@@ -92,10 +106,15 @@ fun MoreScreen(
     onOpenMerchants: () -> Unit = {},
     onOpenCategories: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
+    onOpenPanel: (com.midinero.control.domain.TrackerKind) -> Unit = {},
+    onOpenVehicles: () -> Unit = {},
+    onOpenPolicies: () -> Unit = {},
+    onOpenCompare: () -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenHelp: () -> Unit,
     goalsVm: GoalsViewModel = viewModel(),
     debtsVm: DebtsViewModel = viewModel(),
+    householdVm: com.midinero.control.ui.HouseholdViewModel = viewModel(),
 ) {
     val recurring by vm.recurring.collectAsStateWithLifecycle()
     val categories by vm.expenseCategories.collectAsStateWithLifecycle()
@@ -201,6 +220,11 @@ fun MoreScreen(
             }
         }
 
+        item { SectionTitle(tr("Casa y coche", "Home and car"), Modifier.entrance(entrance, 5)) }
+        item {
+            HouseholdTiles(householdVm, onOpenPanel, onOpenVehicles, onOpenPolicies, Modifier.entrance(entrance, 5))
+        }
+
         item { SectionTitle(tr("Organiza", "Organise"), Modifier.entrance(entrance, 5)) }
         item {
             MenuGroup(null, Modifier.entrance(entrance, 6)) {
@@ -219,6 +243,11 @@ fun MoreScreen(
                     Icons.Filled.Leaderboard, SectionColors.merchants, tr("Tus comercios", "Your merchants"),
                     tr("Dónde gastas más, cuántas veces y el ticket medio", "Where you spend most, how often and the average ticket"),
                     onClick = onOpenMerchants, divider = true,
+                )
+                MenuRow(
+                    Icons.AutoMirrored.Filled.CompareArrows, SectionColors.compare, tr("Comparar periodos", "Compare periods"),
+                    tr("Entre las fechas que quieras: la luz de 2025 frente a 2024…", "Between any dates: this year's electricity against last year's…"),
+                    onClick = onOpenCompare, divider = true,
                 )
                 MenuRow(
                     Icons.Filled.EmojiEvents, SectionColors.goals, tr("Retos de ahorro", "Savings challenges"),
@@ -298,6 +327,89 @@ private fun HubTile(icon: ImageVector, color: Color, title: String, subtitle: St
                 maxLines = 2,
                 minLines = 2,
                 overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Tarjetas de Casa y coche, cada una con su dato del año. */
+@Composable
+private fun HouseholdTiles(
+    hvm: com.midinero.control.ui.HouseholdViewModel,
+    onOpenPanel: (com.midinero.control.domain.TrackerKind) -> Unit,
+    onOpenVehicles: () -> Unit,
+    onOpenPolicies: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val categories by hvm.categories.collectAsStateWithLifecycle()
+    val expenses by hvm.expenses.collectAsStateWithLifecycle()
+    val vehicles by hvm.vehicles.collectAsStateWithLifecycle()
+    val policies by hvm.policies.collectAsStateWithLifecycle()
+    val year = RangePreset.THIS_YEAR.range()
+    fun entries(kind: com.midinero.control.domain.TrackerKind) =
+        com.midinero.control.domain.Meters.inRange(com.midinero.control.domain.Meters.entries(kind, categories, expenses), year)
+    val fuelLine = remember(categories, expenses) {
+        val e = entries(com.midinero.control.domain.TrackerKind.FUEL)
+        if (e.isEmpty()) null else {
+            val f = com.midinero.control.domain.Meters.fuel(e)
+            listOfNotNull(f.litersPer100?.let { com.midinero.control.domain.formatQuantity(it) + " l/100 km" }, formatCents(f.totalCents) + tr(" este año", " this year")).joinToString(" · ")
+        }
+    }
+    fun meterLine(kind: com.midinero.control.domain.TrackerKind): String? {
+        val e = entries(kind)
+        if (e.isEmpty()) return null
+        return formatCents(e.sumOf { it.cents }) + tr(" este año", " this year")
+    }
+    val lightLine = remember(categories, expenses) { meterLine(com.midinero.control.domain.TrackerKind.ELECTRICITY) }
+    val gasLine = remember(categories, expenses) { meterLine(com.midinero.control.domain.TrackerKind.GAS) }
+    val waterLine = remember(categories, expenses) { meterLine(com.midinero.control.domain.TrackerKind.WATER) }
+    val carLine = remember(vehicles, categories, expenses) {
+        val car = com.midinero.control.domain.Meters.entries(com.midinero.control.domain.TrackerKind.CAR, categories, expenses)
+        val today = LocalDate.now()
+        val next = com.midinero.control.domain.Garage.reminders(vehicles, car, emptyList()).firstOrNull { it.isActive(today) }
+        when {
+            next != null -> "🔔 " + next.title + ": " + next.message(today)
+            vehicles.isEmpty() -> null
+            vehicles.size == 1 -> "${vehicles[0].emoji} ${vehicles[0].name}"
+            else -> tr("${vehicles.size} coches", "${vehicles.size} cars")
+        }
+    }
+    val policyLine = remember(policies) { nextPolicyLabel(policies.filter { !it.archived }) }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HubTile(
+                Icons.Filled.LocalGasStation, SectionColors.fuel, tr("Combustible", "Fuel"),
+                fuelLine ?: tr("Litros, consumo y precio del litro", "Litres, consumption and price per litre"),
+                { onOpenPanel(com.midinero.control.domain.TrackerKind.FUEL) }, Modifier.weight(1f),
+            )
+            HubTile(
+                Icons.Filled.DirectionsCar, SectionColors.cars, tr("Coches", "Cars"),
+                carLine ?: tr("ITV, aceite y lo que te cuesta", "MOT, oil and what it costs"),
+                onOpenVehicles, Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HubTile(
+                Icons.Filled.Lightbulb, SectionColors.electricity, tr("Luz", "Electricity"),
+                lightLine ?: tr("kWh por tramos y excedentes", "kWh by period and exports"),
+                { onOpenPanel(com.midinero.control.domain.TrackerKind.ELECTRICITY) }, Modifier.weight(1f),
+            )
+            HubTile(
+                Icons.Filled.LocalFireDepartment, SectionColors.gas, tr("Gas", "Gas"),
+                gasLine ?: tr("kWh y precio del kWh", "kWh and price per kWh"),
+                { onOpenPanel(com.midinero.control.domain.TrackerKind.GAS) }, Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HubTile(
+                Icons.Filled.WaterDrop, SectionColors.water, tr("Agua", "Water"),
+                waterLine ?: tr("m³ de cada recibo", "m³ on each bill"),
+                { onOpenPanel(com.midinero.control.domain.TrackerKind.WATER) }, Modifier.weight(1f),
+            )
+            HubTile(
+                Icons.Filled.Shield, SectionColors.insurance, tr("Seguros", "Insurance"),
+                policyLine ?: tr("Aviso antes de que renueven", "A reminder before they renew"),
+                onOpenPolicies, Modifier.weight(1f),
             )
         }
     }

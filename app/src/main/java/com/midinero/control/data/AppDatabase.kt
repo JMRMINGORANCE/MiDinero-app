@@ -35,7 +35,7 @@ class Converters {
     entities = [
         Category::class, Expense::class, MerchantRule::class, RecurringExpense::class,
         SavingsGoal::class, GoalContribution::class, CustomRule::class, Debt::class, Trip::class, IngestionReceipt::class,
-        CustomMerchant::class, Account::class, Transfer::class,
+        CustomMerchant::class, Account::class, Transfer::class, Vehicle::class, Policy::class, PolicyPrice::class,
     ],
     version = AppDatabase.VERSION,
     exportSchema = true,
@@ -53,10 +53,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tripDao(): TripDao
     abstract fun customMerchantDao(): CustomMerchantDao
     abstract fun accountDao(): AccountDao
+    abstract fun householdDao(): HouseholdDao
 
     companion object {
         /** Versión del esquema. Al subirla: añadir la migración en Migrations.kt y guardar el esquema en schemas/. */
-        const val VERSION = 13
+        const val VERSION = 14
 
         const val FILE_NAME = "midinero.db"
 
@@ -87,7 +88,7 @@ object DefaultCategories {
         Category(name = CategoryNames.localized(COMIDA_DOMICILIO), emoji = "🛵", colorHex = "#E8590C", isDefault = true),
         Category(name = CategoryNames.localized(RESTAURANTES), emoji = "🍽️", colorHex = "#D6336C", isDefault = true),
         Category(name = CategoryNames.localized(SUPERMERCADO), emoji = "🛒", colorHex = "#2F9E44", isDefault = true),
-        Category(name = CategoryNames.localized(GASOLINA), emoji = "⛽", colorHex = "#1971C2", isDefault = true),
+        Category(name = CategoryNames.localized(GASOLINA), emoji = "⛽", colorHex = "#1971C2", isDefault = true, kind = "FUEL"),
         Category(name = CategoryNames.localized(OCIO), emoji = "🎉", colorHex = "#7048E8", isDefault = true),
         Category(name = CategoryNames.localized(TRANSPORTE), emoji = "🚇", colorHex = "#0C8599", isDefault = true),
         Category(name = CategoryNames.localized(COMPRAS), emoji = "🛍️", colorHex = "#AE3EC9", isDefault = true),

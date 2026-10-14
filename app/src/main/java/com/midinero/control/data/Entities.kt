@@ -21,6 +21,8 @@ data class Category(
     @ColumnInfo(defaultValue = "0") val hidden: Boolean = false,
     /** Posición en las listas; a igual posición, por nombre. (v11) */
     @ColumnInfo(defaultValue = "0") val sortOrder: Int = 0,
+    /** Panel al que van sus gastos (FUEL, ELECTRICITY, GAS, WATER, CAR; ver TrackerKind); null = ninguno. (v14) */
+    val kind: String? = null,
 )
 
 /** Origen de un movimiento. GOOGLE_PAY = detectado en una notificación (de cualquier app de pago). */
@@ -64,6 +66,8 @@ data class Expense(
     val receipt: String? = null,
     /** Cuenta de la que sale (o a la que entra) el dinero; null = ninguna. (v13) */
     val accountId: Long? = null,
+    /** Datos extra según el panel de su categoría: litros, km, kWh, m³… (ver ExpenseDetails). (v14) */
+    val details: String? = null,
 ) {
     /** Devolución de una compra: se guarda en negativo para que reste del gasto de su categoría y su mes. */
     val isRefund: Boolean get() = !isIncome && amountCents < 0
@@ -305,5 +309,65 @@ data class Transfer(
     val toAccountId: Long,
     val amountCents: Long,
     val timestamp: Long,
+    val note: String = "",
+)
+
+/** Coche (o moto) para sus repostajes, mantenimientos, ITV y seguro. (v14) */
+@Entity(tableName = "vehicles")
+data class Vehicle(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val emoji: String = "🚗",
+    val plate: String = "",
+    /** Avisar estos meses después del último cambio de aceite; null = no avisar. */
+    val oilReminderMonths: Int? = 11,
+    /** Fecha de la próxima ITV (epochDay); null = sin apuntar. */
+    val itvDueEpochDay: Long? = null,
+    /** Con cuántos días de antelación avisar de la ITV. */
+    val itvNoticeDays: Int = 30,
+    val archived: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
+/** Seguro (coche, hogar, vida…) con su fecha de renovación y los avisos para negociar o darse de baja. (v14) */
+@Entity(
+    tableName = "policies",
+    foreignKeys = [
+        ForeignKey(entity = Vehicle::class, parentColumns = ["id"], childColumns = ["vehicleId"], onDelete = ForeignKey.SET_NULL),
+    ],
+    indices = [Index("vehicleId")],
+)
+data class Policy(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    /** CAR, HOME, LIFE, HEALTH u OTHER. */
+    val type: String = "CAR",
+    val company: String = "",
+    val vehicleId: Long? = null,
+    /** Día en que vence la póliza (epochDay). */
+    val renewalEpochDay: Long,
+    /** Avisar estos días antes del vencimiento para pedir el precio de renovación. */
+    val noticeDays: Int = 45,
+    /** Días antes del vencimiento en que acaba el plazo para darse de baja. */
+    val cancelDays: Int = 30,
+    val note: String = "",
+    val archived: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
+/** Precio de un año (o periodo) de un seguro: el historial muestra cuánto ha subido en cada renovación. (v14) */
+@Entity(
+    tableName = "policy_prices",
+    foreignKeys = [
+        ForeignKey(entity = Policy::class, parentColumns = ["id"], childColumns = ["policyId"], onDelete = ForeignKey.CASCADE),
+    ],
+    indices = [Index("policyId")],
+)
+data class PolicyPrice(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val policyId: Long,
+    /** Desde cuándo vale este precio (epochDay). */
+    val startEpochDay: Long,
+    val amountCents: Long,
     val note: String = "",
 )
