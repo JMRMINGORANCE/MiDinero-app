@@ -162,7 +162,8 @@ fun DetailsFields(
             if (editing) {
                 NumberField(
                     input.tripKm, { input.tripKm = it }, tr("Km que duró este repostaje", "Km this refuel lasted"), Modifier.fillMaxWidth(),
-                    hint = tr("Se rellena solo al apuntar el siguiente repostaje", "Filled in when you log the next refuel"),
+                    hint = consumption(liters, parseQuantity(input.tripKm))
+                        ?: tr("Se rellena solo al apuntar el siguiente repostaje", "Filled in when you log the next refuel"),
                 )
             } else if (previous != null) {
                 val prev = ExpenseDetails.parse(previous.details)
@@ -172,8 +173,9 @@ fun DetailsFields(
                 ).joinToString(", ")
                 NumberField(
                     input.previousKm, { input.previousKm = it }, tr("Km que duró el repostaje anterior", "Km the previous refuel lasted"), Modifier.fillMaxWidth(),
-                    hint = tr("Se apuntan en el del $desc", "Saved on the one from $desc") +
-                        (prev.tripKm?.let { tr(" (ya tiene ${formatQuantity(it, 0)} km)", " (it has ${formatQuantity(it, 0)} km)") } ?: ""),
+                    hint = consumption(prev.liters, parseQuantity(input.previousKm))?.let { tr("El anterior: $it", "The previous one: $it") }
+                        ?: (tr("Se apuntan en el del $desc", "Saved on the one from $desc") +
+                            (prev.tripKm?.let { tr(" (ya tiene ${formatQuantity(it, 0)} km)", " (it has ${formatQuantity(it, 0)} km)") } ?: "")),
                 )
             }
             NumberField(
@@ -212,6 +214,10 @@ fun DetailsFields(
         }
     }
 }
+
+/** «6,2 l/100 km» con los litros y los km que duraron; null si falta alguno. */
+private fun consumption(liters: Double?, km: Double?): String? =
+    if (liters != null && liters > 0 && km != null && km > 0) tr("gastó ", "used ") + formatQuantity(liters / km * 100) + " l/100 km" else null
 
 @Composable
 private fun NumberField(

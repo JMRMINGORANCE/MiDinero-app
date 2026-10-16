@@ -1,5 +1,9 @@
 package com.midinero.control.ui.screens
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -357,7 +361,32 @@ fun CategoryPicker(
     var creating by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     // Las ocultas no se ofrecen, salvo la que ya tiene el movimiento
-    val shown = categories.filter { !it.hidden || it.id == selectedId }
+    val available = categories.filter { !it.hidden || it.id == selectedId }
+    // Con muchas categorías, primero las más usadas y el resto en «Todas»
+    val usage by com.midinero.control.data.CategoryUsageState.counts.collectAsState()
+    var showAll by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val compact = available.size >= com.midinero.control.domain.CategoryUsage.COMPACT_FROM
+    val shown = when {
+        !compact -> available
+        !showAll -> com.midinero.control.domain.CategoryUsage.compact(available, usage, selectedId)
+        query.isBlank() -> available
+        else -> com.midinero.control.domain.Categorizer.normalize(query).let { q ->
+            available.filter { com.midinero.control.domain.Categorizer.normalize(it.name).contains(q) || it.id == selectedId }
+        }
+    }
+    if (compact && showAll && available.size > 15) {
+        androidx.compose.material3.OutlinedTextField(
+            value = query,
+            onValueChange = { query = it.take(40) },
+            placeholder = { Text(tr("Buscar categoría", "Search category")) },
+            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            singleLine = true,
+            shape = CircleShape,
+            colors = softFieldColors(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        )
+    }
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -387,6 +416,22 @@ fun CategoryPicker(
                     style = MaterialTheme.typography.labelLarge,
                     color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+        }
+        if (compact) {
+            val label = if (showAll) tr("Solo las más usadas", "Most used only") else tr("Todas (${available.size})", "All (${available.size})")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), CircleShape)
+                    .clip(CircleShape)
+                    .clickable { showAll = !showAll; query = "" }
+                    .semantics { role = Role.Button }
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            ) {
+                Icon(if (showAll) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(4.dp))
+                Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
         if (onCreate != null) {

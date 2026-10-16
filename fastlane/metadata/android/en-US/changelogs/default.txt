@@ -1,1 +1,1 @@
-New in Settings → Turn on more features: custom payment methods (cards, cash, transfers…) and profiles to keep your business or other books apart.
+Import litres, km, kWh and m³ from CSV (the exported CSV works as a template), live l/100 km when refuelling and, with many categories, the most used first.

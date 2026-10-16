@@ -92,6 +92,7 @@ open class MiDineroApp : Application() {
         }
         appScope.launch {
             repository.allExpenses.collectLatest { list ->
+                com.midinero.control.data.CategoryUsageState.mutable.value = com.midinero.control.domain.CategoryUsage.counts(list)
                 com.midinero.control.data.TagsState.mutable.value = com.midinero.control.domain.Tags.suggestions(list)
             }
         }

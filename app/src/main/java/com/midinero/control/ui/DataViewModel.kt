@@ -134,7 +134,7 @@ class DataViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val result = runCatching {
                 val data = repo.exportBackup()
-                val csv = withContext(Dispatchers.Default) { CsvExport.build(data.expenses, data.categories, data.trips) }
+                val csv = withContext(Dispatchers.Default) { CsvExport.build(data.expenses, data.categories, data.trips, data.vehicles, data.accounts) }
                 withContext(Dispatchers.IO) {
                     resolver.openOutputStream(uri, "wt")!!.use { it.write(csv.toByteArray(Charsets.UTF_8)) }
                 }

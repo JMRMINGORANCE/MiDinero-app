@@ -629,22 +629,59 @@ class ExpenseRepository(
         val rules = customRuleDao.getAll()
         val otherIncome = defaultCategory(DefaultCategories.OTROS_INGRESOS)?.id
         var added = 0; var dupes = 0; var skipped = 0
+        // Columnas de MiDinero (categoría, coche, método de pago): por nombre, creando lo que falte
+        val categoriesByName = categoryDao.getAll().associateBy { Categorizer.normalize(it.name) }.toMutableMap()
+        val vehiclesByName = householdDao.getVehicles().associateBy { Categorizer.normalize(it.name) }.toMutableMap()
+        val methodsByName = accountDao.getAll().associateBy { Categorizer.normalize(it.name) }.toMutableMap()
+        suspend fun categoryFor(row: ImportedRow, income: Boolean): Long? {
+            val name = row.category ?: return null
+            val key = Categorizer.normalize(name)
+            val found = categoriesByName[key]?.takeIf { it.isIncome == income }
+            val cat = found ?: if (!row.createCategory || key.isEmpty()) return null else {
+                val palette = listOf("#E8590C", "#D6336C", "#2F9E44", "#1971C2", "#7048E8", "#0C8599", "#AE3EC9", "#F59F00")
+                val new = Category(
+                    name = name.trim().take(40), emoji = if (income) "💰" else (row.details.impliedKind?.emoji ?: "📦"),
+                    colorHex = palette[(categoriesByName.size) % palette.size], isIncome = income,
+                ).withNextSortOrder()
+                new.copy(id = categoryDao.insert(new)).also { categoriesByName[key] = it }
+            }
+            // Una categoría sin panel con litros, kWh o m³ pasa al panel que toque
+            val kind = row.details.impliedKind
+            if (!income && cat.kind == null && kind != null) {
+                householdDao.setCategoryKind(cat.id, kind.name)
+                categoriesByName[key] = cat.copy(kind = kind.name)
+            }
+            return cat.id
+        }
+        suspend fun vehicleFor(name: String?): Long? {
+            val key = name?.let { Categorizer.normalize(it) }?.takeIf { it.isNotEmpty() } ?: return null
+            vehiclesByName[key]?.let { return it.id }
+            val v = Vehicle(name = name.trim().take(40))
+            return householdDao.insertVehicle(v).also { vehiclesByName[key] = v.copy(id = it) }
+        }
+        suspend fun methodFor(name: String?): Long? {
+            val key = name?.let { Categorizer.normalize(it) }?.takeIf { it.isNotEmpty() } ?: return null
+            methodsByName[key]?.let { return it.id }
+            val m = Account(name = name.trim().take(40), emoji = "💳")
+            return accountDao.insert(m).also { methodsByName[key] = m.copy(id = it) }
+        }
         for (row in rows) {
             // Un abono que es la devolución de una compra resta del gasto (no es un ingreso)
-            val refund = row.amountCents > 0 && PaymentParser.isRefundText(row.description)
+            val refund = row.refund || row.amountCents > 0 && PaymentParser.isRefundText(row.description)
             val income = row.amountCents > 0 && !refund
             if (income && !includeIncome) { skipped++; continue }
             val abs = kotlin.math.abs(row.amountCents)
             val cents = if (refund) -abs else abs
             val name = RuleMatcher.displayName(rules, row.description)
             if (takeExisting(row.date, cents, listOf(Categorizer.merchantKey(name), Categorizer.merchantKey(row.description)))) { dupes++; continue }
-            val timestamp = row.date.atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
-            val original = if (refund) refundedPurchase(name, abs, timestamp) else null
+            val timestamp = row.date.atTime(row.time ?: java.time.LocalTime.NOON).atZone(zone).toInstant().toEpochMilli()
+            val original = if (refund && row.category == null) refundedPurchase(name, abs, timestamp) else null
+            val details = row.details.copy(vehicleId = vehicleFor(row.vehicle) ?: row.details.vehicleId)
             expenseDao.insert(
                 Expense(
                     amountCents = cents,
                     merchant = original?.merchant ?: name,
-                    categoryId = when {
+                    categoryId = categoryFor(row, income) ?: when {
                         income -> otherIncome
                         original != null -> original.categoryId
                         else -> categorize(row.description, rules)
@@ -653,8 +690,10 @@ class ExpenseRepository(
                     source = ExpenseSource.IMPORTED,
                     isIncome = income,
                     rawText = row.description,
-                    note = if (refund) refundNote(original) else "",
+                    note = listOf(row.note, if (refund && !row.refund) refundNote(original) else "").filter { it.isNotBlank() }.joinToString(" · "),
                     tripId = original?.tripId,
+                    details = details.encode(),
+                    accountId = methodFor(row.method),
                 )
             )
             added++

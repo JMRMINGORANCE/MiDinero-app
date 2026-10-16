@@ -24,7 +24,7 @@ enum class TrackerKind(val emoji: String, private val es: String, private val en
 }
 
 /** Qué se le ha hecho al coche en un gasto de mantenimiento. */
-enum class ServiceType(val emoji: String, private val es: String, private val en: String) {
+enum class ServiceType(val emoji: String, val labelEs: String, val labelEn: String) {
     OIL("🛢️", "Aceite y filtros", "Oil and filters"),
     TYRES("🛞", "Ruedas", "Tyres"),
     BRAKES("🛑", "Frenos", "Brakes"),
@@ -34,7 +34,7 @@ enum class ServiceType(val emoji: String, private val es: String, private val en
     REPAIR("🔧", "Reparación", "Repair"),
     OTHER("🧽", "Otros", "Other");
 
-    val label: String get() = tr(es, en)
+    val label: String get() = tr(labelEs, labelEn)
 
     companion object {
         fun of(value: String): ServiceType? = entries.firstOrNull { it.name == value }
@@ -63,6 +63,16 @@ data class ExpenseDetails(
     val services: Set<ServiceType> = emptySet(),
 ) {
     val isEmpty: Boolean get() = this == EMPTY
+
+    /** El panel al que parecen ir estos datos (para una categoría importada que aún no tiene panel). */
+    val impliedKind: TrackerKind? get() = when {
+        liters != null || tripKm != null -> TrackerKind.FUEL
+        kwhPeak != null || kwhFlat != null || kwhValley != null || kwhExported != null -> TrackerKind.ELECTRICITY
+        kwh != null -> TrackerKind.GAS
+        m3 != null -> TrackerKind.WATER
+        services.isNotEmpty() || odometerKm != null || vehicleId != null -> TrackerKind.CAR
+        else -> null
+    }
 
     /** kWh de luz consumidos (los tres tramos). */
     val kwhConsumed: Double? get() = listOfNotNull(kwhPeak, kwhFlat, kwhValley).takeIf { it.isNotEmpty() }?.sum()

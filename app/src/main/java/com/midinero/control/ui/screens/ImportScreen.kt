@@ -76,6 +76,23 @@ fun ImportScreen(onBack: () -> Unit, vm: DataViewModel = viewModel()) {
             )
         }
         item {
+            AppCard(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(tr("¿Vienes de otra app o de una hoja de cálculo?", "Coming from another app or a spreadsheet?"), fontWeight = FontWeight.SemiBold)
+                    Text(
+                        tr(
+                            "Usa de plantilla un CSV exportado desde MiDinero (Ajustes → Exportar CSV): una fila por gasto con Fecha, Tipo (Gasto, Ingreso o Devolución), Importe, Comercio y Categoría. " +
+                                "Para los paneles de Casa y coche rellena también Litros, Km del repostaje, Km del coche, Coche, kWh punta, kWh llano, kWh valle, kWh excedentes, kWh gas, m³ o Mantenimiento (por ejemplo «Aceite y filtros, Ruedas»). Las columnas vacías se ignoran.",
+                            "Use a CSV exported from MiDinero as a template (Settings → Export CSV): one row per expense with Date, Type (Expense, Income or Refund), Amount, Merchant and Category. " +
+                                "For the Home and car panels also fill in Litres, Refuel km, Odometer km, Car, Peak kWh, Flat kWh, Off-peak kWh, Exported kWh, Gas kWh, m³ or Servicing (e.g. “Oil and filters, Tyres”). Empty columns are ignored.",
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+        item {
             Button(onClick = { runCatching { picker.launch(arrayOf("text/*", "application/csv", "application/vnd.ms-excel", "*/*")) }.onFailure { android.widget.Toast.makeText(context, tr("Este móvil no deja abrir archivos desde aquí", "This phone can't open files from here"), android.widget.Toast.LENGTH_LONG).show() } }) {
                 Text(if (p == null) tr("Elegir fichero CSV", "Choose CSV file") else tr("Elegir otro fichero", "Choose another file"))
             }
@@ -94,6 +111,14 @@ fun ImportScreen(onBack: () -> Unit, vm: DataViewModel = viewModel()) {
                         ColumnPicker(tr("Fecha", "Date"), p.header, m.date) { mapping = m.copy(date = it) }
                         ColumnPicker(tr("Concepto", "Description"), p.header, m.description) { mapping = m.copy(description = it) }
                         ColumnPicker(tr("Importe", "Amount"), p.header, m.amount) { mapping = m.copy(amount = it) }
+                        if (m.extras.isNotEmpty()) {
+                            Text(
+                                tr("También se leen: ", "Also read: ") + m.extras.keys.sortedBy { it.ordinal }.joinToString(", ") { it.header } +
+                                    if (m.midinero) tr(". Las categorías, coches y métodos de pago que no existan se crean.", ". Categories, cars and payment methods that don't exist are created.") else "",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
                             Column(Modifier.weight(1f)) {
                                 Text(tr("Importar también los ingresos", "Also import income"), style = MaterialTheme.typography.bodyMedium)

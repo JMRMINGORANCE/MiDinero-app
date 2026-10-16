@@ -3,11 +3,71 @@ package com.midinero.control.domain
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-/** Qué columna del CSV es cada dato (índices; -1 = no hay). */
-data class CsvMapping(val date: Int, val description: Int, val amount: Int)
+/**
+ * Columnas de más que se leen si el CSV las tiene con el mismo nombre que las que exporta MiDinero
+ * (en español o en inglés): así un CSV exportado sirve de plantilla para importar.
+ */
+enum class CsvField(val es: String, val en: String) {
+    TYPE("Tipo", "Type"),
+    TIME("Hora", "Time"),
+    CATEGORY("Categoría", "Category"),
+    NOTE("Nota", "Note"),
+    METHOD("Método de pago", "Payment method"),
+    LITERS("Litros", "Litres"),
+    TRIP_KM("Km del repostaje", "Refuel km"),
+    ODOMETER("Km del coche", "Odometer km"),
+    VEHICLE("Coche", "Car"),
+    KWH_PEAK("kWh punta", "Peak kWh"),
+    KWH_FLAT("kWh llano", "Flat kWh"),
+    KWH_VALLEY("kWh valle", "Off-peak kWh"),
+    KWH_EXPORTED("kWh excedentes", "Exported kWh"),
+    KWH_GAS("kWh gas", "Gas kWh"),
+    M3("m³", "m³"),
+    SERVICES("Mantenimiento", "Servicing");
 
-/** Movimiento leído de un CSV del banco. [amountCents] negativo = gasto, positivo = ingreso. */
-data class ImportedRow(val date: LocalDate, val description: String, val amountCents: Long)
+    val header: String get() = tr(es, en)
+
+    companion object {
+        /** «Categoría» = «categoria», «m³» = «m3». */
+        fun norm(s: String): String = java.text.Normalizer.normalize(s.trim().lowercase().replace("³", "3"), java.text.Normalizer.Form.NFD)
+            .replace(Regex("""\p{Mn}+"""), "").replace(Regex("""\s+"""), " ")
+
+        fun detect(header: List<String>): Map<CsvField, Int> {
+            val h = header.map(::norm)
+            return entries.mapNotNull { f ->
+                val i = h.indexOfFirst { it == norm(f.es) || it == norm(f.en) || (f == LITERS && it == "liters") }
+                if (i >= 0) f to i else null
+            }.toMap()
+        }
+    }
+}
+
+/** Qué columna del CSV es cada dato (índices; -1 = no hay). [extras]: columnas de más; [midinero]: es un CSV de MiDinero. */
+data class CsvMapping(
+    val date: Int,
+    val description: Int,
+    val amount: Int,
+    val extras: Map<CsvField, Int> = emptyMap(),
+    val midinero: Boolean = false,
+)
+
+/** Movimiento leído de un CSV. [amountCents] negativo = gasto, positivo = ingreso (o devolución si [refund]). */
+data class ImportedRow(
+    val date: LocalDate,
+    val description: String,
+    val amountCents: Long,
+    val refund: Boolean = false,
+    val time: java.time.LocalTime? = null,
+    /** Nombre de la categoría; null = se clasifica sola. */
+    val category: String? = null,
+    /** Si no existe la categoría, se crea (solo en CSV de MiDinero; en los del banco se clasifica sola). */
+    val createCategory: Boolean = false,
+    val note: String = "",
+    val details: ExpenseDetails = ExpenseDetails.EMPTY,
+    /** Nombre del coche y del método de pago (se crean si no existen). */
+    val vehicle: String? = null,
+    val method: String? = null,
+)
 
 data class CsvPreview(
     val header: List<String>,
@@ -97,7 +157,27 @@ object CsvImport {
         val descCol = byName("concepto", "descripcion", "description", "movimiento", "detalle", "comercio", "merchant", "payee", "details", "reference").takeIf { it >= 0 && it != dateCol && it != amountCol }
             ?: (0 until cols).filter { it != dateCol && it != amountCol }
                 .maxByOrNull { col -> rows.take(30).sumOf { r -> r.getOrNull(col)?.count { it.isLetter() } ?: 0 } } ?: -1
-        return CsvMapping(dateCol, descCol, amountCol)
+        val extras = CsvField.detect(header)
+        // Un CSV de MiDinero (o hecho con su plantilla): trae tipo, categoría y origen
+        val origin = h.indexOfFirst { it == "origen" || it == "source" }
+        val midinero = CsvField.TYPE in extras && CsvField.CATEGORY in extras && origin >= 0
+        return CsvMapping(dateCol, descCol, amountCol, extras.filterValues { it != dateCol && it != amountCol && it != descCol }, midinero)
+    }
+
+    private fun services(raw: String): Set<ServiceType> =
+        raw.split(',', '+', '/', ';').mapNotNull { part ->
+            val p = CsvField.norm(part)
+            if (p.isEmpty()) null else ServiceType.entries.firstOrNull { t ->
+                p == t.name.lowercase() || p == CsvField.norm(tr(t.labelEs, t.labelEn)) || p == CsvField.norm(t.labelEs) || p == CsvField.norm(t.labelEn)
+            }
+        }.toSet()
+
+    /** Gasto, ingreso o devolución según la columna «Tipo» (null si no la hay o no se entiende). */
+    private fun type(raw: String?): Int? = when (raw?.let(CsvField::norm)) {
+        "gasto", "expense" -> -1
+        "ingreso", "income" -> 1
+        "devolucion", "refund" -> 0
+        else -> null
     }
 
     fun rows(preview: CsvPreview, mapping: CsvMapping = preview.mapping): List<ImportedRow> =
@@ -106,6 +186,29 @@ object CsvImport {
             val amount = r.getOrNull(mapping.amount)?.let(::parseAmount) ?: return@mapNotNull null
             if (amount == 0L) return@mapNotNull null
             val desc = r.getOrNull(mapping.description)?.replace(Regex("""\s+"""), " ")?.trim().orEmpty()
-            ImportedRow(date, desc.ifBlank { tr("Movimiento importado", "Imported transaction") }.take(80), amount)
+            fun cell(f: CsvField) = mapping.extras[f]?.let { r.getOrNull(it) }?.trim()?.takeIf { it.isNotEmpty() }
+            fun num(f: CsvField) = cell(f)?.let(::parseQuantity)
+            // Con la columna «Tipo» (las de MiDinero), el importe va en positivo y el tipo dice qué es
+            val type = type(cell(CsvField.TYPE))
+            val abs = kotlin.math.abs(amount)
+            val details = ExpenseDetails(
+                liters = num(CsvField.LITERS), tripKm = num(CsvField.TRIP_KM), odometerKm = num(CsvField.ODOMETER)?.toLong(),
+                kwhPeak = num(CsvField.KWH_PEAK), kwhFlat = num(CsvField.KWH_FLAT), kwhValley = num(CsvField.KWH_VALLEY),
+                kwhExported = num(CsvField.KWH_EXPORTED), kwh = num(CsvField.KWH_GAS), m3 = num(CsvField.M3),
+                services = cell(CsvField.SERVICES)?.let(::services).orEmpty(),
+            )
+            ImportedRow(
+                date = date,
+                description = desc.ifBlank { tr("Movimiento importado", "Imported transaction") }.take(80),
+                amountCents = when (type) { -1 -> -abs; 1, 0 -> abs; else -> amount },
+                refund = type == 0,
+                time = cell(CsvField.TIME)?.let { t -> runCatching { java.time.LocalTime.parse(t.padStart(5, '0').take(5)) }.getOrNull() },
+                category = cell(CsvField.CATEGORY),
+                createCategory = mapping.midinero,
+                note = cell(CsvField.NOTE).orEmpty().take(300),
+                details = details,
+                vehicle = cell(CsvField.VEHICLE),
+                method = cell(CsvField.METHOD),
+            )
         }
 }

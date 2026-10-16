@@ -1,5 +1,11 @@
 # Cambios
 
+## 4.20
+
+- **Importar con datos extra**: el CSV exportado trae ahora las columnas Método de pago, Litros, Km del repostaje, Km del coche, Coche, kWh punta, kWh llano, kWh valle, kWh excedentes, kWh gas, m³ y Mantenimiento, y sirve de plantilla. Al importar un CSV con esas columnas se leen también el tipo (gasto, ingreso o devolución), la hora, la categoría y la nota. Las categorías, coches y métodos de pago que falten se crean, y las categorías con litros, kWh o m³ pasan solas a su panel de Casa y coche.
+- **Consumo al momento**: al poner los km de un repostaje, el editor enseña los l/100 km, igual que el precio del litro.
+- **Muchas categorías**: si tienes 12 o más, al apuntar salen las 8 que más usas y un botón «Todas» que despliega el resto, con buscador.
+
 ## 4.19
 
 - **Activar más funciones** (Ajustes): funciones extra que vienen apagadas y se encienden cuando las quieras. Al apagarlas no se borra nada.

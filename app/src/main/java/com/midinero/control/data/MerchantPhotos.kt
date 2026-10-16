@@ -39,6 +39,12 @@ object PaymentMethodsState {
     val defaultId: StateFlow<Long?> = defaultMutable
 }
 
+/** Cuántas veces usas cada categoría, para enseñar primero las más usadas al apuntar. */
+object CategoryUsageState {
+    internal val mutable = MutableStateFlow<Map<Long, Int>>(emptyMap())
+    val counts: StateFlow<Map<Long, Int>> = mutable
+}
+
 /** Las etiquetas (#cumpleaños…) que más usas, para ofrecerlas al apuntar. */
 object TagsState {
     internal val mutable = MutableStateFlow<List<String>>(emptyList())

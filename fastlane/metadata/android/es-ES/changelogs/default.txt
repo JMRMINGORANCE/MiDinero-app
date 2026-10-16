@@ -1,1 +1,1 @@
-Nuevo en Ajustes → Activar más funciones: métodos de pago personalizados (tarjetas, efectivo, transferencias…) y perfiles para llevar aparte tu negocio u otras cuentas.
+Importa litros, km, kWh y m³ desde CSV (el CSV exportado sirve de plantilla), l/100 km al momento al repostar y, con muchas categorías, primero las más usadas.
