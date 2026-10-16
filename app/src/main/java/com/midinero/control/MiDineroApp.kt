@@ -5,6 +5,7 @@ import android.app.Application
 import android.os.StrictMode
 import com.midinero.control.data.AppDatabase
 import com.midinero.control.data.AppPrefs
+import com.midinero.control.data.Profiles
 import com.midinero.control.domain.MerchantCatalog
 import com.midinero.control.domain.Period
 import com.midinero.control.data.ExpenseRepository
@@ -36,10 +37,14 @@ open class MiDineroApp : Application() {
         private set
 
     /** Nombre del fichero de la base de datos (los tests usan uno distinto en cada ejecución). */
-    protected open val databaseName: String = AppDatabase.FILE_NAME
+    protected open val databaseName: String get() = Profiles.databaseName(Profiles.current)
 
     override fun onCreate() {
         super.onCreate()
+        // El proceso que solo reinicia la app al cambiar de perfil no abre nada
+        if (com.midinero.control.ui.ProfileRestart.isRestartProcess(this)) return
+        Profiles.current = Profiles.activeId(this)
+        Profiles.loadFeatures(this)
         com.midinero.control.service.CrashLog.install(this)
         if (BuildConfig.DEBUG) {
             // En desarrollo, avisa en el log de accesos a disco o red en el hilo principal y de fugas.
@@ -69,6 +74,8 @@ open class MiDineroApp : Application() {
         // Tus comercios (con su foto) a mano para las listas
         appScope.launch { repository.customMerchants.collect { com.midinero.control.data.CustomMerchantsState.mutable.value = it } }
         appScope.launch { repository.vehicles.collect { com.midinero.control.data.VehiclesState.mutable.value = it } }
+        appScope.launch { repository.paymentMethods.collect { com.midinero.control.data.PaymentMethodsState.mutable.value = it } }
+        appScope.launch { prefs.changes.collect { com.midinero.control.data.PaymentMethodsState.defaultMutable.value = prefs.defaultPaymentMethod } }
         appScope.launch {
             combine(repository.categories, repository.allExpenses) { cats, list ->
                 val ids = cats.filter { it.kind == com.midinero.control.domain.TrackerKind.FUEL.name }.map { it.id }.toSet()

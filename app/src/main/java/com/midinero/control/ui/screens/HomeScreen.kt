@@ -170,8 +170,15 @@ fun HomeScreen(
             item {
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp, start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
+                        // Con perfiles, cuál está abierto («💼 Negocio»)
+                        val features by com.midinero.control.data.Profiles.features.collectAsStateWithLifecycle()
+                        val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+                        val profileLabel = if (!features.profiles) null else remember {
+                            com.midinero.control.data.Profiles.list(appContext).firstOrNull { it.id == com.midinero.control.data.Profiles.current }?.let { "${it.emoji} ${it.name}" }
+                        }
                         Text(
-                            LocalDate.now().format(Lang.dateFormat("EEEE, d 'de' MMMM", "EEEE, d MMMM")).replaceFirstChar { it.uppercase() },
+                            LocalDate.now().format(Lang.dateFormat("EEEE, d 'de' MMMM", "EEEE, d MMMM")).replaceFirstChar { it.uppercase() } +
+                                (profileLabel?.let { " · $it" } ?: ""),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

@@ -344,6 +344,7 @@ fun TripDetailScreen(vm: MainViewModel, tripId: Long, onBack: () -> Unit) {
                         tripId = d.tripId,
                         receipt = d.receipt,
                         details = d.details,
+                        accountId = d.accountId,
                     ),
                     d.learn,
                 )

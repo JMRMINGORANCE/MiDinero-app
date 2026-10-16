@@ -61,7 +61,7 @@ class PaymentNotificationListener : NotificationListenerService() {
         val raw = listOfNotNull(PaymentApps.nameOf(sbn.packageName), title, body).joinToString(" | ")
         app.appScope.launch {
             try {
-                if (app.repository.addDetectedPayment(payment, raw, postedAt, "phone:$fingerprint") != null) {
+                if (app.repository.addDetectedPayment(payment, raw, postedAt, "phone:$fingerprint", sourcePackage = sbn.packageName) != null) {
                     app.prefs.lastDetectionAt = System.currentTimeMillis()
                 }
             } catch (e: Exception) {

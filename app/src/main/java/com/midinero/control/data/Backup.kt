@@ -15,6 +15,9 @@ data class BackupSettings(
     val challengesJson: String? = null,
     /** Moneda principal; null en copias antiguas (euros). */
     val mainCurrency: String? = null,
+    /** Método de pago por defecto y el de cada app de pago. */
+    val defaultPaymentMethod: Long? = null,
+    val paymentMethodApps: Map<String, Long> = emptyMap(),
 )
 
 /** Contenido completo de una copia de seguridad. */
@@ -211,7 +214,9 @@ object Backup {
                         .put("weeklySummary", st.weeklySummary)
                         .put("enabledPaymentApps", JSONArray(st.enabledPaymentApps.sorted()))
                         .apply { st.challengesJson?.let { put("challenges", JSONArray(it)) } }
-                        .apply { st.mainCurrency?.let { put("mainCurrency", it) } },
+                        .apply { st.mainCurrency?.let { put("mainCurrency", it) } }
+                        .apply { st.defaultPaymentMethod?.let { put("defaultPaymentMethod", it) } }
+                        .apply { if (st.paymentMethodApps.isNotEmpty()) put("paymentMethodApps", JSONObject(st.paymentMethodApps as Map<*, *>)) },
                 )
             }
         }
@@ -299,6 +304,8 @@ object Backup {
                     ?: com.midinero.control.domain.PaymentApps.defaultEnabled,
                 challengesJson = o.optJSONArray("challenges")?.toString(),
                 mainCurrency = o.optString("mainCurrency").takeIf { it in com.midinero.control.domain.Currencies.mainChoices },
+                defaultPaymentMethod = o.optLongOrNull("defaultPaymentMethod"),
+                paymentMethodApps = o.optJSONObject("paymentMethodApps")?.let { m -> m.keys().asSequence().associateWith { m.getLong(it) } }.orEmpty(),
             )
         }
         val goals = root.optJSONArray("goals").objects().map { o ->

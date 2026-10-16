@@ -12,7 +12,11 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.midinero.control.MiDineroApp
+import com.midinero.control.data.AppDatabase
+import com.midinero.control.data.AppPrefs
 import com.midinero.control.data.Backup
+import com.midinero.control.data.ExpenseRepository
+import com.midinero.control.data.Profiles
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
@@ -21,14 +25,34 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
 
     override suspend fun doWork(): Result {
         val app = applicationContext as MiDineroApp
-        val prefs = app.prefs
+        val force = inputData.getBoolean(KEY_FORCE, false)
+        var result = backup(app, Source(app.repository, app.prefs, Profiles.current), force)
+        // Con perfiles, también los demás (cada uno con su carpeta y su frecuencia), aunque no estén abiertos
+        if (!force) {
+            for (p in Profiles.list(app).filter { it.id != Profiles.current }) {
+                val prefs = AppPrefs(app, Profiles.prefsName(p.id))
+                if (prefs.autoBackupUri == null || prefs.autoBackupDays <= 0) continue
+                val db = AppDatabase.build(app, Profiles.databaseName(p.id))
+                try {
+                    val r = backup(app, Source(ExpenseRepository(db, app, prefs), prefs, p.id), false)
+                    if (r == Result.retry()) result = r
+                } finally {
+                    db.close()
+                }
+            }
+        }
+        return result
+    }
+
+    private suspend fun backup(app: MiDineroApp, source: Source, force: Boolean): Result {
+        val prefs = source.prefs
         val days = prefs.autoBackupDays
         val folder = prefs.autoBackupUri ?: return Result.success()
         if (days <= 0) return Result.success()
         val due = System.currentTimeMillis() - prefs.lastBackupAt >= days * 24L * 3600 * 1000 - 3600_000
-        if (!due && !inputData.getBoolean(KEY_FORCE, false)) return Result.success()
+        if (!due && !force) return Result.success()
         return try {
-            writeTo(app, folder)
+            writeTo(app, folder, source)
             prefs.lastBackupAt = System.currentTimeMillis()
             prefs.lastAutoBackupError = null
             Result.success()
@@ -47,10 +71,12 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         }
     }
 
+    /** De qué perfil se hace la copia. */
+    class Source(val repository: ExpenseRepository, val prefs: AppPrefs, val profileId: Int)
+
     companion object {
         private const val NAME = "auto_backup"
         const val KEY_FORCE = "force"
-        private const val PREFIX = "MiDinero-auto-"
         private const val KEEP = 5
 
         fun schedule(context: Context) {
@@ -64,20 +90,26 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         const val DOWNLOADS = "downloads"
 
         /** Escribe la copia en la carpeta elegida o en Descargas/MiDinero. Lanza excepción si no puede. */
-        suspend fun writeTo(app: MiDineroApp, folder: String) {
-            if (folder == DOWNLOADS) writeToDownloads(app, PREFIX, keep = KEEP) else writeBackup(app, folder.toUri())
+        suspend fun writeTo(app: MiDineroApp, folder: String, source: Source = Source(app.repository, app.prefs, Profiles.current)) {
+            val prefix = Profiles.backupPrefix(source.profileId, "auto")
+            if (folder == DOWNLOADS) writeToDownloads(app, prefix, keep = KEEP, source = source) else writeBackup(app, folder.toUri(), source)
         }
 
         /**
          * Guarda la copia en Descargas/MiDinero con MediaStore (Android 10 o posterior, sin pedir permisos) y deja solo
          * las [keep] más recientes con ese [prefix]. Devuelve el nombre del archivo.
          */
-        suspend fun writeToDownloads(app: MiDineroApp, prefix: String, keep: Int = Int.MAX_VALUE): String {
+        suspend fun writeToDownloads(
+            app: MiDineroApp,
+            prefix: String,
+            keep: Int = Int.MAX_VALUE,
+            source: Source = Source(app.repository, app.prefs, Profiles.current),
+        ): String {
             if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
                 throw IllegalStateException(tr("Este móvil necesita elegir una carpeta", "This phone needs a folder to be chosen"))
             }
             val resolver = app.contentResolver
-            val json = Backup.toFile(app.repository.exportBackup(), app.prefs.backupPassword)
+            val json = Backup.toFile(source.repository.exportBackup(), source.prefs.backupPassword)
             val collection = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
             val path = android.os.Environment.DIRECTORY_DOWNLOADS + "/MiDinero/"
             val name = "$prefix${LocalDate.now()}.json"
@@ -115,11 +147,12 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         }
 
         /** Escribe la copia en la carpeta [tree] y borra las antiguas. Lanza excepción si no puede. */
-        suspend fun writeBackup(app: MiDineroApp, tree: Uri) {
+        suspend fun writeBackup(app: MiDineroApp, tree: Uri, source: Source = Source(app.repository, app.prefs, Profiles.current)) {
+            val prefix = Profiles.backupPrefix(source.profileId, "auto")
             val resolver = app.contentResolver
-            val json = Backup.toFile(app.repository.exportBackup(), app.prefs.backupPassword)
+            val json = Backup.toFile(source.repository.exportBackup(), source.prefs.backupPassword)
             val dir = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
-            val name = "$PREFIX${LocalDate.now()}.json"
+            val name = "$prefix${LocalDate.now()}.json"
             // Si ya hay una de hoy, se sustituye, pero solo después de escribir la nueva (si falla, se conserva la anterior)
             val sameDay = children(app, tree).filter { it.second == name }.map { it.first }
             val file = DocumentsContract.createDocument(resolver, dir, "application/json", name)
@@ -133,7 +166,7 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
             sameDay.forEach { runCatching { DocumentsContract.deleteDocument(resolver, it) } }
             if (sameDay.isNotEmpty()) runCatching { DocumentsContract.renameDocument(resolver, file, name) }
             children(app, tree)
-                .filter { it.second.startsWith(PREFIX) }
+                .filter { it.second.startsWith(prefix) }
                 .sortedByDescending { it.second }
                 .drop(KEEP)
                 .forEach { runCatching { DocumentsContract.deleteDocument(resolver, it.first) } }

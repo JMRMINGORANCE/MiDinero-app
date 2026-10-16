@@ -222,7 +222,7 @@ fun PanelExpenseEditor(
                         amountCents = d.amountCents, merchant = d.merchant, note = d.note, categoryId = d.categoryId,
                         timestamp = d.timestamp, isIncome = d.isIncome,
                         originalCurrency = d.originalCurrency, originalAmountCents = d.originalAmountCents,
-                        tripId = d.tripId, receipt = d.receipt, details = d.details,
+                        tripId = d.tripId, receipt = d.receipt, details = d.details, accountId = d.accountId,
                     ),
                     d.learn,
                 )

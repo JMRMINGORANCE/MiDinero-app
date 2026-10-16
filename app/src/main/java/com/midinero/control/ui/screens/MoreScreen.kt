@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Groups
@@ -110,6 +111,8 @@ fun MoreScreen(
     onOpenVehicles: () -> Unit = {},
     onOpenPolicies: () -> Unit = {},
     onOpenCompare: () -> Unit = {},
+    onOpenPaymentMethods: () -> Unit = {},
+    onOpenProfiles: () -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenHelp: () -> Unit,
     goalsVm: GoalsViewModel = viewModel(),
@@ -123,6 +126,7 @@ fun MoreScreen(
     val debts by debtsVm.debts.collectAsStateWithLifecycle()
     val rules by vm.customRules.collectAsStateWithLifecycle()
     val prefsVersion by vm.prefs.changes.collectAsStateWithLifecycle()
+    val features by com.midinero.control.data.Profiles.features.collectAsStateWithLifecycle()
     val budget = remember(prefsVersion) { vm.prefs.monthlyBudgetCents }
     var showMerchants by rememberSaveable { mutableStateOf(false) }
     var showTags by rememberSaveable { mutableStateOf(false) }
@@ -145,6 +149,7 @@ fun MoreScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { ScreenHeader(tr("Más", "More"), subtitle = tr("Planifica, organiza y ajusta MiDinero", "Plan, organise and tune MiDinero")) }
+        if (features.profiles) item { ProfileSwitcherCard(onManage = onOpenProfiles) }
 
         item {
             // Buscador de acceso rápido
@@ -243,6 +248,11 @@ fun MoreScreen(
                     Icons.Filled.Leaderboard, SectionColors.merchants, tr("Tus comercios", "Your merchants"),
                     tr("Dónde gastas más, cuántas veces y el ticket medio", "Where you spend most, how often and the average ticket"),
                     onClick = onOpenMerchants, divider = true,
+                )
+                if (features.paymentMethods) MenuRow(
+                    Icons.Filled.Payments, SectionColors.import, tr("Métodos de pago", "Payment methods"),
+                    tr("Tarjetas, efectivo, transferencias… y lo gastado con cada uno", "Cards, cash, transfers… and what you spent with each"),
+                    onClick = onOpenPaymentMethods, divider = true,
                 )
                 MenuRow(
                     Icons.AutoMirrored.Filled.CompareArrows, SectionColors.compare, tr("Comparar periodos", "Compare periods"),

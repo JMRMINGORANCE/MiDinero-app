@@ -18,8 +18,9 @@ import java.io.File
  * Fotos de tickets. Se guardan reducidas (lado largo de 1600 px, JPEG) en el almacenamiento
  * privado de la app; el gasto solo guarda el nombre del fichero.
  */
-class ReceiptStore(private val context: Context) {
-    private val dir: File get() = File(context.filesDir, "receipts").apply { mkdirs() }
+class ReceiptStore(private val context: Context, private val profileId: Int = Profiles.current) {
+    // Cada perfil tiene su carpeta: así limpiar los tickets sin gasto de uno no borra los de otro
+    private val dir: File get() = File(context.filesDir, Profiles.receiptsDir(profileId)).apply { mkdirs() }
 
     fun file(name: String): File? = File(dir, name).takeIf { it.exists() }
 

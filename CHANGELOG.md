@@ -1,5 +1,11 @@
 # Cambios
 
+## 4.19
+
+- **Activar más funciones** (Ajustes): funciones extra que vienen apagadas y se encienden cuando las quieras. Al apagarlas no se borra nada.
+- **Métodos de pago**: crea los tuyos («💳 Crédito BBVA», «🏦 Débito Santander», «💶 Efectivo», «🔁 Transferencia HSBC»…) y elige en cada gasto con cuál pagaste. Uno puede ir por defecto y cada app de pago puede tener el suyo para los pagos detectados. En Más → Métodos de pago ves lo gastado con cada uno, mes a mes.
+- **Perfiles**: lleva aparte tu negocio (o lo que quieras) sin clonar la app. Cada perfil tiene sus gastos, categorías, presupuesto, ajustes, tickets y copias de seguridad. Se cambia desde Más y la app se reinicia con los datos de ese perfil. Tu perfil de siempre no cambia.
+
 ## 4.18
 
 - **Casa y coche** (nueva sección en Más), con una pantalla para cada cosa:

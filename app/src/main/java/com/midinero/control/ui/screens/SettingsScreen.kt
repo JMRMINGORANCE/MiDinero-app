@@ -94,6 +94,8 @@ fun SettingsScreen(
     vm: MainViewModel,
     onBack: () -> Unit,
     onOpenHelp: () -> Unit = {},
+    onOpenPaymentMethods: () -> Unit = {},
+    onOpenProfiles: () -> Unit = {},
     dataVm: DataViewModel = viewModel(),
 ) {
     val context = LocalContext.current
@@ -182,6 +184,8 @@ fun SettingsScreen(
         }
 
         AppearanceSection(vm, onPickPeriod = { showPeriodDialog = true })
+
+        ExtraFeaturesSection(onOpenPaymentMethods, onOpenProfiles)
 
         SettingCard(
             title = tr("Detección automática de pagos", "Automatic payment detection"),

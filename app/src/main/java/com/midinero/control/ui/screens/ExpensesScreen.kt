@@ -512,6 +512,7 @@ fun ExpensesScreen(
                         tripId = d.tripId,
                         receipt = d.receipt,
                         details = d.details,
+                        accountId = d.accountId,
                     ),
                     d.learn,
                 )

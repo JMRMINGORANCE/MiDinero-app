@@ -65,7 +65,7 @@ class DataViewModel(app: Application) : AndroidViewModel(app) {
     /** Guarda una copia en Descargas/MiDinero sin preguntar dónde (si el móvil no abre el selector de archivos). */
     fun exportToDownloads(onDone: (String) -> Unit) {
         viewModelScope.launch {
-            val result = runCatching { withContext(Dispatchers.IO) { BackupWorker.writeToDownloads(getApplication(), "MiDinero-copia-") } }
+            val result = runCatching { withContext(Dispatchers.IO) { BackupWorker.writeToDownloads(getApplication(), com.midinero.control.data.Profiles.backupPrefix(com.midinero.control.data.Profiles.current, "copia")) } }
             if (result.isSuccess) prefs.lastBackupAt = System.currentTimeMillis()
             onDone(result.fold({ tr("Copia guardada en Descargas/$it", "Backup saved to Downloads/$it") }, { (it as? IllegalStateException)?.message ?: tr("No se ha podido guardar la copia", "Couldn't save the backup") }))
         }

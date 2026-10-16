@@ -1,1 +1,1 @@
-New Home and car section: fuel (l/100 km, price per litre), electricity by period, gas, water, cars with MOT and oil reminders, and insurance with a reminder before renewal. Plus compare periods.
+New in Settings → Turn on more features: custom payment methods (cards, cash, transfers…) and profiles to keep your business or other books apart.

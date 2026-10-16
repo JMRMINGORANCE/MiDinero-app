@@ -31,6 +31,14 @@ object FuelState {
     val fills: StateFlow<List<Expense>> = mutable
 }
 
+/** Tus métodos de pago y el de por defecto, para el editor de gastos. */
+object PaymentMethodsState {
+    internal val mutable = MutableStateFlow<List<Account>>(emptyList())
+    val list: StateFlow<List<Account>> = mutable
+    internal val defaultMutable = MutableStateFlow<Long?>(null)
+    val defaultId: StateFlow<Long?> = defaultMutable
+}
+
 /** Las etiquetas (#cumpleaños…) que más usas, para ofrecerlas al apuntar. */
 object TagsState {
     internal val mutable = MutableStateFlow<List<String>>(emptyList())

@@ -374,7 +374,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         d.rate?.let { r -> d.originalCurrency?.let { prefs.setRate(it, r) } }
         addExpense(
             d.amountCents, d.merchant, d.note, d.categoryId, d.timestamp, d.isIncome, d.originalCurrency, d.originalAmountCents,
-            tripId = d.tripId, autoTrip = false, receipt = d.receipt, details = d.details,
+            tripId = d.tripId, autoTrip = false, receipt = d.receipt, details = d.details, accountId = d.accountId,
         )
         val prevId = d.previousFuelId
         val prevKm = d.previousFuelKm
@@ -394,6 +394,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         autoTrip: Boolean = true,
         receipt: String? = null,
         details: String? = null,
+        accountId: Long? = null,
     ) {
         viewModelScope.launch {
             val trip = tripId ?: if (autoTrip && !isIncome) repo.autoTripFor(timestamp) else null
@@ -414,6 +415,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     tripId = trip,
                     receipt = receipt,
                     details = details,
+                    accountId = accountId,
                 )
             )
         }

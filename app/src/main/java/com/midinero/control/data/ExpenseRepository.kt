@@ -175,7 +175,14 @@ class ExpenseRepository(
     }
 
     /** Registra un pago detectado en una notificación. Devuelve null si es un duplicado. */
-    suspend fun addDetectedPayment(payment: ParsedPayment, rawText: String, timestamp: Long, eventId: String? = null): Pair<Expense, Category?>? =
+    suspend fun addDetectedPayment(
+        payment: ParsedPayment,
+        rawText: String,
+        timestamp: Long,
+        eventId: String? = null,
+        /** App de la que viene el aviso, para ponerle su método de pago. */
+        sourcePackage: String? = null,
+    ): Pair<Expense, Category?>? =
         detectionLock.withLock {
             val result = db.withTransaction {
             if (eventId != null && db.ingestionDao().contains(eventId)) return@withTransaction null
@@ -213,6 +220,9 @@ class ExpenseRepository(
                 timestamp = timestamp,
                 source = ExpenseSource.GOOGLE_PAY,
                 rawText = rawText.take(500),
+                accountId = if (Profiles.features.value.paymentMethods) {
+                    com.midinero.control.domain.PaymentMethods.forDetected(sourcePackage, prefs.paymentMethodApps, prefs.defaultPaymentMethod, accountDao.getAll())
+                } else null,
             )
             val id = expenseDao.insert(expense)
             val saved = expense.copy(id = id)
@@ -454,7 +464,7 @@ class ExpenseRepository(
         val budget = trip.budgetCents?.takeIf { it > 0 } ?: return
         val spent = expenseDao.tripTotal(trip.id)
         val lvl = TripStats.alertLevel(spent, budget) ?: return
-        val alerts = context.getSharedPreferences("budget_alerts", Context.MODE_PRIVATE)
+        val alerts = context.getSharedPreferences("budget_alerts" + Profiles.suffix(Profiles.current), Context.MODE_PRIVATE)
         val key = "alert_trip_${trip.id}_$lvl"
         if (alerts.getBoolean(key, false)) return
         alerts.edit { putBoolean(key, true) }
@@ -674,6 +684,28 @@ class ExpenseRepository(
         prefs.notifiedAchievements = notified + fresh.mapNotNull { it.achievementKey }
     }
 
+    // ---------- Métodos de pago ----------
+
+    val paymentMethods: Flow<List<Account>> = accountDao.observeAll()
+
+    suspend fun savePaymentMethod(method: Account): Long {
+        val clean = method.copy(name = method.name.trim())
+        if (clean.id != 0L) {
+            accountDao.update(clean)
+            return clean.id
+        }
+        val order = (accountDao.getAll().maxOfOrNull { it.sortOrder } ?: 0) + 1
+        return accountDao.insert(clean.copy(sortOrder = order))
+    }
+
+    /** Borra un método de pago: sus gastos se quedan sin método (no se borran). */
+    suspend fun deletePaymentMethod(method: Account) = db.withTransaction {
+        accountDao.detachExpenses(method.id)
+        accountDao.delete(method)
+        if (prefs.defaultPaymentMethod == method.id) prefs.defaultPaymentMethod = null
+        prefs.paymentMethodApps = prefs.paymentMethodApps.filterValues { it != method.id }
+    }
+
     // ---------- Casa y coche ----------
 
     val vehicles: Flow<List<Vehicle>> = householdDao.observeVehicles()
@@ -860,6 +892,8 @@ class ExpenseRepository(
                 enabledPaymentApps = prefs.enabledPaymentApps,
                 challengesJson = AppPrefs.challengesToJson(prefs.challenges),
                 mainCurrency = prefs.mainCurrency,
+                defaultPaymentMethod = prefs.defaultPaymentMethod,
+                paymentMethodApps = prefs.paymentMethodApps,
             ),
         )
     }
@@ -897,6 +931,9 @@ class ExpenseRepository(
             prefs.enabledPaymentApps = st.enabledPaymentApps
             st.challengesJson?.let { json -> runCatching { prefs.challenges = AppPrefs.challengesFromJson(json) } }
             st.mainCurrency?.let { prefs.mainCurrency = it }
+            val methodIds = data.accounts.map { it.id }.toSet()
+            prefs.defaultPaymentMethod = st.defaultPaymentMethod?.takeIf { it in methodIds }
+            prefs.paymentMethodApps = st.paymentMethodApps.filterValues { it in methodIds }
         }
         ensureDefaults()
     }
@@ -905,7 +942,7 @@ class ExpenseRepository(
     suspend fun deleteAllData() {
         db.withTransaction { wipe() }
         receipts.deleteAll()
-        context.getSharedPreferences("budget_alerts", Context.MODE_PRIVATE).edit { clear() }
+        context.getSharedPreferences("budget_alerts" + Profiles.suffix(Profiles.current), Context.MODE_PRIVATE).edit { clear() }
         prefs.monthlyBudgetCents = 0
         prefs.lastDetectionAt = 0
         prefs.clearUnrecognized()
@@ -947,7 +984,7 @@ class ExpenseRepository(
         val month = monthOf(timestamp)
         if (month != currentPeriod()) return
         val threshold = prefs.alertThreshold
-        val alerts = context.getSharedPreferences("budget_alerts", Context.MODE_PRIVATE)
+        val alerts = context.getSharedPreferences("budget_alerts" + Profiles.suffix(Profiles.current), Context.MODE_PRIVATE)
         fun level(spent: Long, limit: Long): Int? = when {
             spent >= limit -> 100
             threshold in 1..99 && spent * 100 >= limit * threshold -> threshold
@@ -1092,7 +1129,7 @@ class ExpenseRepository(
     /** Avisa el día antes de los cargos que lo tienen activado (una vez por cargo). */
     suspend fun remindUpcoming() {
         val tomorrow = LocalDate.now().plusDays(1).toEpochDay()
-        val prefs = context.getSharedPreferences("recurring_reminders", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("recurring_reminders" + Profiles.suffix(Profiles.current), Context.MODE_PRIVATE)
         // Renovaciones anuales: aviso una semana antes, para poder darse de baja a tiempo
         com.midinero.control.domain.Renewals.dueIn(recurringDao.getAll(), 7).forEach { r ->
             val key = "renewal_${r.id}_${r.nextDueEpochDay}"

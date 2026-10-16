@@ -15,8 +15,8 @@ data class UnrecognizedNotification(val app: String, val title: String, val text
  * Preferencias sencillas de la app (SharedPreferences).
  * [changes] cambia con cada escritura para que la interfaz se refresque.
  */
-class AppPrefs(context: Context) {
-    private val prefs = context.getSharedPreferences("midinero_prefs", Context.MODE_PRIVATE)
+class AppPrefs(context: Context, name: String = Profiles.prefsName(Profiles.current)) {
+    private val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
     private val _changes = MutableStateFlow(0)
     val changes: StateFlow<Int> = _changes.asStateFlow()
 
@@ -218,6 +218,19 @@ class AppPrefs(context: Context) {
     var notifiedAchievements: Set<String>
         get() = prefs.getStringSet("challenge_notified", emptySet())!!.toSet()
         set(value) = edit { putStringSet("challenge_notified", value.toList().takeLast(200).toSet()) }
+
+    /** Método de pago para los gastos nuevos y los detectados; null = ninguno. */
+    var defaultPaymentMethod: Long?
+        get() = prefs.getLong("default_payment_method", -1L).takeIf { it > 0 }
+        set(value) = edit { if (value == null) remove("default_payment_method") else putLong("default_payment_method", value) }
+
+    /** Método de pago de los pagos detectados en cada app (paquete → método). */
+    var paymentMethodApps: Map<String, Long>
+        get() = runCatching {
+            val o = JSONObject(prefs.getString("payment_method_apps", "{}") ?: "{}")
+            o.keys().asSequence().associateWith { o.getLong(it) }
+        }.getOrDefault(emptyMap())
+        set(value) = edit { putString("payment_method_apps", JSONObject(value as Map<*, *>).toString()) }
 
     /** Vencimientos (seguros, ITV, aceite) de los que ya se ha avisado. */
     var notifiedReminders: Set<String>

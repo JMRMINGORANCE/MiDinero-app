@@ -282,6 +282,8 @@ data class ExpenseDraft(
     /** Repostaje anterior al que anotar los km que duró (solo al apuntar uno nuevo). */
     val previousFuelId: Long? = null,
     val previousFuelKm: Double? = null,
+    /** Método de pago (tabla de cuentas); null = ninguno. */
+    val accountId: Long? = null,
 )
 
 /**
@@ -403,6 +405,11 @@ fun ExpenseEditorDialog(
     // Datos extra (litros, kWh…) si la categoría va a un panel de casa y coche
     val vehicles by com.midinero.control.data.VehiclesState.list.collectAsState()
     val detailsInput = rememberDetailsInput(expense?.details ?: initialDetails, vehicles)
+    // Método de pago (si está activado en Ajustes → Activar más funciones)
+    val features by com.midinero.control.data.Profiles.features.collectAsState()
+    val paymentMethods by com.midinero.control.data.PaymentMethodsState.list.collectAsState()
+    val defaultMethod by com.midinero.control.data.PaymentMethodsState.defaultId.collectAsState()
+    var methodId by rememberSaveable { mutableStateOf(if (expense != null) expense.accountId else defaultMethod) }
     val trackerKind = if (isIncome) null else com.midinero.control.domain.TrackerKind.of(shownCategories.firstOrNull { it.id == categoryId }?.kind)
     var date by rememberSaveable { mutableStateOf(expense?.let { dateOf(it.timestamp) } ?: defaultDate) }
     var receiptFilled by remember { mutableStateOf<String?>(null) }
@@ -482,6 +489,7 @@ fun ExpenseEditorDialog(
                     tripId = if (isIncome) null else tripId,
                     receipt = receipt,
                     details = detailsInput.build(trackerKind),
+                    accountId = if (features.paymentMethods) methodId else expense?.accountId,
                     previousFuelId = if (trackerKind == com.midinero.control.domain.TrackerKind.FUEL) previousFill?.id else null,
                     previousFuelKm = if (trackerKind == com.midinero.control.domain.TrackerKind.FUEL && previousFill != null) com.midinero.control.domain.parseQuantity(detailsInput.previousKm)?.takeIf { it > 0 } else null,
                 )
@@ -662,6 +670,30 @@ fun ExpenseEditorDialog(
                     tr("Usar siempre esta categoría para «${merchant.trim()}»", "Always use this category for “${merchant.trim()}”"),
                     style = MaterialTheme.typography.bodyMedium,
                 )
+            }
+        }
+        if (features.paymentMethods) {
+            FieldLabel(if (isIncome) tr("Cobrado en", "Received in") else tr("Pagado con", "Paid with"))
+            val shown = paymentMethods.filter { !it.archived || it.id == methodId }
+            if (shown.isEmpty()) {
+                Text(
+                    tr("Crea tus métodos de pago en Más → Métodos de pago.", "Create your payment methods in More → Payment methods."),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    shown.forEach { m ->
+                        FilterChip(
+                            selected = methodId == m.id,
+                            onClick = { methodId = if (methodId == m.id) null else m.id },
+                            label = { Text("${m.emoji} ${m.name}") },
+                            shape = CircleShape,
+                            colors = sheetChipColors(),
+                            border = null,
+                        )
+                    }
+                }
             }
         }
         trackerKind?.let { DetailsFields(it, detailsInput, vehicles, amountCents = amount, previous = previousFill, editing = expense != null) }

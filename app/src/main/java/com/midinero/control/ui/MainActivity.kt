@@ -563,6 +563,8 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         onOpenVehicles = { open("vehicles") },
                         onOpenPolicies = { open("policies") },
                         onOpenCompare = { open("compare") },
+                        onOpenPaymentMethods = { open("methods") },
+                        onOpenProfiles = { open("profiles") },
                         onOpenSettings = { open(SETTINGS_ROUTE) },
                         onOpenHelp = { open("help") },
                     )
@@ -593,6 +595,8 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                 composable("vehicle/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
                     com.midinero.control.ui.screens.VehicleDetailScreen(vehicleId = entry.arguments?.getLong("id") ?: 0L, vm = vm, onBack = { nav.popBackStack() })
                 }
+                composable("methods") { com.midinero.control.ui.screens.PaymentMethodsScreen(onBack = { nav.popBackStack() }) }
+                composable("profiles") { com.midinero.control.ui.screens.ProfilesScreen(onBack = { nav.popBackStack() }) }
                 composable("policies") { com.midinero.control.ui.screens.PoliciesScreen(onBack = { nav.popBackStack() }) }
                 composable("compare") { com.midinero.control.ui.screens.CompareScreen(onBack = { nav.popBackStack() }, onOpenCategory = ::openCategory) }
                 composable("debts") { DebtsScreen(onBack = { nav.popBackStack() }) }
@@ -604,6 +608,8 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         vm = vm,
                         onBack = { nav.popBackStack() },
                         onOpenHelp = { nav.navigate("help") },
+                        onOpenPaymentMethods = { nav.navigate("methods") },
+                        onOpenProfiles = { nav.navigate("profiles") },
                     )
                 }
             }

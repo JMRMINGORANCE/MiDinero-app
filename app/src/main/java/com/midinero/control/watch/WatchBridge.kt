@@ -164,7 +164,15 @@ object WatchBridge {
         }
         val raw = listOf("$appName ⌚", notice.title, notice.body)
             .joinToString(" | ")
-        if (app.repository.addDetectedPayment(payment, raw, notice.time, "watch:${notice.id}") != null) {
+        if (app.repository.addDetectedPayment(
+                payment, raw, notice.time, "watch:${notice.id}",
+                // Los pagos del reloj van con el método de la app del móvil (Google Wallet, Samsung Wallet…)
+                sourcePackage = when (notice.packageName) {
+                    GOOGLE_PLAY_SERVICES -> GOOGLE_WALLET
+                    "com.samsung.android.samsungpay.gear" -> "com.samsung.android.spay"
+                    else -> notice.packageName
+                },
+            ) != null) {
             app.prefs.lastDetectionAt = System.currentTimeMillis()
         }
     }
