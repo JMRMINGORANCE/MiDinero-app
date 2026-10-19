@@ -134,6 +134,30 @@ class MigrationTest {
         }
     }
 
+    /** v15: los coches que ya había siguen siendo coches y los seguros conservan todo. */
+    @Test
+    fun migrate14To15() = runBlocking {
+        val name = "migrate-14-15.db"
+        createDatabase(name, 14).apply {
+            execSQL("INSERT INTO vehicles (id, name, emoji, plate, oilReminderMonths, itvDueEpochDay, itvNoticeDays, archived, createdAt) VALUES (1, 'León', '🚗', '1234ABC', 11, NULL, 30, 0, 0)")
+            execSQL("INSERT INTO policies (id, name, type, company, vehicleId, renewalEpochDay, noticeDays, cancelDays, note, archived, createdAt) VALUES (2, 'Seguro', 'CAR', 'Mapfre', 1, 20600, 45, 30, '', 0, 0)")
+            close()
+        }
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(*ALL_MIGRATIONS).allowMainThreadQueries().build()
+        try {
+            db.openHelper.writableDatabase
+            val v = db.householdDao().getVehicles().single()
+            assertEquals(Vehicle.KIND_CAR, v.kind)
+            assertEquals("1234ABC", v.plate)
+            val p = db.householdDao().getPolicies().single()
+            assertEquals("Mapfre", p.company)
+            assertEquals("", p.phone)
+            assertEquals("", p.policyNumber)
+        } finally {
+            db.close()
+        }
+    }
+
     private companion object {
         const val DB = "migration-test.db"
     }

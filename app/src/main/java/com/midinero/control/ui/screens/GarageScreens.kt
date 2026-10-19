@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.midinero.control.data.Vehicle
+import com.midinero.control.domain.DateRange
 import com.midinero.control.domain.ExpenseDetails
 import com.midinero.control.domain.Garage
 import com.midinero.control.domain.Lang
@@ -64,7 +65,8 @@ private val longDate get() = Lang.dateFormat("d MMM yyyy")
 /** Tus coches con lo que te cuestan y lo que les toca (ITV, aceite, seguro). */
 @Composable
 fun VehiclesScreen(onBack: () -> Unit, onOpenVehicle: (Long) -> Unit, hvm: HouseholdViewModel = viewModel()) {
-    val vehicles by hvm.vehicles.collectAsStateWithLifecycle()
+    val allAssets by hvm.vehicles.collectAsStateWithLifecycle()
+    val vehicles = allAssets.filter { !it.isHome }
     val categories by hvm.categories.collectAsStateWithLifecycle()
     val expenses by hvm.expenses.collectAsStateWithLifecycle()
     val policies by hvm.policies.collectAsStateWithLifecycle()
@@ -74,7 +76,7 @@ fun VehiclesScreen(onBack: () -> Unit, onOpenVehicle: (Long) -> Unit, hvm: House
     val fuel = remember(categories, expenses) { Meters.entries(TrackerKind.FUEL, categories, expenses) }
     val car = remember(categories, expenses) { Meters.entries(TrackerKind.CAR, categories, expenses) }
     val reminders = remember(vehicles, car, policies) { Garage.reminders(vehicles, car, policies).filter { it.kind != ReminderKind.POLICY } }
-    val year = RangePreset.THIS_YEAR.range(today)
+    val year = DateRange.year(today.year)
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -168,7 +170,7 @@ fun VehicleDetailScreen(vehicleId: Long, vm: MainViewModel, onBack: () -> Unit, 
     val policies by hvm.policies.collectAsStateWithLifecycle()
     val prices by hvm.prices.collectAsStateWithLifecycle()
     val vehicle = vehicles.firstOrNull { it.id == vehicleId }
-    var preset by rememberSaveable { mutableStateOf(RangePreset.THIS_YEAR) }
+    val selection = rememberRangeSelection()
     var editing by rememberSaveable { mutableStateOf(false) }
     var adding by rememberSaveable { mutableStateOf<String?>(null) }
     var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -180,7 +182,7 @@ fun VehicleDetailScreen(vehicleId: Long, vm: MainViewModel, onBack: () -> Unit, 
     val today = LocalDate.now()
     val fuel = remember(categories, expenses) { Meters.entries(TrackerKind.FUEL, categories, expenses) }
     val car = remember(categories, expenses) { Meters.entries(TrackerKind.CAR, categories, expenses) }
-    val s = remember(vehicle, fuel, car, policies, prices, preset) { Garage.summary(vehicle, fuel, car, policies, prices, preset.range(today)) }
+    val s = remember(vehicle, fuel, car, policies, prices, selection.range) { Garage.summary(vehicle, fuel, car, policies, prices, selection.range) }
     val reminders = remember(vehicle, car) { Garage.reminders(listOf(vehicle), car, emptyList()) }
     val lastOil = remember(vehicle, car) { Garage.lastService(vehicle.id, ServiceType.OIL, car) }
     val byId = remember(categories) { categories.associateBy { it.id } }
@@ -204,7 +206,7 @@ fun VehicleDetailScreen(vehicleId: Long, vm: MainViewModel, onBack: () -> Unit, 
                     actions = { RoundAction(Icons.Filled.Edit, tr("Editar coche", "Edit car"), { editing = true }) },
                 )
             }
-            item { RangeChips(preset, { preset = it }) }
+            item { RangeSelector(selection) }
             item {
                 StatGrid(
                     listOf(
@@ -316,12 +318,20 @@ fun VehicleDetailScreen(vehicleId: Long, vm: MainViewModel, onBack: () -> Unit, 
 }
 
 private val vehicleEmojis = listOf("🚗", "🚙", "🚐", "🛻", "🏍️", "🛵", "🚚", "🏎️")
+private val homeEmojis = listOf("🏠", "🏡", "🏢", "🏖️", "🏘️", "🏚️", "⛰️", "🏪")
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun VehicleEditor(vehicle: Vehicle?, onDismiss: () -> Unit, onSave: (Vehicle) -> Unit, onDelete: (() -> Unit)?) {
+internal fun VehicleEditor(
+    vehicle: Vehicle?,
+    onDismiss: () -> Unit,
+    onSave: (Vehicle) -> Unit,
+    onDelete: (() -> Unit)?,
+    /** Vivienda en lugar de coche: sin matrícula, ITV ni aceite. */
+    home: Boolean = vehicle?.isHome == true,
+) {
     var name by rememberSaveable { mutableStateOf(vehicle?.name ?: "") }
-    var emoji by rememberSaveable { mutableStateOf(vehicle?.emoji ?: "🚗") }
+    var emoji by rememberSaveable { mutableStateOf(vehicle?.emoji ?: if (home) "🏠" else "🚗") }
     var plate by rememberSaveable { mutableStateOf(vehicle?.plate ?: "") }
     var oilOn by rememberSaveable { mutableStateOf(vehicle?.oilReminderMonths != null || vehicle == null) }
     var oilMonths by rememberSaveable { mutableStateOf((vehicle?.oilReminderMonths ?: 11).toString()) }
@@ -331,30 +341,35 @@ private fun VehicleEditor(vehicle: Vehicle?, onDismiss: () -> Unit, onSave: (Veh
     val months = oilMonths.toIntOrNull()?.takeIf { it in 1..60 }
     val days = itvDays.toIntOrNull()?.takeIf { it in 0..120 }
     EditorSheet(
-        title = if (vehicle == null) tr("Nuevo coche", "New car") else tr("Editar coche", "Edit car"),
+        title = when {
+            home -> if (vehicle == null) tr("Nueva vivienda", "New home") else tr("Editar vivienda", "Edit home")
+            else -> if (vehicle == null) tr("Nuevo coche", "New car") else tr("Editar coche", "Edit car")
+        },
         onDismiss = onDismiss,
         primaryText = tr("Guardar", "Save"),
-        primaryEnabled = name.isNotBlank() && (!oilOn || months != null) && days != null,
+        primaryEnabled = name.isNotBlank() && (home || ((!oilOn || months != null) && days != null)),
         onPrimary = {
             onSave(
-                (vehicle ?: Vehicle(name = "")).copy(
-                    name = name.trim(), emoji = emoji, plate = plate,
-                    oilReminderMonths = if (oilOn) months else null, itvNoticeDays = days ?: 30, archived = archived,
+                (vehicle ?: Vehicle(name = "", kind = if (home) Vehicle.KIND_HOME else Vehicle.KIND_CAR)).copy(
+                    name = name.trim(), emoji = emoji, plate = if (home) "" else plate,
+                    oilReminderMonths = if (oilOn && !home) months else null, itvNoticeDays = days ?: 30, archived = archived,
+                    itvDueEpochDay = if (home) null else vehicle?.itvDueEpochDay,
                 )
             )
         },
     ) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            vehicleEmojis.forEach { e ->
+            (if (home) homeEmojis else vehicleEmojis).forEach { e ->
                 FilterChip(selected = emoji == e, onClick = { emoji = e }, label = { Text(e) }, shape = CircleShape, colors = sheetChipColors(), border = null)
             }
         }
         OutlinedTextField(
             value = name, onValueChange = { name = it.take(40) }, label = { Text(tr("Nombre", "Name")) },
-            placeholder = { Text(tr("Ej.: León, el de papá…", "E.g. León, Dad's car…")) },
+            placeholder = { Text(if (home) tr("Ej.: Piso, Casa de la playa…", "E.g. Flat, Beach house…") else tr("Ej.: León, el de papá…", "E.g. León, Dad's car…")) },
             singleLine = true, modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         )
+        if (!home) {
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
             value = plate, onValueChange = { plate = it.take(12) }, label = { Text(tr("Matrícula (opcional)", "Plate (optional)")) },
@@ -381,6 +396,7 @@ private fun VehicleEditor(vehicle: Vehicle?, onDismiss: () -> Unit, onSave: (Veh
             isError = days == null, singleLine = true, modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
+        }
         if (vehicle != null) {
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -392,14 +408,19 @@ private fun VehicleEditor(vehicle: Vehicle?, onDismiss: () -> Unit, onSave: (Veh
             }
         }
         if (onDelete != null) {
-            TextButton(onClick = { confirmDelete = true }) { Text(tr("Eliminar coche", "Delete car"), color = MaterialTheme.colorScheme.error) }
+            TextButton(onClick = { confirmDelete = true }) { Text(if (home) tr("Eliminar vivienda", "Delete home") else tr("Eliminar coche", "Delete car"), color = MaterialTheme.colorScheme.error) }
         }
     }
     if (confirmDelete && onDelete != null) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text(tr("¿Eliminar «${vehicle?.name}»?", "Delete “${vehicle?.name}”?")) },
-            text = { Text(tr("Sus repostajes y mantenimientos no se borran: siguen en sus categorías, sin coche.", "Its refuels and services aren't deleted: they stay in their categories, with no car.")) },
+            text = {
+                Text(
+                    if (home) tr("Sus recibos y gastos no se borran: siguen en sus categorías, sin vivienda.", "Its bills and expenses aren't deleted: they stay in their categories, with no home.")
+                    else tr("Sus repostajes y mantenimientos no se borran: siguen en sus categorías, sin coche.", "Its refuels and services aren't deleted: they stay in their categories, with no car.")
+                )
+            },
             confirmButton = { TextButton(onClick = { confirmDelete = false; onDismiss(); onDelete() }) { Text(tr("Eliminar", "Delete"), color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(tr("Cancelar", "Cancel")) } },
         )

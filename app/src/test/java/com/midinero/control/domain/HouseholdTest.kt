@@ -186,4 +186,31 @@ class HouseholdTest {
         assertEquals(46000L, s.insuranceCents)
         assertEquals(115000L, s.lastOdometer)
     }
+
+    @Test
+    fun gastosDeCadaVivienda() {
+        val water = Category(id = 5, name = "Agua", emoji = "🚿", colorHex = "#000000", kind = "WATER")
+        val diy = Category(id = 6, name = "Bricolaje", emoji = "🔨", colorHex = "#000000", kind = "HOME")
+        val cats = categories + water + diy
+        val home = Vehicle(id = 7, name = "Playa", kind = Vehicle.KIND_HOME)
+        val d = LocalDate.of(2025, 5, 1)
+        val expenses = listOf(
+            expense(1, 4000, 5, d, ExpenseDetails(m3 = 10.0, vehicleId = 7)),
+            expense(2, 3000, 5, d, ExpenseDetails(m3 = 8.0, vehicleId = 8)),
+            expense(3, 2500, 6, d, ExpenseDetails(vehicleId = 7)),
+            expense(4, 9000, 2, d, ExpenseDetails(kwhPeak = 10.0, vehicleId = 7)),
+        )
+        val entries = Garage.homeKinds.associateWith { Meters.entries(it, cats, expenses) }
+        val policy = Policy(id = 1, name = "Hogar", type = "HOME", vehicleId = 7, renewalEpochDay = d.toEpochDay())
+        val prices = listOf(PolicyPrice(policyId = 1, startEpochDay = d.toEpochDay(), amountCents = 20000))
+        val s = Garage.homeSummary(home, entries, listOf(policy), prices, DateRange.year(2025))
+        assertEquals(4000L, s.byKind[TrackerKind.WATER])
+        assertEquals(2500L, s.byKind[TrackerKind.HOME])
+        assertEquals(9000L, s.byKind[TrackerKind.ELECTRICITY])
+        assertEquals(35500L, s.totalCents)
+        assertEquals(1, Garage.forAsset(entries[TrackerKind.WATER]!!, 8).size)
+        assertEquals(2, Garage.forAsset(entries[TrackerKind.WATER]!!, null).size)
+        // Las viviendas no tienen ITV ni aceite
+        assertTrue(Garage.reminders(listOf(home.copy(itvDueEpochDay = d.toEpochDay())), emptyList(), emptyList()).isEmpty())
+    }
 }

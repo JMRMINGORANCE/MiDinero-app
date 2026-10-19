@@ -1,5 +1,12 @@
 # Cambios
 
+## 4.21
+
+- **Viviendas** (Más → Casa y coche): si tienes más de una casa, al apuntar la luz, el agua, el gas o un arreglo eliges de cuál es, y cada vivienda tiene su pantalla con lo que cuesta (luz, agua, gas, mantenimiento y seguro). Nuevo tipo de categoría «Casa: mantenimiento, bricolaje…» para llevar los arreglos de cada vivienda (puedes tener varias, por ejemplo Mantenimiento y Bricolaje). En el CSV, la columna «Coche o vivienda» vale para las dos cosas.
+- **Paneles con más fechas**: en Combustible, Luz, Gas, Agua, cada coche y cada vivienda eliges Mes o Año (y te mueves con las flechas), 12 meses, Todo o unas fechas desde–hasta.
+- **Filtrar por coche o vivienda**: el panel de combustible se puede ver de un solo coche, y los de luz, agua y gas, de una sola vivienda.
+- **Seguros**: nº de póliza y teléfono de la compañía. Al tocarlos se copian para pegarlos al llamar o en un parte, y hay un botón para llamar. Si el coche o la vivienda del seguro aún no existe, se crea desde el propio seguro.
+
 ## 4.20
 
 - **Importar con datos extra**: el CSV exportado trae ahora las columnas Método de pago, Litros, Km del repostaje, Km del coche, Coche, kWh punta, kWh llano, kWh valle, kWh excedentes, kWh gas, m³ y Mantenimiento, y sirve de plantilla. Al importar un CSV con esas columnas se leen también el tipo (gasto, ingreso o devolución), la hora, la categoría y la nota. Las categorías, coches y métodos de pago que falten se crean, y las categorías con litros, kWh o m³ pasan solas a su panel de Casa y coche.

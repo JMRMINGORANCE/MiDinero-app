@@ -8,13 +8,15 @@ enum class TrackerKind(val emoji: String, private val es: String, private val en
     ELECTRICITY("💡", "Luz", "Electricity"),
     GAS("🔥", "Gas", "Gas"),
     WATER("🚿", "Agua", "Water"),
-    CAR("🔧", "Coche: mantenimiento, ITV, impuesto…", "Car: servicing, MOT, tax…");
+    CAR("🔧", "Coche: mantenimiento, ITV, impuesto…", "Car: servicing, MOT, tax…"),
+    HOME("🔨", "Casa: mantenimiento, bricolaje…", "Home: repairs, DIY…");
 
     val label: String get() = tr(es, en)
 
     /** Nombre corto para una categoría nueva de este panel. */
     val categoryName: String get() = when (this) {
         CAR -> tr("Mantenimiento coche", "Car servicing")
+        HOME -> tr("Mantenimiento casa", "Home repairs")
         else -> label
     }
 
@@ -70,7 +72,7 @@ data class ExpenseDetails(
         kwhPeak != null || kwhFlat != null || kwhValley != null || kwhExported != null -> TrackerKind.ELECTRICITY
         kwh != null -> TrackerKind.GAS
         m3 != null -> TrackerKind.WATER
-        services.isNotEmpty() || odometerKm != null || vehicleId != null -> TrackerKind.CAR
+        services.isNotEmpty() || odometerKm != null -> TrackerKind.CAR
         else -> null
     }
 

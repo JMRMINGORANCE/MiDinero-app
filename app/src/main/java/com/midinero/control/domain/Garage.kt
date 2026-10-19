@@ -25,6 +25,18 @@ data class VehicleSummary(
     val centsPerKm: Double? get() = if (km > 0) totalCents / km else null
 }
 
+/** Lo que ha costado una vivienda en un tramo: recibos de cada suministro, mantenimiento y seguro. */
+data class HomeSummary(
+    val home: Vehicle,
+    /** Gasto de cada panel (luz, agua, gas, casa) en el tramo. */
+    val byKind: Map<TrackerKind, Long>,
+    val insuranceCents: Long,
+    /** Todo lo de esta vivienda en el tramo, del más reciente al más antiguo. */
+    val entries: List<Pair<TrackerKind, MeterEntry>>,
+) {
+    val totalCents: Long get() = byKind.values.sum() + insuranceCents
+}
+
 enum class ReminderKind { OIL, ITV, POLICY }
 
 /**
@@ -101,6 +113,31 @@ object Garage {
         )
     }
 
+    /** Paneles que pueden ir a una vivienda. */
+    val homeKinds = listOf(TrackerKind.ELECTRICITY, TrackerKind.WATER, TrackerKind.GAS, TrackerKind.HOME)
+
+    fun homeSummary(
+        home: Vehicle,
+        entries: Map<TrackerKind, List<MeterEntry>>,
+        policies: List<Policy>,
+        prices: List<PolicyPrice>,
+        range: DateRange?,
+    ): HomeSummary {
+        val mine = homeKinds.flatMap { k -> Meters.inRange(entries[k].orEmpty(), range).filter { it.details.vehicleId == home.id }.map { k to it } }
+        val policyIds = policies.filter { it.vehicleId == home.id }.map { it.id }.toSet()
+        val insurance = prices.filter { it.policyId in policyIds && (range == null || range.contains(LocalDate.ofEpochDay(it.startEpochDay))) }.sumOf { it.amountCents }
+        return HomeSummary(
+            home = home,
+            byKind = homeKinds.associateWith { k -> mine.filter { it.first == k }.sumOf { it.second.cents } },
+            insuranceCents = insurance,
+            entries = mine.sortedByDescending { it.second.expense.timestamp },
+        )
+    }
+
+    /** Solo lo de un coche o una vivienda; null = todo. */
+    fun forAsset(entries: List<MeterEntry>, assetId: Long?): List<MeterEntry> =
+        if (assetId == null) entries else entries.filter { it.details.vehicleId == assetId }
+
     /** Último gasto de [type] de un coche (el cambio de aceite más reciente, por ejemplo). */
     fun lastService(vehicleId: Long, type: ServiceType, carEntries: List<MeterEntry>): MeterEntry? =
         carEntries.filter { it.details.vehicleId == vehicleId && type in it.details.services }.maxByOrNull { it.date }
@@ -108,7 +145,7 @@ object Garage {
     /** Todos los avisos (activos o no), del que vence antes al que vence después. */
     fun reminders(vehicles: List<Vehicle>, carEntries: List<MeterEntry>, policies: List<Policy>): List<Reminder> {
         val list = mutableListOf<Reminder>()
-        vehicles.filter { !it.archived }.forEach { v ->
+        vehicles.filter { !it.archived && !it.isHome }.forEach { v ->
             val months = v.oilReminderMonths
             if (months != null && months > 0) {
                 lastService(v.id, ServiceType.OIL, carEntries)?.let { last ->

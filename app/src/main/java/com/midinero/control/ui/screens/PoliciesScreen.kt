@@ -137,6 +137,10 @@ fun PoliciesScreen(onBack: () -> Unit, hvm: HouseholdViewModel = viewModel()) {
                                 }
                             }
                         }
+                        if (p.policyNumber.isNotBlank() || p.phone.isNotBlank()) {
+                            Spacer(Modifier.height(6.dp))
+                            PolicyContact(p)
+                        }
                         if (reminder != null && !p.archived) {
                             Spacer(Modifier.height(8.dp))
                             val active = reminder.isActive(today)
@@ -235,6 +239,9 @@ private fun PolicyEditor(
     var notice by rememberSaveable { mutableStateOf((policy?.noticeDays ?: 45).toString()) }
     var cancel by rememberSaveable { mutableStateOf((policy?.cancelDays ?: 30).toString()) }
     var note by rememberSaveable { mutableStateOf(policy?.note ?: "") }
+    var policyNumber by rememberSaveable { mutableStateOf(policy?.policyNumber ?: "") }
+    var phone by rememberSaveable { mutableStateOf(policy?.phone ?: "") }
+    var newAssetName by rememberSaveable { mutableStateOf("") }
     var price by rememberSaveable { mutableStateOf("") }
     var archived by rememberSaveable { mutableStateOf(policy?.archived ?: false) }
     var pickingDate by rememberSaveable { mutableStateOf(false) }
@@ -252,7 +259,8 @@ private fun PolicyEditor(
         onPrimary = {
             hvm.savePolicy(
                 (policy ?: Policy(name = "", renewalEpochDay = renewal)).copy(
-                    name = name, type = type, company = company, vehicleId = if (type == PolicyType.CAR.name) vehicleId else null,
+                    name = name, type = type, company = company, vehicleId = if (type == PolicyType.CAR.name || type == PolicyType.HOME.name) vehicleId else null,
+                    policyNumber = policyNumber.trim(), phone = phone.trim(),
                     renewalEpochDay = renewal, noticeDays = noticeDays ?: 45, cancelDays = cancelDays ?: 30, note = note.trim(), archived = archived,
                 ),
                 if (policy == null) priceCents else null,
@@ -276,11 +284,50 @@ private fun PolicyEditor(
             singleLine = true, modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
         )
-        if (type == PolicyType.CAR.name && vehicles.isNotEmpty()) {
-            FieldLabel(tr("Coche", "Car"))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                vehicles.filter { !it.archived || it.id == vehicleId }.forEach { v ->
-                    FilterChip(selected = vehicleId == v.id, onClick = { vehicleId = if (vehicleId == v.id) null else v.id }, label = { Text("${v.emoji} ${v.name}") }, shape = CircleShape, colors = sheetChipColors(), border = null)
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = policyNumber, onValueChange = { policyNumber = it.take(40) }, label = { Text(tr("Nº de póliza", "Policy number")) },
+                singleLine = true, modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+            )
+            OutlinedTextField(
+                value = phone, onValueChange = { phone = it.filter { c -> c.isDigit() || c in "+ ()-" }.take(20) }, label = { Text(tr("Teléfono", "Phone")) },
+                placeholder = { Text(tr("Partes y asistencia", "Claims and assistance")) },
+                singleLine = true, modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            )
+        }
+        // El coche (o la vivienda) del seguro; si aún no está, se puede crear aquí mismo
+        val home = type == PolicyType.HOME.name
+        if (type == PolicyType.CAR.name || home) {
+            FieldLabel(if (home) tr("Vivienda", "Home") else tr("Coche", "Car"))
+            val assets = vehicles.filter { it.isHome == home && (!it.archived || it.id == vehicleId) }
+            if (assets.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    assets.forEach { v ->
+                        FilterChip(selected = vehicleId == v.id, onClick = { vehicleId = if (vehicleId == v.id) null else v.id }, label = { Text("${v.emoji} ${v.name}") }, shape = CircleShape, colors = sheetChipColors(), border = null)
+                    }
+                }
+            }
+            if (vehicleId == null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = newAssetName, onValueChange = { newAssetName = it.take(40) },
+                        label = { Text(if (home) tr("Añadir vivienda", "Add home") else tr("Añadir coche", "Add car")) },
+                        placeholder = { Text(if (home) tr("Ej.: Piso", "E.g. Flat") else tr("Ej.: León", "E.g. León")) },
+                        singleLine = true, modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    )
+                    TextButton(
+                        onClick = {
+                            val v = if (home) Vehicle(name = newAssetName.trim(), emoji = "🏠", kind = Vehicle.KIND_HOME, oilReminderMonths = null)
+                                else Vehicle(name = newAssetName.trim())
+                            hvm.saveVehicle(v) { id -> vehicleId = id }
+                            newAssetName = ""
+                        },
+                        enabled = newAssetName.isNotBlank(),
+                    ) { Text(tr("Añadir", "Add")) }
                 }
             }
         }
@@ -375,6 +422,35 @@ private fun PolicyEditor(
             confirmButton = { TextButton(onClick = { confirmDelete = false; hvm.deletePolicy(policy); onDismiss() }) { Text(tr("Eliminar", "Delete"), color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(tr("Cancelar", "Cancel")) } },
         )
+    }
+}
+
+/**
+ * Nº de póliza y teléfono a mano: al tocarlos se copian (para pegarlos al llamar o en un parte),
+ * y el teléfono tiene botón para abrir el marcador.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PolicyContact(p: Policy) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    fun copy(label: String, value: String) {
+        context.getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(android.content.ClipData.newPlainText(label, value))
+        android.widget.Toast.makeText(context, tr("$label copiado", "$label copied"), android.widget.Toast.LENGTH_SHORT).show()
+    }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (p.policyNumber.isNotBlank()) {
+            FilterChip(selected = false, onClick = { copy(tr("Nº de póliza", "Policy number"), p.policyNumber) }, label = { Text("📄 ${p.policyNumber}") }, shape = CircleShape, colors = pillChipColors(), border = null)
+        }
+        if (p.phone.isNotBlank()) {
+            FilterChip(selected = false, onClick = { copy(tr("Teléfono", "Phone"), p.phone) }, label = { Text("📞 ${p.phone}") }, shape = CircleShape, colors = pillChipColors(), border = null)
+            FilterChip(
+                selected = false,
+                onClick = {
+                    runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:" + p.phone.filter { it.isDigit() || it == '+' }))) }
+                },
+                label = { Text(tr("Llamar", "Call")) }, shape = CircleShape, colors = pillChipColors(), border = null,
+            )
+        }
     }
 }
 

@@ -1,1 +1,1 @@
-Import litres, km, kWh and m³ from CSV (the exported CSV works as a template), live l/100 km when refuelling and, with many categories, the most used first.
+Homes with their own electricity, water and gas, panels by month, year or custom dates with a per-car filter, and insurance with policy number and phone.

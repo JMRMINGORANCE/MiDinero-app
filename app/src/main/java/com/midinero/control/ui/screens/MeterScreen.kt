@@ -65,7 +65,9 @@ private val valleyColor = Color(0xFF2B7BC4)
 fun MeterScreen(kind: TrackerKind, vm: MainViewModel, onBack: () -> Unit, hvm: HouseholdViewModel = viewModel()) {
     val categories by hvm.categories.collectAsStateWithLifecycle()
     val expenses by hvm.expenses.collectAsStateWithLifecycle()
-    var preset by rememberSaveable { mutableStateOf(RangePreset.THIS_YEAR) }
+    val vehicles by hvm.vehicles.collectAsStateWithLifecycle()
+    val selection = rememberRangeSelection()
+    var assetId by rememberSaveable { mutableStateOf<Long?>(null) }
     var chartMode by rememberSaveable { mutableStateOf(0) }
     var selectedBar by rememberSaveable { mutableStateOf<Int?>(null) }
     var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -73,8 +75,10 @@ fun MeterScreen(kind: TrackerKind, vm: MainViewModel, onBack: () -> Unit, hvm: H
     val context = LocalContext.current
 
     val all = remember(kind, categories, expenses) { Meters.entries(kind, categories, expenses) }
-    val range = preset.range()
-    val entries = remember(all, preset) { Meters.inRange(all, range) }
+    val range = selection.range
+    // El combustible se filtra por coche; la luz, el agua y el gas, por vivienda
+    val assets = vehicles.filter { (it.isHome == (kind != TrackerKind.FUEL)) && (!it.archived || it.id == assetId) }
+    val entries = remember(all, range, assetId) { com.midinero.control.domain.Garage.forAsset(Meters.inRange(all, range), assetId) }
     val byId = remember(categories) { categories.associateBy { it.id } }
     val kindCategories = remember(categories) { Meters.categoriesOf(kind, categories) }
     val fuel = remember(entries, kind) { if (kind == TrackerKind.FUEL) Meters.fuel(entries) else null }
@@ -104,7 +108,8 @@ fun MeterScreen(kind: TrackerKind, vm: MainViewModel, onBack: () -> Unit, hvm: H
             }
             item { KindCategoryCard(kind, hvm) }
             if (kindCategories.isNotEmpty()) {
-                item { RangeChips(preset, { preset = it; selectedBar = null }) }
+                item { RangeSelector(selection, onChange = { selectedBar = null }) }
+                if (assets.size >= 2) item { AssetFilter(assets, assetId, { assetId = it; selectedBar = null }) }
                 item {
                     val total = entries.sumOf { it.cents }
                     val tiles = mutableListOf<Triple<String, String, String?>>()
@@ -176,7 +181,11 @@ fun MeterScreen(kind: TrackerKind, vm: MainViewModel, onBack: () -> Unit, hvm: H
         }
     }
 
-    if (adding) PanelExpenseEditor(vm, expense = null, initialCategoryId = kindCategories.firstOrNull()?.id, onDismiss = { adding = false })
+    if (adding) PanelExpenseEditor(
+        vm, expense = null, initialCategoryId = kindCategories.firstOrNull()?.id,
+        initialDetails = assetId?.let { com.midinero.control.domain.ExpenseDetails(vehicleId = it).encode() },
+        onDismiss = { adding = false },
+    )
     expenses.firstOrNull { it.id == editingId }?.let { old: Expense ->
         PanelExpenseEditor(vm, expense = old, initialCategoryId = null, onDismiss = { editingId = null })
     }
@@ -209,7 +218,7 @@ private fun entryDetail(kind: TrackerKind, d: ExpenseDetails, fill: com.midinero
             parts += formatQuantity(q, 1) + " $unit"
             if (q > 0) parts += formatUnitPrice(cents / q, 4) + "/$unit"
         }
-        TrackerKind.CAR -> Unit
+        TrackerKind.CAR, TrackerKind.HOME -> Unit
     }
     return parts.joinToString(" · ").ifBlank { null }
 }

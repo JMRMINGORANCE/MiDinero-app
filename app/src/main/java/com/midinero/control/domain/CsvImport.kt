@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter
  * Columnas de más que se leen si el CSV las tiene con el mismo nombre que las que exporta MiDinero
  * (en español o en inglés): así un CSV exportado sirve de plantilla para importar.
  */
-enum class CsvField(val es: String, val en: String) {
+enum class CsvField(val es: String, val en: String, val aliases: List<String> = emptyList()) {
     TYPE("Tipo", "Type"),
     TIME("Hora", "Time"),
     CATEGORY("Categoría", "Category"),
@@ -16,7 +16,7 @@ enum class CsvField(val es: String, val en: String) {
     LITERS("Litros", "Litres"),
     TRIP_KM("Km del repostaje", "Refuel km"),
     ODOMETER("Km del coche", "Odometer km"),
-    VEHICLE("Coche", "Car"),
+    VEHICLE("Coche o vivienda", "Car or home", listOf("Coche", "Car", "Vivienda", "Home", "Casa")),
     KWH_PEAK("kWh punta", "Peak kWh"),
     KWH_FLAT("kWh llano", "Flat kWh"),
     KWH_VALLEY("kWh valle", "Off-peak kWh"),
@@ -35,7 +35,8 @@ enum class CsvField(val es: String, val en: String) {
         fun detect(header: List<String>): Map<CsvField, Int> {
             val h = header.map(::norm)
             return entries.mapNotNull { f ->
-                val i = h.indexOfFirst { it == norm(f.es) || it == norm(f.en) || (f == LITERS && it == "liters") }
+                val names = (listOf(f.es, f.en) + f.aliases).map(::norm) + if (f == LITERS) listOf("liters") else emptyList()
+                val i = h.indexOfFirst { it in names }
                 if (i >= 0) f to i else null
             }.toMap()
         }

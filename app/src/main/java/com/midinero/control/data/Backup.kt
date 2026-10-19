@@ -172,6 +172,7 @@ object Backup {
                         .put("oilReminderMonths", v.oilReminderMonths ?: JSONObject.NULL)
                         .put("itvDueEpochDay", v.itvDueEpochDay ?: JSONObject.NULL)
                         .put("itvNoticeDays", v.itvNoticeDays).put("archived", v.archived).put("createdAt", v.createdAt)
+                        .put("kind", v.kind)
                 )
             }
         })
@@ -182,6 +183,7 @@ object Backup {
                         .put("vehicleId", p.vehicleId ?: JSONObject.NULL).put("renewalEpochDay", p.renewalEpochDay)
                         .put("noticeDays", p.noticeDays).put("cancelDays", p.cancelDays).put("note", p.note)
                         .put("archived", p.archived).put("createdAt", p.createdAt)
+                        .put("policyNumber", p.policyNumber).put("phone", p.phone)
                 )
             }
         })
@@ -394,6 +396,7 @@ object Backup {
                 plate = o.optString("plate"), oilReminderMonths = o.optLongOrNull("oilReminderMonths")?.toInt(),
                 itvDueEpochDay = o.optLongOrNull("itvDueEpochDay"), itvNoticeDays = o.optInt("itvNoticeDays", 30),
                 archived = o.optBoolean("archived"), createdAt = o.optLong("createdAt"),
+                kind = if (o.optString("kind") == Vehicle.KIND_HOME) Vehicle.KIND_HOME else Vehicle.KIND_CAR,
             )
         }
         val vehicleIds = vehicles.map { it.id }.toSet()
@@ -404,6 +407,7 @@ object Backup {
                 renewalEpochDay = o.getLong("renewalEpochDay"), noticeDays = o.optInt("noticeDays", 45),
                 cancelDays = o.optInt("cancelDays", 30), note = o.optString("note"),
                 archived = o.optBoolean("archived"), createdAt = o.optLong("createdAt"),
+                policyNumber = o.optString("policyNumber"), phone = o.optString("phone"),
             )
         }
         val policyIds = policies.map { it.id }.toSet()

@@ -23,7 +23,7 @@ class CsvExportTest {
         val lines = csv.removePrefix(CsvExport.BOM).trimEnd().split("\r\n")
         assertEquals(
             "Fecha;Hora;Tipo;Importe;Comercio;Categoría;Nota;Origen;Moneda original;Importe original;Viaje;" +
-                "Método de pago;Litros;Km del repostaje;Km del coche;Coche;kWh punta;kWh llano;kWh valle;kWh excedentes;kWh gas;m³;Mantenimiento",
+                "Método de pago;Litros;Km del repostaje;Km del coche;Coche o vivienda;kWh punta;kWh llano;kWh valle;kWh excedentes;kWh gas;m³;Mantenimiento",
             lines[0],
         )
         assertEquals("07/03/2025;09:05;Gasto;1234,56;\"Bar; \"\"El Sol\"\"\";Restaurantes;cena con amigos;Detectado;;;" + ";".repeat(12), lines[1])

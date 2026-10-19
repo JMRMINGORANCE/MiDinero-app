@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FlightTakeoff
@@ -89,6 +90,7 @@ object SectionColors {
     val gas = Color(0xFFE8590C)
     val water = Color(0xFF1098AD)
     val insurance = Color(0xFF2F9E44)
+    val homes = Color(0xFFAE3EC9)
     val compare = Color(0xFF7048E8)
 }
 
@@ -109,6 +111,7 @@ fun MoreScreen(
     onOpenChallenges: () -> Unit = {},
     onOpenPanel: (com.midinero.control.domain.TrackerKind) -> Unit = {},
     onOpenVehicles: () -> Unit = {},
+    onOpenHomes: () -> Unit = {},
     onOpenPolicies: () -> Unit = {},
     onOpenCompare: () -> Unit = {},
     onOpenPaymentMethods: () -> Unit = {},
@@ -227,7 +230,7 @@ fun MoreScreen(
 
         item { SectionTitle(tr("Casa y coche", "Home and car"), Modifier.entrance(entrance, 5)) }
         item {
-            HouseholdTiles(householdVm, onOpenPanel, onOpenVehicles, onOpenPolicies, Modifier.entrance(entrance, 5))
+            HouseholdTiles(householdVm, onOpenPanel, onOpenVehicles, onOpenHomes, onOpenPolicies, Modifier.entrance(entrance, 5))
         }
 
         item { SectionTitle(tr("Organiza", "Organise"), Modifier.entrance(entrance, 5)) }
@@ -348,14 +351,17 @@ private fun HouseholdTiles(
     hvm: com.midinero.control.ui.HouseholdViewModel,
     onOpenPanel: (com.midinero.control.domain.TrackerKind) -> Unit,
     onOpenVehicles: () -> Unit,
+    onOpenHomes: () -> Unit,
     onOpenPolicies: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val categories by hvm.categories.collectAsStateWithLifecycle()
     val expenses by hvm.expenses.collectAsStateWithLifecycle()
-    val vehicles by hvm.vehicles.collectAsStateWithLifecycle()
+    val assets by hvm.vehicles.collectAsStateWithLifecycle()
+    val vehicles = assets.filter { !it.isHome }
+    val homes = assets.filter { it.isHome && !it.archived }
     val policies by hvm.policies.collectAsStateWithLifecycle()
-    val year = RangePreset.THIS_YEAR.range()
+    val year = com.midinero.control.domain.DateRange.year(LocalDate.now().year)
     fun entries(kind: com.midinero.control.domain.TrackerKind) =
         com.midinero.control.domain.Meters.inRange(com.midinero.control.domain.Meters.entries(kind, categories, expenses), year)
     val fuelLine = remember(categories, expenses) {
@@ -417,10 +423,19 @@ private fun HouseholdTiles(
                 { onOpenPanel(com.midinero.control.domain.TrackerKind.WATER) }, Modifier.weight(1f),
             )
             HubTile(
+                Icons.Filled.Home, SectionColors.homes, tr("Viviendas", "Homes"),
+                homes.takeIf { it.isNotEmpty() }?.let { h -> if (h.size == 1) "${h[0].emoji} ${h[0].name}" else tr("${h.size} viviendas", "${h.size} homes") }
+                    ?: tr("Gastos de cada casa, por separado", "Each home's costs, kept apart"),
+                onOpenHomes, Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HubTile(
                 Icons.Filled.Shield, SectionColors.insurance, tr("Seguros", "Insurance"),
                 policyLine ?: tr("Aviso antes de que renueven", "A reminder before they renew"),
                 onOpenPolicies, Modifier.weight(1f),
             )
+            Spacer(Modifier.weight(1f))
         }
     }
 }

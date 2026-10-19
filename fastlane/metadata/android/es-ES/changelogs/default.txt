@@ -1,1 +1,1 @@
-Importa litros, km, kWh y m³ desde CSV (el CSV exportado sirve de plantilla), l/100 km al momento al repostar y, con muchas categorías, primero las más usadas.
+Viviendas con su luz, agua y gas por separado, paneles por mes, año o fechas a medida y filtro por coche, y seguros con nº de póliza y teléfono.

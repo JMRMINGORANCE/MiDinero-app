@@ -561,6 +561,7 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         onOpenChallenges = { open("challenges") },
                         onOpenPanel = { kind -> open("panel/${kind.name}") },
                         onOpenVehicles = { open("vehicles") },
+                        onOpenHomes = { open("homes") },
                         onOpenPolicies = { open("policies") },
                         onOpenCompare = { open("compare") },
                         onOpenPaymentMethods = { open("methods") },
@@ -597,6 +598,12 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                 }
                 composable("methods") { com.midinero.control.ui.screens.PaymentMethodsScreen(onBack = { nav.popBackStack() }) }
                 composable("profiles") { com.midinero.control.ui.screens.ProfilesScreen(onBack = { nav.popBackStack() }) }
+                composable("homes") {
+                    com.midinero.control.ui.screens.HomesScreen(onBack = { nav.popBackStack() }, onOpenHome = { id -> nav.navigate("home/$id") })
+                }
+                composable("home/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
+                    com.midinero.control.ui.screens.HomeDetailScreen(homeId = entry.arguments?.getLong("id") ?: 0L, vm = vm, onBack = { nav.popBackStack() })
+                }
                 composable("policies") { com.midinero.control.ui.screens.PoliciesScreen(onBack = { nav.popBackStack() }) }
                 composable("compare") { com.midinero.control.ui.screens.CompareScreen(onBack = { nav.popBackStack() }, onOpenCategory = ::openCategory) }
                 composable("debts") { DebtsScreen(onBack = { nav.popBackStack() }) }

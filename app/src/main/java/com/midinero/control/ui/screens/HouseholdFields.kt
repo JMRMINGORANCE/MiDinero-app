@@ -77,11 +77,12 @@ class DetailsInput(
             )
             TrackerKind.ELECTRICITY -> initial.copy(
                 kwhPeak = parseQuantity(kwhPeak), kwhFlat = parseQuantity(kwhFlat),
-                kwhValley = parseQuantity(kwhValley), kwhExported = parseQuantity(kwhExported),
+                kwhValley = parseQuantity(kwhValley), kwhExported = parseQuantity(kwhExported), vehicleId = vehicleId,
             )
-            TrackerKind.GAS -> initial.copy(kwh = parseQuantity(kwh))
-            TrackerKind.WATER -> initial.copy(m3 = parseQuantity(m3))
+            TrackerKind.GAS -> initial.copy(kwh = parseQuantity(kwh), vehicleId = vehicleId)
+            TrackerKind.WATER -> initial.copy(m3 = parseQuantity(m3), vehicleId = vehicleId)
             TrackerKind.CAR -> initial.copy(odometerKm = parseQuantity(odometer)?.toLong(), vehicleId = vehicleId, services = services)
+            TrackerKind.HOME -> initial.copy(vehicleId = vehicleId)
         }
         return d.encode()
     }
@@ -105,14 +106,10 @@ class DetailsInput(
     }
 }
 
-/** Estado de los campos extra; un gasto nuevo con un solo coche lo lleva ya elegido. */
+/** Estado de los campos extra (el coche o la vivienda se eligen solos en [DetailsFields] si solo hay uno). */
 @Composable
-fun rememberDetailsInput(details: String?, vehicles: List<Vehicle>): DetailsInput =
-    rememberSaveable(saver = DetailsInput.Saver) {
-        val parsed = ExpenseDetails.parse(details)
-        val active = vehicles.filter { !it.archived }
-        DetailsInput(parsed, vehicleId = parsed.vehicleId ?: active.singleOrNull()?.id)
-    }
+fun rememberDetailsInput(details: String?, @Suppress("UNUSED_PARAMETER") vehicles: List<Vehicle>): DetailsInput =
+    rememberSaveable(saver = DetailsInput.Saver) { DetailsInput(ExpenseDetails.parse(details)) }
 
 /** Campos extra del editor según el panel de la categoría elegida. Todos opcionales. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -133,10 +130,18 @@ fun DetailsFields(
             TrackerKind.ELECTRICITY -> tr("Consumo del recibo (opcional)", "Usage on the bill (optional)")
             TrackerKind.GAS, TrackerKind.WATER -> tr("Consumo del recibo (opcional)", "Usage on the bill (optional)")
             TrackerKind.CAR -> tr("Coche (opcional)", "Car (optional)")
+            TrackerKind.HOME -> tr("Vivienda (opcional)", "Home (optional)")
         }
     )
-    val active = vehicles.filter { !it.archived || it.id == input.vehicleId }
-    if ((kind == TrackerKind.FUEL || kind == TrackerKind.CAR) && active.isNotEmpty()) {
+    // Los repostajes y el taller van a un coche; la luz, el agua, el gas y la casa, a una vivienda
+    val wantsHome = kind in com.midinero.control.domain.Garage.homeKinds
+    val ofKind = vehicles.filter { it.isHome == wantsHome }
+    val active = ofKind.filter { !it.archived || it.id == input.vehicleId }
+    androidx.compose.runtime.LaunchedEffect(kind, ofKind) {
+        if (input.vehicleId != null && ofKind.none { it.id == input.vehicleId }) input.vehicleId = null
+        if (input.vehicleId == null) ofKind.filter { !it.archived }.singleOrNull()?.let { input.vehicleId = it.id }
+    }
+    if (active.isNotEmpty()) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             active.forEach { v ->
                 FilterChip(
@@ -196,6 +201,7 @@ fun DetailsFields(
         }
         TrackerKind.GAS -> NumberField(input.kwh, { input.kwh = it }, tr("kWh consumidos", "kWh used"), Modifier.fillMaxWidth())
         TrackerKind.WATER -> NumberField(input.m3, { input.m3 = it }, tr("m³ consumidos", "m³ used"), Modifier.fillMaxWidth())
+        TrackerKind.HOME -> Unit
         TrackerKind.CAR -> {
             NumberField(input.odometer, { input.odometer = it }, tr("Km que marca el coche", "Odometer (km)"), Modifier.fillMaxWidth(), decimals = false)
             Text(tr("Qué se le ha hecho", "What was done"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

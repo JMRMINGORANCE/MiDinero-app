@@ -165,7 +165,7 @@ object Meters {
         TrackerKind.GAS -> d.kwh
         TrackerKind.WATER -> d.m3
         TrackerKind.FUEL -> d.liters
-        TrackerKind.CAR -> null
+        TrackerKind.CAR, TrackerKind.HOME -> null
     }
 
     fun quantity(kind: TrackerKind, m: MeterMonth): Double = when (kind) {
@@ -187,6 +187,7 @@ object Meters {
         TrackerKind.WATER -> "m³"
         TrackerKind.FUEL -> "l"
         TrackerKind.CAR -> "km"
+        TrackerKind.HOME -> ""
     }
 
     /**

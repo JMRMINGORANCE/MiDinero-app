@@ -653,10 +653,12 @@ class ExpenseRepository(
             }
             return cat.id
         }
-        suspend fun vehicleFor(name: String?): Long? {
+        suspend fun vehicleFor(name: String?, home: Boolean): Long? {
             val key = name?.let { Categorizer.normalize(it) }?.takeIf { it.isNotEmpty() } ?: return null
             vehiclesByName[key]?.let { return it.id }
-            val v = Vehicle(name = name.trim().take(40))
+            // Con recibos de luz, agua o gas (o de una categoría de la casa) es una vivienda; si no, un coche
+            val v = if (home) Vehicle(name = name.trim().take(40), emoji = "🏠", kind = Vehicle.KIND_HOME, oilReminderMonths = null)
+                else Vehicle(name = name.trim().take(40))
             return householdDao.insertVehicle(v).also { vehiclesByName[key] = v.copy(id = it) }
         }
         suspend fun methodFor(name: String?): Long? {
@@ -676,16 +678,19 @@ class ExpenseRepository(
             if (takeExisting(row.date, cents, listOf(Categorizer.merchantKey(name), Categorizer.merchantKey(row.description)))) { dupes++; continue }
             val timestamp = row.date.atTime(row.time ?: java.time.LocalTime.NOON).atZone(zone).toInstant().toEpochMilli()
             val original = if (refund && row.category == null) refundedPurchase(name, abs, timestamp) else null
-            val details = row.details.copy(vehicleId = vehicleFor(row.vehicle) ?: row.details.vehicleId)
+            val categoryId = categoryFor(row, income) ?: when {
+                income -> otherIncome
+                original != null -> original.categoryId
+                else -> categorize(row.description, rules)
+            }
+            val kind = com.midinero.control.domain.TrackerKind.of(categoriesByName.values.firstOrNull { it.id == categoryId }?.kind) ?: row.details.impliedKind
+            val home = kind in com.midinero.control.domain.Garage.homeKinds
+            val details = row.details.copy(vehicleId = vehicleFor(row.vehicle, home) ?: row.details.vehicleId)
             expenseDao.insert(
                 Expense(
                     amountCents = cents,
                     merchant = original?.merchant ?: name,
-                    categoryId = categoryFor(row, income) ?: when {
-                        income -> otherIncome
-                        original != null -> original.categoryId
-                        else -> categorize(row.description, rules)
-                    },
+                    categoryId = categoryId,
                     timestamp = timestamp,
                     source = ExpenseSource.IMPORTED,
                     isIncome = income,
@@ -810,8 +815,9 @@ class ExpenseRepository(
             com.midinero.control.domain.TrackerKind.GAS -> "#E8590C"
             com.midinero.control.domain.TrackerKind.WATER -> "#1098AD"
             com.midinero.control.domain.TrackerKind.CAR -> "#495057"
+            com.midinero.control.domain.TrackerKind.HOME -> "#AE3EC9"
         }
-        val emoji = if (kind == com.midinero.control.domain.TrackerKind.CAR) "🔧" else kind.emoji
+        val emoji = kind.emoji
         return categoryDao.insert(Category(name = name, emoji = emoji, colorHex = color, kind = kind.name).withNextSortOrder())
     }
 

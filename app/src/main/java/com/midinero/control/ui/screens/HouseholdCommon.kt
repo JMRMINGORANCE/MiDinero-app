@@ -42,39 +42,129 @@ import com.midinero.control.domain.tr
 import com.midinero.control.ui.HouseholdViewModel
 import com.midinero.control.ui.MainViewModel
 import java.time.LocalDate
+import java.time.YearMonth
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.saveable.listSaver
 
-/** Tramos de fechas que se ofrecen en los paneles. */
+/** Tramos de fechas que se ofrecen en los paneles. Mes y año se mueven con las flechas. */
 enum class RangePreset {
-    THIS_YEAR, LAST_YEAR, LAST_12, ALL;
+    MONTH, YEAR, LAST_12, ALL, CUSTOM;
 
     val label: String get() = when (this) {
-        THIS_YEAR -> tr("Este año", "This year")
-        LAST_YEAR -> tr("Año pasado", "Last year")
+        MONTH -> tr("Mes", "Month")
+        YEAR -> tr("Año", "Year")
         LAST_12 -> tr("12 meses", "12 months")
         ALL -> tr("Todo", "All")
-    }
-
-    /** null = sin límite. */
-    fun range(today: LocalDate = LocalDate.now()): DateRange? = when (this) {
-        THIS_YEAR -> DateRange(LocalDate.of(today.year, 1, 1), LocalDate.of(today.year, 12, 31))
-        LAST_YEAR -> DateRange.year(today.year - 1)
-        LAST_12 -> DateRange(today.withDayOfMonth(1).minusMonths(11), today)
-        ALL -> null
+        CUSTOM -> tr("Fechas…", "Dates…")
     }
 }
 
+/** El tramo elegido en un panel: un mes o un año (que se pueden mover), los últimos 12 meses, todo o unas fechas. */
+@Stable
+class RangeSelection(preset: RangePreset, anchor: LocalDate, start: LocalDate, end: LocalDate) {
+    var preset by mutableStateOf(preset)
+    /** Un día del mes o del año que se enseña. */
+    var anchor by mutableStateOf(anchor)
+    var start by mutableStateOf(start)
+    var end by mutableStateOf(end)
+
+    /** null = sin límite. */
+    val range: DateRange?
+        get() {
+            val today = LocalDate.now()
+            return when (preset) {
+                RangePreset.MONTH -> DateRange.month(YearMonth.from(anchor))
+                RangePreset.YEAR -> DateRange.year(anchor.year)
+                RangePreset.LAST_12 -> DateRange(today.withDayOfMonth(1).minusMonths(11), today)
+                RangePreset.ALL -> null
+                RangePreset.CUSTOM -> DateRange(minOf(start, end), maxOf(start, end))
+            }
+        }
+
+    fun shift(by: Long) {
+        anchor = if (preset == RangePreset.MONTH) anchor.plusMonths(by) else anchor.plusYears(by)
+    }
+
+    companion object {
+        val Saver = listSaver<RangeSelection, Long>(
+            save = { listOf(it.preset.ordinal.toLong(), it.anchor.toEpochDay(), it.start.toEpochDay(), it.end.toEpochDay()) },
+            restore = { RangeSelection(RangePreset.entries[it[0].toInt()], LocalDate.ofEpochDay(it[1]), LocalDate.ofEpochDay(it[2]), LocalDate.ofEpochDay(it[3])) },
+        )
+    }
+}
+
+@Composable
+fun rememberRangeSelection(preset: RangePreset = RangePreset.YEAR): RangeSelection = rememberSaveable(saver = RangeSelection.Saver) {
+    val today = LocalDate.now()
+    RangeSelection(preset, today, today.withDayOfYear(1), today)
+}
+
+/** Chips de tramo y, debajo, el mes o año con flechas o las dos fechas. [onChange] avisa de cada cambio. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun RangeChips(selected: RangePreset, onSelect: (RangePreset) -> Unit, modifier: Modifier = Modifier) {
+fun RangeSelector(selection: RangeSelection, modifier: Modifier = Modifier, onChange: () -> Unit = {}) {
+    var picking by rememberSaveable { mutableStateOf<String?>(null) }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            RangePreset.entries.forEach { p ->
+                FilterChip(
+                    selected = p == selection.preset,
+                    onClick = {
+                        if (p != selection.preset && (p == RangePreset.MONTH || p == RangePreset.YEAR)) selection.anchor = LocalDate.now()
+                        selection.preset = p
+                        onChange()
+                    },
+                    label = { Text(p.label) },
+                    shape = CircleShape,
+                    colors = pillChipColors(),
+                    border = null,
+                )
+            }
+        }
+        when (selection.preset) {
+            RangePreset.MONTH, RangePreset.YEAR -> {
+                val month = selection.preset == RangePreset.MONTH
+                val current = if (month) YearMonth.from(selection.anchor) >= YearMonth.now() else selection.anchor.year >= LocalDate.now().year
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = { selection.shift(-1); onChange() }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
+                    Text(
+                        if (month) selection.anchor.format(com.midinero.control.domain.Lang.dateFormat("MMMM yyyy")).replaceFirstChar { it.uppercase() }
+                        else selection.anchor.year.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                    TextButton(onClick = { selection.shift(1); onChange() }, enabled = !current) { Text("›", style = MaterialTheme.typography.titleLarge) }
+                }
+            }
+            RangePreset.CUSTOM -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                val f = com.midinero.control.domain.Lang.dateFormat("d MMM yyyy")
+                FilterChip(selected = false, onClick = { picking = "start" }, label = { Text(tr("Desde ", "From ") + selection.start.format(f)) }, shape = CircleShape, colors = pillChipColors(), border = null)
+                FilterChip(selected = false, onClick = { picking = "end" }, label = { Text(tr("Hasta ", "To ") + selection.end.format(f)) }, shape = CircleShape, colors = pillChipColors(), border = null)
+            }
+            else -> Unit
+        }
+    }
+    picking?.let { which ->
+        DatePickerModal(if (which == "start") selection.start else selection.end, onDismiss = { picking = null }) { d ->
+            if (which == "start") selection.start = d else selection.end = d
+            picking = null
+            onChange()
+        }
+    }
+}
+
+/** Fichas para ver solo un coche o una vivienda (o todos). Con uno o ninguno no se enseñan. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AssetFilter(assets: List<com.midinero.control.data.Vehicle>, selectedId: Long?, onSelect: (Long?) -> Unit, modifier: Modifier = Modifier) {
+    if (assets.size < 2) return
     FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        RangePreset.entries.forEach { p ->
+        FilterChip(selected = selectedId == null, onClick = { onSelect(null) }, label = { Text(tr("Todos", "All")) }, shape = CircleShape, colors = pillChipColors(), border = null)
+        assets.forEach { a ->
             FilterChip(
-                selected = p == selected,
-                onClick = { onSelect(p) },
-                label = { Text(p.label) },
-                shape = CircleShape,
-                colors = pillChipColors(),
-                border = null,
+                selected = selectedId == a.id, onClick = { onSelect(if (selectedId == a.id) null else a.id) },
+                label = { Text("${a.emoji} ${a.name}") }, shape = CircleShape, colors = pillChipColors(), border = null,
             )
         }
     }
@@ -139,6 +229,7 @@ private fun hintFor(kind: TrackerKind): String = when (kind) {
     TrackerKind.GAS -> "kWh"
     TrackerKind.WATER -> "m³"
     TrackerKind.CAR -> tr("coche, km y qué se le hizo", "car, km and what was done")
+    TrackerKind.HOME -> tr("la vivienda", "the home")
 }
 
 @Composable

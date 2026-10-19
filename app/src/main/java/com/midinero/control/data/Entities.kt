@@ -312,7 +312,10 @@ data class Transfer(
     val note: String = "",
 )
 
-/** Coche (o moto) para sus repostajes, mantenimientos, ITV y seguro. (v14) */
+/**
+ * Coche (o moto) o vivienda: a él van sus repostajes, mantenimientos, ITV y seguro, o sus recibos de luz, agua y gas. (v14)
+ * [kind]: "CAR" o "HOME". (v15)
+ */
 @Entity(tableName = "vehicles")
 data class Vehicle(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -327,7 +330,15 @@ data class Vehicle(
     val itvNoticeDays: Int = 30,
     val archived: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
-)
+    @ColumnInfo(defaultValue = "CAR") val kind: String = KIND_CAR,
+) {
+    val isHome: Boolean get() = kind == KIND_HOME
+
+    companion object {
+        const val KIND_CAR = "CAR"
+        const val KIND_HOME = "HOME"
+    }
+}
 
 /** Seguro (coche, hogar, vida…) con su fecha de renovación y los avisos para negociar o darse de baja. (v14) */
 @Entity(
@@ -353,6 +364,9 @@ data class Policy(
     val note: String = "",
     val archived: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
+    /** Número de póliza y teléfono de la compañía, a mano para dar un parte. (v15) */
+    @ColumnInfo(defaultValue = "") val policyNumber: String = "",
+    @ColumnInfo(defaultValue = "") val phone: String = "",
 )
 
 /** Precio de un año (o periodo) de un seguro: el historial muestra cuánto ha subido en cada renovación. (v14) */
