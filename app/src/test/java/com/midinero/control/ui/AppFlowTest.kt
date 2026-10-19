@@ -89,6 +89,9 @@ class AppFlowTest {
         compose.onAllNodes(hasText("Límites") and hasClickAction()).onFirst().performClick()
         see(hasText("Presupuesto total del mes"), 5_000)
         compose.onNodeWithContentDescription("Volver").performClick()
+        // Con Casa y coche, Categorías queda más abajo en Más: se baja hasta ella
+        see(hasText("Límites") and hasClickAction(), 5_000)
+        compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Categorías") and hasClickAction())
         see(hasText("Categorías") and hasClickAction(), 5_000)
         compose.onAllNodes(hasText("Categorías") and hasClickAction()).onFirst().performClick()
         see(hasContentDescription("Subir Ocio") and hasClickAction(), 5_000)
