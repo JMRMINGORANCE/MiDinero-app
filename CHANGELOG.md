@@ -1,5 +1,9 @@
 # Cambios
 
+## 4.22
+
+- **Borrar todos los datos** pide ahora escribir BORRAR para confirmarlo, con un aviso claro de todo lo que se borra.
+
 ## 4.21
 
 - **Viviendas** (Más → Casa y coche): si tienes más de una casa, al apuntar la luz, el agua, el gas o un arreglo eliges de cuál es, y cada vivienda tiene su pantalla con lo que cuesta (luz, agua, gas, mantenimiento y seguro). Nuevo tipo de categoría «Casa: mantenimiento, bricolaje…» para llevar los arreglos de cada vivienda (puedes tener varias, por ejemplo Mantenimiento y Bricolaje). En el CSV, la columna «Coche o vivienda» vale para las dos cosas.
