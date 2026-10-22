@@ -1081,7 +1081,7 @@ class ExpenseRepository(
         val updated = if (active) {
             val today = LocalDate.now()
             val next = Recurrence.firstOnOrAfter(
-                LocalDate.ofEpochDay(recurring.nextDueEpochDay), today, recurring.frequency, recurring.dayOfMonth
+                LocalDate.ofEpochDay(recurring.nextDueEpochDay), today, recurring.frequency, recurring.dayOfMonth, recurring.weekdays
             )
             recurring.copy(active = true, nextDueEpochDay = next.toEpochDay())
         } else {
@@ -1119,7 +1119,7 @@ class ExpenseRepository(
                         recurringId = r.id,
                     )
                     charged += expense.copy(id = expenseDao.insert(expense))
-                    next = Recurrence.next(next, r.frequency, r.dayOfMonth)
+                    next = Recurrence.next(next, r.frequency, r.dayOfMonth, r.weekdays)
                     remaining = remaining?.minus(1)
                     guard++
                 }
@@ -1144,7 +1144,7 @@ class ExpenseRepository(
 
     /** Salta el próximo cargo sin apuntarlo (p. ej. un mes que no se paga). */
     suspend fun skipNextCharge(r: RecurringExpense) {
-        val next = Recurrence.next(LocalDate.ofEpochDay(r.nextDueEpochDay), r.frequency, r.dayOfMonth)
+        val next = Recurrence.next(LocalDate.ofEpochDay(r.nextDueEpochDay), r.frequency, r.dayOfMonth, r.weekdays)
         recurringDao.update(r.copy(nextDueEpochDay = next.toEpochDay()))
     }
 
@@ -1161,7 +1161,7 @@ class ExpenseRepository(
                 )
             )
             val remaining = r.remainingCharges?.minus(1)
-            val next = if (due > today) Recurrence.next(due, r.frequency, r.dayOfMonth) else Recurrence.next(today, r.frequency, r.dayOfMonth)
+            val next = if (due > today) Recurrence.next(due, r.frequency, r.dayOfMonth, r.weekdays) else Recurrence.next(today, r.frequency, r.dayOfMonth, r.weekdays)
             recurringDao.update(
                 r.copy(nextDueEpochDay = next.toEpochDay(), remainingCharges = remaining, active = remaining == null || remaining > 0)
             )

@@ -2,6 +2,7 @@
 
 ## 4.22
 
+- **Ingresos y cargos fijos en varios días de la semana**: en uno semanal eliges los días (por ejemplo L, X, V y D) y se apunta cada uno de esos días. Ideal si cobras por día trabajado.
 - **Borrar todos los datos** pide ahora escribir BORRAR para confirmarlo, con un aviso claro de todo lo que se borra.
 
 ## 4.21

@@ -158,6 +158,25 @@ class MigrationTest {
         }
     }
 
+    /** v16: los cargos fijos semanales siguen siendo de un día a la semana. */
+    @Test
+    fun migrate15To16() = runBlocking {
+        val name = "migrate-15-16.db"
+        createDatabase(name, 15).apply {
+            execSQL("INSERT INTO recurring_expenses (id, name, amountCents, categoryId, frequency, dayOfMonth, nextDueEpochDay, active, note, isIncome, remainingCharges, remindDayBefore) VALUES (3, 'Sueldo', 7000, NULL, 'WEEKLY', 5, 20000, 1, '', 1, NULL, 0)")
+            close()
+        }
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(*ALL_MIGRATIONS).allowMainThreadQueries().build()
+        try {
+            db.openHelper.writableDatabase
+            val r = db.recurringDao().getAll().single()
+            assertEquals(0, r.weekdays)
+            assertEquals(7000L, r.amountCents)
+        } finally {
+            db.close()
+        }
+    }
+
     private companion object {
         const val DB = "migration-test.db"
     }

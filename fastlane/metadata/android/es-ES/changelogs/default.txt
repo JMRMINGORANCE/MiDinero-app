@@ -1,1 +1,1 @@
-Borrar todos los datos pide confirmarlo escribiendo BORRAR.
+Ingresos y cargos fijos en varios días de la semana (por ejemplo, el sueldo de cada día trabajado) y borrar todos los datos pide escribir BORRAR.

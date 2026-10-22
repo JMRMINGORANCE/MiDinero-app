@@ -56,3 +56,26 @@ class CategoryUsageTest {
         assertEquals(listOf(15L, 3L, 7L, 1L, 2L, 4L, 5L, 6L, 19L), shown.map { it.id })
     }
 }
+
+class WeekdaysRecurrenceTest {
+    @Test
+    fun sueldoVariosDiasALaSemana() {
+        val f = com.midinero.control.data.Frequency.WEEKLY
+        // L, X, V y D
+        val days = listOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.FRIDAY, java.time.DayOfWeek.SUNDAY)
+            .fold(0) { acc, d -> acc or Recurrence.bit(d) }
+        val mon = java.time.LocalDate.of(2026, 10, 19)
+        assertEquals(mon.plusDays(2), Recurrence.next(mon, f, 19, days))
+        assertEquals(mon.plusDays(4), Recurrence.next(mon.plusDays(2), f, 19, days))
+        assertEquals(mon.plusDays(6), Recurrence.next(mon.plusDays(4), f, 19, days))
+        assertEquals(mon.plusDays(7), Recurrence.next(mon.plusDays(6), f, 19, days))
+        // Empezando un martes, el primero es el miércoles
+        assertEquals(mon.plusDays(2), Recurrence.alignToWeekdays(mon.plusDays(1), days))
+        assertEquals("L, X, V y D", Recurrence.weekdaysLabel(days))
+        val r = com.midinero.control.data.RecurringExpense(name = "Sueldo", amountCents = 7000, frequency = f, dayOfMonth = 1, nextDueEpochDay = 0, weekdays = days, isIncome = true)
+        assertEquals(7000L * 4 * 52, Recurrence.yearlyCents(r))
+        assertEquals(7000L * 4 * 52 / 12, Recurrence.monthlyEquivalentCents(r))
+        // Sin días: como siempre, una vez por semana
+        assertEquals(mon.plusWeeks(1), Recurrence.next(mon, f, 19, 0))
+    }
+}

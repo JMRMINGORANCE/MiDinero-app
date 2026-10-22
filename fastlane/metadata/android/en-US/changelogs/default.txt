@@ -1,1 +1,1 @@
-Deleting all data now asks you to type DELETE to confirm.
+Recurring income and charges on several weekdays (e.g. pay for each day worked), and deleting all data asks you to type DELETE.

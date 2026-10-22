@@ -126,7 +126,7 @@ object Stats {
             var count = 0
             while (d < end && (r.remainingCharges == null || count < r.remainingCharges) && count < 60) {
                 if (d >= today) sum += r.amountCents
-                d = Recurrence.next(d, r.frequency, r.dayOfMonth)
+                d = Recurrence.next(d, r.frequency, r.dayOfMonth, r.weekdays)
                 count++
             }
             sum

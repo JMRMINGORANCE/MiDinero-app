@@ -95,6 +95,7 @@ object Backup {
                         .put("active", r.active).put("note", r.note).put("isIncome", r.isIncome)
                         .put("remainingCharges", r.remainingCharges ?: JSONObject.NULL)
                         .put("remindDayBefore", r.remindDayBefore)
+                        .put("weekdays", r.weekdays)
                 )
             }
         })
@@ -293,6 +294,7 @@ object Backup {
                 isIncome = o.optBoolean("isIncome"),
                 remainingCharges = o.optLongOrNull("remainingCharges")?.toInt(),
                 remindDayBefore = o.optBoolean("remindDayBefore"),
+                weekdays = o.optInt("weekdays") and 0x7F,
             )
         }
         val settings = root.optJSONObject("settings")?.let { o ->

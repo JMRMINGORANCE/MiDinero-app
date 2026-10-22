@@ -150,6 +150,11 @@ data class RecurringExpense(
     val remainingCharges: Int? = null,
     /** Avisar el día antes del cargo. (v2) */
     @ColumnInfo(defaultValue = "0") val remindDayBefore: Boolean = false,
+    /**
+     * Semanal en varios días: bit 0 = lunes … bit 6 = domingo (por ejemplo, un sueldo cada L, X, V y D).
+     * 0 = una vez por semana, el mismo día que el primer cargo. (v16)
+     */
+    @ColumnInfo(defaultValue = "0") val weekdays: Int = 0,
 )
 
 /** Meta de ahorro (viaje, colchón, coche...). Lo ahorrado es la suma de sus aportaciones. (v3) */

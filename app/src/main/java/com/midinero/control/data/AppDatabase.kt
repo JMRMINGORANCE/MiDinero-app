@@ -57,7 +57,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         /** Versión del esquema. Al subirla: añadir la migración en Migrations.kt y guardar el esquema en schemas/. */
-        const val VERSION = 15
+        const val VERSION = 16
 
         const val FILE_NAME = "midinero.db"
 
