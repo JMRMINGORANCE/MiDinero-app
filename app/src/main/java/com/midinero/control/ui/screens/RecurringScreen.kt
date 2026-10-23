@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.FilterChip
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -346,6 +347,8 @@ private fun RecurringDialog(
     var amountText by rememberSaveable { mutableStateOf(recurring?.let { centsToInput(it.amountCents) } ?: "") }
     var categoryId by rememberSaveable { mutableStateOf(recurring?.categoryId) }
     var frequency by rememberSaveable { mutableStateOf(recurring?.frequency ?: Frequency.MONTHLY) }
+    // Semanal en varios días (L, X, V y D…); sin ninguno, cada semana el mismo día que la fecha
+    var weekdays by rememberSaveable { mutableStateOf(recurring?.weekdays ?: 0) }
     var date by rememberSaveable {
         mutableStateOf(recurring?.let { LocalDate.ofEpochDay(it.nextDueEpochDay) } ?: LocalDate.now())
     }
@@ -383,7 +386,8 @@ private fun RecurringDialog(
                     categoryId = categoryId,
                     frequency = frequency,
                     dayOfMonth = date.dayOfMonth,
-                    nextDueEpochDay = date.toEpochDay(),
+                    weekdays = if (frequency == Frequency.WEEKLY) weekdays else 0,
+                    nextDueEpochDay = (if (frequency == Frequency.WEEKLY) Recurrence.alignToWeekdays(date, weekdays) else date).toEpochDay(),
                     note = note.trim(),
                     remainingCharges = remaining,
                     remindDayBefore = remind,
@@ -461,6 +465,27 @@ private fun RecurringDialog(
                 ) { Text(label, maxLines = 1, style = MaterialTheme.typography.labelSmall) }
             }
         }
+        if (frequency == Frequency.WEEKLY) {
+            Spacer(Modifier.height(8.dp))
+            Text(tr("Qué días de la semana", "Which days of the week"), style = MaterialTheme.typography.labelLarge)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                java.time.DayOfWeek.entries.forEach { d ->
+                    val bit = Recurrence.bit(d)
+                    val on = weekdays and bit != 0
+                    FilterChip(
+                        selected = on,
+                        onClick = { weekdays = if (on) weekdays and bit.inv() else weekdays or bit },
+                        label = { Text(if (com.midinero.control.domain.Lang.english) d.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH) else listOf("L", "M", "X", "J", "V", "S", "D")[d.value - 1]) },
+                    )
+                }
+            }
+            Text(
+                if (weekdays == 0) tr("Sin elegir: una vez por semana, el mismo día que la fecha de abajo.", "None picked: once a week, on the same day as the date below.")
+                else tr("Se apunta cada ${Recurrence.weekdaysLabel(weekdays)}: ${Recurrence.timesPerWeek(frequency, weekdays)} veces por semana.", "Logged every ${Recurrence.weekdaysLabel(weekdays)}: ${Recurrence.timesPerWeek(frequency, weekdays)} times a week."),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Spacer(Modifier.height(12.dp))
         Text(
             if (recurring == null) tr("Fecha del primer cargo", "Date of the first charge") else tr("Fecha del próximo cargo", "Date of the next charge"),
@@ -476,7 +501,7 @@ private fun RecurringDialog(
                 date < today && (recurring == null || dateChanged) ->
                     tr("Esa fecha ya ha pasado: se apuntarán también los cargos desde ese día hasta hoy.", "That date has passed: charges from that day until today will be logged too.")
                 else -> tr("Después se repetirá ", "Then it will repeat ") + when (frequency) {
-                    Frequency.WEEKLY -> tr("cada semana.", "every week.")
+                    Frequency.WEEKLY -> if (weekdays != 0) tr("cada ${Recurrence.weekdaysLabel(weekdays)}.", "every ${Recurrence.weekdaysLabel(weekdays)}.") else tr("cada semana.", "every week.")
                     Frequency.MONTHLY -> tr("el día ${date.dayOfMonth} de cada mes.", "on day ${date.dayOfMonth} of every month.")
                     Frequency.QUARTERLY -> tr("cada 3 meses, el día ${date.dayOfMonth}.", "every 3 months, on day ${date.dayOfMonth}.")
                     Frequency.YEARLY -> tr("cada año en la misma fecha.", "every year on the same date.")

@@ -617,15 +617,33 @@ fun SettingsScreen(
     }
 
     if (confirmWipe) {
+        // Doble seguro: hay que escribir BORRAR para poder confirmar
+        var typed by rememberSaveable { mutableStateOf("") }
+        val word = tr("BORRAR", "DELETE")
         AlertDialog(
             onDismissRequest = { confirmWipe = false },
-            title = { Text(tr("¿Borrar todos los datos?", "Delete all data?")) },
-            text = { Text(tr("Se eliminarán todos los movimientos, recurrentes, límites y lo aprendido. No se puede deshacer. Si quieres conservarlos, guarda antes una copia.", "All transactions, recurring charges, limits and learned categories will be deleted. This can't be undone. If you want to keep them, save a backup first.")) },
+            title = { Text(tr("⚠️ ¿Seguro que quieres borrarlo todo?", "⚠️ Are you sure you want to delete everything?")) },
+            text = {
+                Column {
+                    Text(
+                        tr(
+                            "Todos los datos se borrarán: movimientos, cargos fijos, límites, metas, viajes, coches, seguros y lo aprendido. No se puede deshacer. Si quieres conservarlos, guarda antes una copia.",
+                            "All your data will be deleted: transactions, recurring charges, limits, goals, trips, cars, insurance and what the app learned. This can't be undone. To keep it, save a backup first.",
+                        )
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(tr("Escribe $word para confirmar:", "Type $word to confirm:"), style = MaterialTheme.typography.bodySmall)
+                    androidx.compose.material3.OutlinedTextField(value = typed, onValueChange = { typed = it.take(20) }, singleLine = true)
+                }
+            },
             confirmButton = {
-                TextButton(onClick = {
-                    confirmWipe = false
-                    dataVm.deleteAllData { say(tr("Datos borrados", "Data deleted")) }
-                }) { Text(tr("Borrar todo", "Delete everything"), color = MaterialTheme.colorScheme.error) }
+                TextButton(
+                    onClick = {
+                        confirmWipe = false
+                        dataVm.deleteAllData { say(tr("Datos borrados", "Data deleted")) }
+                    },
+                    enabled = typed.trim().equals(word, ignoreCase = true),
+                ) { Text(tr("Borrar todo", "Delete everything"), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = { TextButton(onClick = { confirmWipe = false }) { Text(tr("Cancelar", "Cancel")) } },
         )
