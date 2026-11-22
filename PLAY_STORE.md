@@ -63,13 +63,13 @@ que la app abre desde *Ajustes → Privacidad*. Si cambias `PRIVACY.md`, copia e
 ## 7. Pruebas
 
 Las cuentas personales nuevas deben hacer una **prueba cerrada con 12 testers durante 14 días** antes de pasar a producción.
-Empieza por *Pruebas internas* con el .aab, luego *Prueba cerrada*.
+MiDinero ya la superó y tiene acceso a producción (noviembre de 2026): la app está publicada para todo el mundo en Play Store.
 
 ## 8. Subida automática a Play
 
 Con una cuenta de servicio, cada compilación de `main` sube sola los dos .aab a Play (paso «Subir a Google Play» de
-`build.yml`, script `.github/scripts/play_upload.py`): el del móvil al canal `alpha` y el del reloj al canal de Wear OS
-«wear:Reloj - prueba cerrada», ya publicados para los testers y con las notas de `fastlane/metadata/android/*/changelogs/default.txt`.
+`build.yml`, script `.github/scripts/play_upload.py`): el del móvil al canal de **producción** (`production`) y el del reloj al de producción de Wear OS
+(`wear:production`), publicados para todos los usuarios (tras la revisión de Google, si la hay) y con las notas de `fastlane/metadata/android/*/changelogs/default.txt`.
 Sin el secreto el paso no se ejecuta y hay que subirlos a mano como antes.
 
 Se configura una sola vez:
@@ -80,9 +80,10 @@ Se configura una sola vez:
    Ábrela → *Claves → Añadir clave → JSON*: se descarga un archivo .json.
 3. Play Console → *Usuarios y permisos → Invitar a usuarios* → el correo de la cuenta de servicio
    (`github-play@….iam.gserviceaccount.com`) → *Permisos de la aplicación* → MiDinero → marca
-   **Publicar en canales de prueba** (y «Ver información de la aplicación») → Invitar.
+   **Lanzar a producción** y **Publicar en canales de prueba** (y «Ver información de la aplicación») → Invitar.
 4. GitHub → *Settings → Secrets and variables → Actions → New repository secret* → nombre `PLAY_SERVICE_ACCOUNT_JSON`,
    valor: el contenido completo del .json. Después borra el .json de tu equipo.
 
-Si los canales cambian de nombre, ponlos en *Variables* del repositorio: `PLAY_TRACK` (móvil) y `PLAY_WEAR_TRACK` (reloj).
+Para volver a subir a la prueba cerrada en vez de a producción, pon en *Variables* del repositorio `PLAY_TRACK=alpha`
+y `PLAY_WEAR_TRACK=wear:Reloj - prueba cerrada` (o el canal que quieras); sin variables se usa producción.
 Si un nombre no existe, el paso falla y muestra la lista de canales que hay.

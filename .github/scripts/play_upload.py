@@ -1,8 +1,8 @@
 """Sube los .aab del móvil y del reloj a Google Play (API de publicación) en una sola edición.
 
 Uso: play_upload.py <móvil.aab> <reloj.aab>
-Variables: PLAY_SERVICE_ACCOUNT_JSON (clave de la cuenta de servicio), PLAY_TRACK (canal del móvil, «alpha» por
-defecto), PLAY_WEAR_TRACK (canal del reloj; si no existe se busca el canal de Wear OS que ya tenga versiones).
+Variables: PLAY_SERVICE_ACCOUNT_JSON (clave de la cuenta de servicio), PLAY_TRACK (canal del móvil, «production» por
+defecto), PLAY_WEAR_TRACK (canal del reloj, «wear:production» por defecto).
 Las notas de la versión salen de fastlane/metadata/android/<idioma>/changelogs/default.txt.
 """
 import json
@@ -57,10 +57,10 @@ def main():
         t["track"]: t.get("releases", [])
         for t in check(session.get(f"{API}/edits/{edit}/tracks")).get("tracks", [])
     }
-    phone_track = os.environ.get("PLAY_TRACK") or "alpha"
+    phone_track = os.environ.get("PLAY_TRACK") or "production"
     if phone_track not in tracks:
         sys.exit(f"No existe el canal del móvil «{phone_track}». Canales: {', '.join(tracks)}. Ponlo en la variable PLAY_TRACK.")
-    wear_track = pick_wear_track(tracks, os.environ.get("PLAY_WEAR_TRACK") or "wear:Reloj - prueba cerrada")
+    wear_track = pick_wear_track(tracks, os.environ.get("PLAY_WEAR_TRACK") or "wear:production")
     notes = release_notes()
     version = os.environ.get("MIDINERO_VERSION", "")
 

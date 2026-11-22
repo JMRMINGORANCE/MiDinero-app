@@ -130,7 +130,7 @@ jobs:
             Novedades: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
           files: dist/*
 
-      # Con la cuenta de servicio en los secretos, cada versión de main se sube sola a Play (mira PLAY_STORE.md)
+      # Con la cuenta de servicio en los secretos, cada versión de main se sube sola a producción en Play (mira PLAY_STORE.md)
       - name: Subir a Google Play
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.PLAY_SERVICE_ACCOUNT_JSON != '' && hashFiles('dist/*.aab') != ''
         env:
