@@ -1,1 +1,1 @@
-Recurring income and charges on several weekdays (e.g. pay for each day worked), and deleting all data asks you to type DELETE.
+Switch profile with one tap from Home, many more profile icons (or any keyboard emoji), and assign merchants to a profile: their detected payments always go there, even if another one is open.

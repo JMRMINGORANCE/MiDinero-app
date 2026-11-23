@@ -1,5 +1,11 @@
 # Cambios
 
+## 4.23
+
+- **Cambiar de perfil desde Inicio**: arriba, junto a la fecha, sale el perfil abierto («💼 Negocio ▾»). Un toque y eliges otro, sin pasar por Ajustes.
+- **Muchos más iconos para los perfiles**: más de 40 a mano, «Ver todos los iconos…» con buscador y, si no está el que buscas, puedes escribir cualquier emoji del teclado.
+- **Comercios de cada perfil**: en Perfiles asignas un comercio a un perfil (por ejemplo, Makro → 💼 Negocio) y sus pagos detectados se apuntan siempre ahí, aunque tengas otro perfil abierto. El aviso dice en qué perfil se ha apuntado.
+
 ## 4.22
 
 - **Ingresos y cargos fijos en varios días de la semana**: en uno semanal eliges los días (por ejemplo L, X, V y D) y se apunta cada uno de esos días. Ideal si cobras por día trabajado.

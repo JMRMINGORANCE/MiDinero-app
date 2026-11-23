@@ -62,4 +62,37 @@ class ProfilesTest {
         assertEquals(1, Profiles.list(context).size)
         assertEquals(50000L, AppPrefs(context).monthlyBudgetCents)
     }
+
+    @Test
+    fun losComerciosAsignadosVanASuPerfil() {
+        val routes = listOf(MerchantRoute("Mercadona", 2), MerchantRoute("Makro", 3), MerchantRoute("Makro Valencia", 2), MerchantRoute("Lidl", 9))
+        val existing = setOf(Profiles.MAIN, 2, 3)
+        // Vale con una parte del nombre, sin mayúsculas, acentos ni números de tienda
+        assertEquals(2, Profiles.matchRoute(routes, existing, "MERCADONA 4432 VALENCIA"))
+        assertEquals(3, Profiles.matchRoute(routes, existing, "MAKRO MADRID"))
+        // Gana el más concreto
+        assertEquals(2, Profiles.matchRoute(routes, existing, "MAKRO VALENCIA 12"))
+        // Solo palabras enteras: «Makro» no es «Makroshop»
+        assertEquals(null, Profiles.matchRoute(routes, existing, "MAKROSHOP"))
+        // Un perfil que ya no existe no cuenta
+        assertEquals(null, Profiles.matchRoute(routes, existing, "LIDL 22"))
+        // También por el nombre limpio del comercio
+        assertEquals(2, Profiles.matchRoute(routes, existing, "MERC 4432", "Mercadona"))
+        assertEquals(null, Profiles.matchRoute(routes, existing, "Carrefour"))
+    }
+
+    @Test
+    fun asignarComerciosYBorrarElPerfilLosQuita() {
+        val business = Profiles.create(context, "Negocio", "💼")
+        Profiles.addRoute(context, "Makro", business.id)
+        Profiles.addRoute(context, "makro ", Profiles.MAIN)
+        // El mismo comercio se queda una sola vez, con el último perfil elegido
+        assertEquals(listOf(MerchantRoute("makro", Profiles.MAIN)), Profiles.routes(context))
+        Profiles.addRoute(context, "Bauhaus", business.id)
+        assertEquals(business.id, Profiles.routeFor(context, "BAUHAUS ALFAFAR"))
+        assertTrue(Profiles.delete(context, business.id))
+        assertEquals(listOf("makro"), Profiles.routes(context).map { it.merchant })
+        Profiles.removeRoute(context, "makro")
+        assertTrue(Profiles.routes(context).isEmpty())
+    }
 }

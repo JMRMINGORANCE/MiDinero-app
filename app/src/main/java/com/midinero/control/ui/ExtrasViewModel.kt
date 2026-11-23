@@ -7,6 +7,7 @@ import com.midinero.control.MiDineroApp
 import com.midinero.control.data.Account
 import com.midinero.control.data.Expense
 import com.midinero.control.data.Features
+import com.midinero.control.data.MerchantRoute
 import com.midinero.control.data.Profile
 import com.midinero.control.data.Profiles
 import com.midinero.control.domain.currentPeriod
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.YearMonth
@@ -59,7 +61,20 @@ class ExtrasViewModel(app: Application) : AndroidViewModel(app) {
 
     fun createProfile(name: String, emoji: String): Profile = Profiles.create(getApplication(), name, emoji).also { reloadProfiles() }
     fun renameProfile(profile: Profile) { Profiles.rename(getApplication(), profile); reloadProfiles() }
-    fun deleteProfile(id: Int) { Profiles.delete(getApplication(), id); reloadProfiles() }
+    fun deleteProfile(id: Int) { Profiles.delete(getApplication(), id); reloadProfiles(); _routes.value = Profiles.routes(getApplication()) }
+
+    private val _routes = MutableStateFlow(Profiles.routes(app))
+    /** Comercios cuyos pagos detectados van siempre a un perfil. */
+    val routes: StateFlow<List<MerchantRoute>> = _routes.asStateFlow()
+    fun addRoute(merchant: String, profileId: Int) { Profiles.addRoute(getApplication(), merchant, profileId); _routes.value = Profiles.routes(getApplication()) }
+    fun removeRoute(merchant: String) { Profiles.removeRoute(getApplication(), merchant); _routes.value = Profiles.routes(getApplication()) }
+
+    /** Tus comercios más repetidos (para elegir rápido a qué perfil va cada uno). */
+    val frequentMerchants: StateFlow<List<String>> = repo.allExpenses.map { list ->
+        list.asSequence().filter { !it.isIncome && it.merchant.isNotBlank() }
+            .groupingBy { it.merchant.trim() }.eachCount()
+            .entries.sortedByDescending { it.value }.take(12).map { it.key }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** Abre la app con otro perfil (se reinicia). */
     fun switchTo(id: Int) {

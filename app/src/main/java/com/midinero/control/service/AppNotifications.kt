@@ -75,6 +75,8 @@ object AppNotifications {
         quickCategories: List<Category> = emptyList(),
         /** Devolución sin compra original: se pregunta de qué categoría era. */
         askCategory: Boolean = false,
+        /** Se apuntó en otro perfil (no el abierto): se dice en cuál y el aviso abre la lista de perfiles. */
+        otherProfile: com.midinero.control.data.Profile? = null,
     ) {
         val text = if (expense.isRefund) {
             val back = formatCents(-expense.amountCents)
@@ -101,14 +103,16 @@ object AppNotifications {
             )
             NotificationCompat.Action(0, "${cat.emoji} ${cat.name}", pending)
         }
+        val title = if (expense.isRefund) tr("Devolución registrada", "Refund logged") else tr("Gasto registrado", "Expense logged")
         notify(
             context,
-            tag = TAG_PAYMENT,
+            // Los ids de otro perfil pueden coincidir con los del abierto: va en su propio grupo de avisos
+            tag = if (otherProfile == null) TAG_PAYMENT else "${TAG_PAYMENT}_p${otherProfile.id}",
             id = id,
             channel = CHANNEL_DETECTED,
-            title = if (expense.isRefund) tr("Devolución registrada", "Refund logged") else tr("Gasto registrado", "Expense logged"),
+            title = if (otherProfile == null) title else title + tr(" en ${otherProfile.emoji} ${otherProfile.name}", " in ${otherProfile.emoji} ${otherProfile.name}"),
             text = text,
-            open = "expenses?edit=${expense.id}",
+            open = if (otherProfile == null) "expenses?edit=${expense.id}" else "profiles",
             actions = actions,
         )
     }

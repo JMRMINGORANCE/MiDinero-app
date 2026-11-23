@@ -182,6 +182,8 @@ class ExpenseRepository(
         eventId: String? = null,
         /** App de la que viene el aviso, para ponerle su método de pago. */
         sourcePackage: String? = null,
+        /** Perfil (no abierto) en el que se apunta, cuando el comercio está asignado a otro perfil. */
+        otherProfile: Profile? = null,
     ): Pair<Expense, Category?>? =
         detectionLock.withLock {
             val result = db.withTransaction {
@@ -233,9 +235,10 @@ class ExpenseRepository(
             val (saved, category, unmatchedRefund) = result
             val categoryId = saved.categoryId
             val ask = category == null || unmatchedRefund
-            val quick = if (ask) quickCategories() else emptyList()
+            // Los botones de categoría actúan sobre el perfil abierto: en otro perfil se elige al abrirlo
+            val quick = if (ask && otherProfile == null) quickCategories() else emptyList()
             // Sin categoría (o devolución sin compra) se avisa siempre, para poder elegirla desde la notificación.
-            if (prefs.notifyDetected || ask) AppNotifications.paymentDetected(context, saved, category, quick, askCategory = unmatchedRefund)
+            if (prefs.notifyDetected || ask) AppNotifications.paymentDetected(context, saved, category, quick, askCategory = unmatchedRefund, otherProfile = otherProfile)
             checkBudget(categoryId, timestamp)
             checkTripBudget(saved.tripId)
             saved to category

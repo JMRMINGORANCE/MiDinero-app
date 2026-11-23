@@ -11,6 +11,9 @@ import java.io.File
 /** Un perfil: datos completamente aparte (gastos, categorías, ajustes, tickets y copias). El 0 es el principal. */
 data class Profile(val id: Int, val name: String, val emoji: String)
 
+/** Los pagos detectados de un comercio se apuntan siempre en [profileId], esté abierto o no. */
+data class MerchantRoute(val merchant: String, val profileId: Int)
+
 /** Funciones extra que se activan en Ajustes → Activar más funciones (desactivadas al principio). */
 data class Features(val paymentMethods: Boolean = false, val profiles: Boolean = false)
 
@@ -113,12 +116,51 @@ object Profiles {
         context.deleteSharedPreferences("recurring_reminders" + suffix(id))
         File(context.filesDir, receiptsDir(id)).deleteRecursively()
         if (store(context).getInt("active", MAIN) == id) store(context).edit { putInt("active", MAIN) }
+        setRoutes(context, routes(context).filter { it.profileId != id })
         return true
     }
 
     /** Elige el perfil con el que se abrirá la app (hay que reiniciarla: ver ProfileRestart). */
     fun setActive(context: Context, id: Int) {
         store(context).edit(commit = true) { putInt("active", id) }
+    }
+
+    /** Comercios cuyos pagos detectados van siempre a un perfil concreto (común a todos los perfiles). */
+    fun routes(context: Context): List<MerchantRoute> = runCatching {
+        val arr = JSONArray(store(context).getString("merchant_routes", "[]"))
+        (0 until arr.length()).map { i -> arr.getJSONObject(i).let { MerchantRoute(it.getString("merchant"), it.getInt("profile")) } }
+    }.getOrDefault(emptyList())
+
+    fun setRoutes(context: Context, routes: List<MerchantRoute>) {
+        val arr = JSONArray()
+        routes.forEach { arr.put(JSONObject().put("merchant", it.merchant).put("profile", it.profileId)) }
+        store(context).edit { putString("merchant_routes", arr.toString()) }
+    }
+
+    /** Añade (o cambia de perfil) el comercio. Si ya estaba, se queda uno solo. */
+    fun addRoute(context: Context, merchant: String, profileId: Int) {
+        val key = com.midinero.control.domain.Categorizer.merchantKey(merchant)
+        if (key.isBlank()) return
+        setRoutes(context, routes(context).filter { com.midinero.control.domain.Categorizer.merchantKey(it.merchant) != key } + MerchantRoute(merchant.trim(), profileId))
+    }
+
+    fun removeRoute(context: Context, merchant: String) {
+        setRoutes(context, routes(context).filter { it.merchant != merchant })
+    }
+
+    /**
+     * Perfil al que va un pago detectado en [merchants] (el texto del aviso y el nombre ya limpio), o null si
+     * ninguno de tus comercios coincide. «Mercadona» vale para «MERCADONA 4432 VALENCIA»; gana el más largo.
+     */
+    fun routeFor(context: Context, vararg merchants: String): Int? = matchRoute(routes(context), list(context).map { it.id }.toSet(), *merchants)
+
+    internal fun matchRoute(routes: List<MerchantRoute>, existing: Set<Int>, vararg merchants: String): Int? {
+        val texts = merchants.map { " " + com.midinero.control.domain.Categorizer.merchantKey(it) + " " }
+        return routes
+            .filter { it.profileId in existing }
+            .map { com.midinero.control.domain.Categorizer.merchantKey(it.merchant) to it.profileId }
+            .filter { (key, _) -> key.isNotBlank() && texts.any { t -> t.contains(" $key ") } }
+            .maxByOrNull { it.first.length }?.second
     }
 
     /** Ajustes que un perfil nuevo copia del actual: solo aspecto, idioma, moneda y seguridad. */

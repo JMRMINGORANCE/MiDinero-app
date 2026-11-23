@@ -1,6 +1,12 @@
 package com.midinero.control.ui.screens
 
 import androidx.compose.foundation.clickable
+import com.midinero.control.data.MerchantRoute
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -287,6 +293,8 @@ fun ProfilesScreen(onBack: () -> Unit, vm: ExtrasViewModel = viewModel()) {
     var creating by rememberSaveable { mutableStateOf(false) }
     var editingId by rememberSaveable { mutableStateOf<Int?>(null) }
     var switchingId by rememberSaveable { mutableStateOf<Int?>(null) }
+    val routes by vm.routes.collectAsStateWithLifecycle()
+    var addingRoute by rememberSaveable { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
@@ -317,11 +325,12 @@ fun ProfilesScreen(onBack: () -> Unit, vm: ExtrasViewModel = viewModel()) {
                     }
                 }
             }
+            if (profiles.size > 1) item { MerchantRoutesCard(profiles, routes, onAdd = { addingRoute = true }, onRemove = vm::removeRoute) }
             item {
                 Text(
                     tr(
-                        "Los pagos detectados y los cargos fijos se apuntan en el perfil abierto. En cada perfil eliges sus apps de pago en Ajustes → Detección; las copias automáticas de cada perfil se hacen aunque no esté abierto.",
-                        "Detected payments and recurring charges go to the open profile. In each profile choose its payment apps in Settings → Detection; each profile's automatic backups run even when it isn't open.",
+                        "Los pagos detectados y los cargos fijos se apuntan en el perfil abierto, salvo los de los comercios que asignes a un perfil. Las apps de pago que se leen son las del perfil abierto (Ajustes → Detección); las copias automáticas de cada perfil se hacen aunque no esté abierto.",
+                        "Detected payments and recurring charges go to the open profile, except those from merchants you assign to a profile. The payment apps read are the open profile's (Settings → Detection); each profile's automatic backups run even when it isn't open.",
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -332,6 +341,10 @@ fun ProfilesScreen(onBack: () -> Unit, vm: ExtrasViewModel = viewModel()) {
         AppFab(tr("Nuevo perfil", "New profile"), action = { creating = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp))
     }
 
+    if (addingRoute) {
+        val frequent by vm.frequentMerchants.collectAsStateWithLifecycle()
+        MerchantRouteEditor(profiles, frequent, onDismiss = { addingRoute = false }, onSave = { merchant, id -> vm.addRoute(merchant, id); addingRoute = false })
+    }
     if (creating) ProfileEditor(null, onDismiss = { creating = false }, onSave = { name, emoji ->
         creating = false
         switchingId = vm.createProfile(name, emoji).id
@@ -354,13 +367,18 @@ fun ProfilesScreen(onBack: () -> Unit, vm: ExtrasViewModel = viewModel()) {
     }
 }
 
-private val profileEmojis = listOf("👤", "💼", "🏪", "🏠", "👨‍👩‍👧", "🛠️", "🚚", "💇", "🍽️", "🏗️")
+private val profileEmojis = listOf(
+    "👤", "🙋", "👩", "👨", "🧑", "👧", "👦", "👵", "👴", "👶", "👫", "💑", "👨‍👩‍👧", "👨‍👩‍👧‍👦", "🐶", "🐱",
+    "💼", "🏪", "🏢", "🏠", "🏡", "🏖️", "🛠️", "🚚", "🚗", "💇", "🍽️", "🏗️", "💻", "📚", "🎓", "🏥",
+    "💰", "💶", "🐷", "🎯", "✈️", "🎉", "⭐", "❤️", "💙", "💚", "💜", "🧡", "🍀", "🌍", "⚽", "🎮",
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ProfileEditor(profile: Profile?, onDismiss: () -> Unit, onSave: (String, String) -> Unit, onDelete: (() -> Unit)?) {
     var name by rememberSaveable { mutableStateOf(profile?.name ?: "") }
     var emoji by rememberSaveable { mutableStateOf(profile?.emoji ?: "💼") }
+    var pickingEmoji by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     var deleteText by rememberSaveable { mutableStateOf("") }
     EditorSheet(
@@ -368,20 +386,40 @@ private fun ProfileEditor(profile: Profile?, onDismiss: () -> Unit, onSave: (Str
         onDismiss = onDismiss,
         primaryText = if (profile == null) tr("Crear", "Create") else tr("Guardar", "Save"),
         primaryEnabled = name.isNotBlank(),
-        onPrimary = { onSave(name, emoji) },
+        onPrimary = { onSave(name, emoji.trim().ifEmpty { "👤" }) },
     ) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = emoji,
+                // Cualquier emoji del teclado (los compuestos, como 👨‍👩‍👧, ocupan varios caracteres)
+                onValueChange = { if (it.length <= 16) emoji = it },
+                label = { Text(tr("Icono", "Icon")) },
+                singleLine = true,
+                modifier = Modifier.width(90.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            OutlinedTextField(
+                value = name, onValueChange = { name = it.take(30) },
+                label = { Text(tr("Nombre", "Name")) },
+                placeholder = { Text(tr("Ej.: Negocio, Casa…", "E.g. Business, Home…")) },
+                singleLine = true, modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            )
+        }
+        FlowRow {
             profileEmojis.forEach { e ->
-                FilterChip(selected = emoji == e, onClick = { emoji = e }, label = { Text(e) }, shape = CircleShape, colors = sheetChipColors(), border = null)
+                TextButton(onClick = { emoji = e }, modifier = Modifier.size(44.dp), contentPadding = PaddingValues(0.dp)) {
+                    Text(e, fontSize = 20.sp)
+                }
             }
         }
-        OutlinedTextField(
-            value = name, onValueChange = { name = it.take(30) },
-            label = { Text(tr("Nombre", "Name")) },
-            placeholder = { Text(tr("Ej.: Negocio, Casa…", "E.g. Business, Home…")) },
-            singleLine = true, modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+        TextButton(onClick = { pickingEmoji = true }) { Text(tr("Ver todos los iconos…", "See all icons…")) }
+        Text(
+            tr("O toca «Icono» y escribe cualquier emoji con el teclado.", "Or tap “Icon” and type any emoji with the keyboard."),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        if (pickingEmoji) EmojiPickerSheet(onDismiss = { pickingEmoji = false }, onPick = { emoji = it; pickingEmoji = false })
         if (profile == null) {
             Spacer(Modifier.height(8.dp))
             Text(
@@ -433,29 +471,99 @@ fun ProfileSwitcherCard(onManage: () -> Unit, modifier: Modifier = Modifier, vm:
             Text(tr("Cambiar", "Switch"), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
         }
     }
-    if (choosing) {
-        AlertDialog(
-            onDismissRequest = { choosing = false },
-            title = { Text(tr("Cambiar de perfil", "Switch profile")) },
-            text = {
-                Column {
-                    profiles.forEach { p ->
-                        Row(
-                            Modifier.fillMaxWidth().clickable { choosing = false; vm.switchTo(p.id) }.padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(p.emoji)
-                            Spacer(Modifier.width(12.dp))
-                            Text(p.name, Modifier.weight(1f), fontWeight = if (p.id == current.id) FontWeight.Bold else FontWeight.Normal)
-                            if (p.id == current.id) Text("✓", color = MaterialTheme.colorScheme.primary)
-                        }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    if (choosing) ProfileSwitchDialog(profiles, current.id, onSwitch = { choosing = false; vm.switchTo(it) }, onManage = { choosing = false; onManage() }, onDismiss = { choosing = false })
+}
+
+/** Lista de perfiles para cambiar de uno a otro con un toque (desde Más o desde Inicio). */
+@Composable
+fun ProfileSwitchDialog(profiles: List<Profile>, currentId: Int, onSwitch: (Int) -> Unit, onManage: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tr("Cambiar de perfil", "Switch profile")) },
+        text = {
+            Column {
+                profiles.forEach { p ->
+                    Row(
+                        Modifier.fillMaxWidth().clickable { if (p.id == currentId) onDismiss() else onSwitch(p.id) }.padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(p.emoji, fontSize = 22.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Text(p.name, Modifier.weight(1f), fontWeight = if (p.id == currentId) FontWeight.Bold else FontWeight.Normal)
+                        if (p.id == currentId) Text("✓", color = MaterialTheme.colorScheme.primary)
                     }
-                    Text(tr("La app se reinicia con los datos del perfil elegido.", "The app restarts with the chosen profile's data."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
-            },
-            confirmButton = { TextButton(onClick = { choosing = false; onManage() }) { Text(tr("Gestionar perfiles", "Manage profiles")) } },
-            dismissButton = { TextButton(onClick = { choosing = false }) { Text(tr("Cerrar", "Close")) } },
+                Text(tr("La app se reinicia con los datos del perfil elegido.", "The app restarts with the chosen profile's data."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+            }
+        },
+        confirmButton = { TextButton(onClick = onManage) { Text(tr("Gestionar perfiles", "Manage profiles")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cerrar", "Close")) } },
+    )
+}
+
+/** Comercios asignados a un perfil: sus pagos detectados se apuntan ahí aunque esté abierto otro. */
+@Composable
+private fun MerchantRoutesCard(profiles: List<Profile>, routes: List<MerchantRoute>, onAdd: () -> Unit, onRemove: (String) -> Unit) {
+    AppCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text(tr("Comercios de cada perfil", "Merchants per profile"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                tr(
+                    "Los pagos detectados en estos comercios se apuntan siempre en su perfil, aunque tengas otro abierto. Ej.: Makro → 💼 Negocio.",
+                    "Detected payments at these merchants always go to their profile, even if another one is open. E.g. Makro → 💼 Business.",
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            val shown = routes.mapNotNull { r -> profiles.firstOrNull { it.id == r.profileId }?.let { r to it } }
+            shown.forEach { (r, p) ->
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(r.merchant, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("→ ${p.emoji} ${p.name}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    IconButton(onClick = { onRemove(r.merchant) }) {
+                        Icon(Icons.Filled.Close, contentDescription = tr("Quitar ${r.merchant}", "Remove ${r.merchant}"))
+                    }
+                }
+            }
+            TextButton(onClick = onAdd, modifier = Modifier.padding(top = 4.dp)) { Text(tr("Asignar un comercio a un perfil", "Assign a merchant to a profile")) }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MerchantRouteEditor(profiles: List<Profile>, frequent: List<String>, onDismiss: () -> Unit, onSave: (String, Int) -> Unit) {
+    var merchant by rememberSaveable { mutableStateOf("") }
+    var profileId by rememberSaveable { mutableStateOf(profiles.firstOrNull { it.id != Profiles.current }?.id ?: Profiles.MAIN) }
+    EditorSheet(
+        title = tr("Comercio de un perfil", "Merchant for a profile"),
+        onDismiss = onDismiss,
+        primaryText = tr("Guardar", "Save"),
+        primaryEnabled = com.midinero.control.domain.Categorizer.merchantKey(merchant).isNotBlank(),
+        onPrimary = { onSave(merchant.trim(), profileId) },
+    ) {
+        OutlinedTextField(
+            value = merchant, onValueChange = { merchant = it.take(40) },
+            label = { Text(tr("Comercio", "Merchant")) },
+            placeholder = { Text(tr("Ej.: Mercadona, Makro…", "E.g. Tesco, Makro…")) },
+            supportingText = { Text(tr("Vale con una parte del nombre: «Mercadona» sirve para «MERCADONA 4432 VALENCIA».", "Part of the name is enough: “Tesco” matches “TESCO STORES 2041”.")) },
+            singleLine = true, modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
         )
+        if (frequent.isNotEmpty()) {
+            Text(tr("Tus comercios más habituales", "Your most frequent merchants"), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 4.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                frequent.forEach { m ->
+                    FilterChip(selected = merchant == m, onClick = { merchant = m }, label = { Text(m, maxLines = 1, overflow = TextOverflow.Ellipsis) }, colors = sheetChipColors(), border = null)
+                }
+            }
+        }
+        Text(tr("Se apunta en", "Goes to"), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            profiles.forEach { p ->
+                FilterChip(selected = profileId == p.id, onClick = { profileId = p.id }, label = { Text("${p.emoji} ${p.name}") }, colors = sheetChipColors(), border = null)
+            }
+        }
     }
 }

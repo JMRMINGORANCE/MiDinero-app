@@ -14,6 +14,10 @@ import com.midinero.control.domain.Lang
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.filled.ArrowDropDown
 import com.midinero.control.domain.tr
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Search
@@ -84,6 +88,7 @@ fun HomeScreen(
     onOpenTrips: () -> Unit = {},
     onOpenTrip: (Long) -> Unit = {},
     onOpenSearch: () -> Unit = {},
+    onOpenProfiles: () -> Unit = {},
     onOpenCategoryMovements: (Long) -> Unit = onOpenCategory,
     onAdd: () -> Unit = {},
     onOpenMovements: () -> Unit = {},
@@ -170,18 +175,45 @@ fun HomeScreen(
             item {
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp, start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        // Con perfiles, cuál está abierto («💼 Negocio»)
+                        // Con perfiles, cuál está abierto («💼 Negocio ▾»): un toque y se cambia a otro
                         val features by com.midinero.control.data.Profiles.features.collectAsStateWithLifecycle()
                         val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
-                        val profileLabel = if (!features.profiles) null else remember {
-                            com.midinero.control.data.Profiles.list(appContext).firstOrNull { it.id == com.midinero.control.data.Profiles.current }?.let { "${it.emoji} ${it.name}" }
+                        val profiles = if (!features.profiles) emptyList() else remember { com.midinero.control.data.Profiles.list(appContext) }
+                        val profile = profiles.firstOrNull { it.id == com.midinero.control.data.Profiles.current }
+                        var switching by rememberSaveable { mutableStateOf(false) }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                LocalDate.now().format(Lang.dateFormat("EEEE, d 'de' MMMM", "EEEE, d MMMM")).replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
+                            if (profile != null) {
+                                Spacer(Modifier.width(8.dp))
+                                androidx.compose.material3.Surface(
+                                    onClick = { switching = true },
+                                    shape = androidx.compose.foundation.shape.CircleShape,
+                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    modifier = Modifier.semantics { contentDescription = tr("Perfil ${profile.name}. Cambiar de perfil", "Profile ${profile.name}. Switch profile") },
+                                ) {
+                                    Row(Modifier.padding(start = 10.dp, end = 4.dp, top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Text("${profile.emoji} ${profile.name}", style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 140.dp))
+                                        Icon(Icons.Filled.ArrowDropDown, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    }
+                                }
+                            }
                         }
-                        Text(
-                            LocalDate.now().format(Lang.dateFormat("EEEE, d 'de' MMMM", "EEEE, d MMMM")).replaceFirstChar { it.uppercase() } +
-                                (profileLabel?.let { " · $it" } ?: ""),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        if (switching && profile != null) {
+                            val extras: com.midinero.control.ui.ExtrasViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                            ProfileSwitchDialog(
+                                profiles, profile.id,
+                                onSwitch = { switching = false; extras.switchTo(it) },
+                                onManage = { switching = false; onOpenProfiles() },
+                                onDismiss = { switching = false },
+                            )
+                        }
                         Text(greeting(), style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.asHeading())
                     }
                     RoundAction(Icons.Filled.Search, tr("Buscar en todos los meses", "Search all months"), onOpenSearch)

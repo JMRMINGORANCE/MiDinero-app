@@ -476,6 +476,7 @@ private fun MiDineroRoot(openRequest: String?, onOpenHandled: () -> Unit) {
                         onOpenTrip = { id -> nav.navigate("trip/$id") { launchSingleTop = true } },
                         onOpenSearch = { nav.navigate("search") { launchSingleTop = true } },
                         onOpenCategoryMovements = ::openCategoryMovements,
+                        onOpenProfiles = { open("profiles") },
                     )
                    }
                    if (twoPane) {

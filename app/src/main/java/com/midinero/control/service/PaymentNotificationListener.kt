@@ -7,10 +7,18 @@ import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.midinero.control.MiDineroApp
+import com.midinero.control.data.AppDatabase
+import com.midinero.control.data.AppPrefs
+import com.midinero.control.data.ExpenseRepository
+import com.midinero.control.data.Profile
+import com.midinero.control.data.Profiles
 import com.midinero.control.data.UnrecognizedNotification
+import com.midinero.control.domain.MerchantCatalog
 import com.midinero.control.domain.PaymentApps
 import com.midinero.control.domain.PaymentParser
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
 
 /**
@@ -59,9 +67,22 @@ class PaymentNotificationListener : NotificationListenerService() {
             if (recentKeys.size > 50) recentKeys.remove(recentKeys.first())
         }
         val raw = listOfNotNull(PaymentApps.nameOf(sbn.packageName), title, body).joinToString(" | ")
+        // Con perfiles, un comercio asignado a otro perfil se apunta en ese perfil aunque no esté abierto
+        val target = if (Profiles.features.value.profiles) {
+            Profiles.routeFor(app, payment.merchant, MerchantCatalog.displayName(payment.merchant))
+                ?.takeIf { it != Profiles.current }
+                ?.let { id -> Profiles.list(app).firstOrNull { it.id == id } }
+        } else null
         app.appScope.launch {
             try {
-                if (app.repository.addDetectedPayment(payment, raw, postedAt, "phone:$fingerprint", sourcePackage = sbn.packageName) != null) {
+                val saved = if (target == null) {
+                    app.repository.addDetectedPayment(payment, raw, postedAt, "phone:$fingerprint", sourcePackage = sbn.packageName)
+                } else {
+                    addToOtherProfile(app, target) { repo ->
+                        repo.addDetectedPayment(payment, raw, postedAt, "phone:$fingerprint", sourcePackage = sbn.packageName, otherProfile = target)
+                    }
+                }
+                if (saved != null) {
                     app.prefs.lastDetectionAt = System.currentTimeMillis()
                 }
             } catch (e: Exception) {
@@ -80,6 +101,18 @@ class PaymentNotificationListener : NotificationListenerService() {
 
     companion object {
         private val recentKeys = LinkedHashSet<String>()
+        private val otherProfileLock = Mutex()
+
+        /** Abre un momento la base de datos y los ajustes de otro perfil para apuntar ahí un pago. */
+        suspend fun <T> addToOtherProfile(app: MiDineroApp, profile: Profile, block: suspend (ExpenseRepository) -> T): T =
+            otherProfileLock.withLock {
+                val db = AppDatabase.build(app, Profiles.databaseName(profile.id))
+                try {
+                    block(ExpenseRepository(db, app, AppPrefs(app, Profiles.prefsName(profile.id))))
+                } finally {
+                    db.close()
+                }
+            }
 
         /** Hora del pago: la que indica el aviso si es razonable, si no la de publicación. */
         fun eventTime(sbn: StatusBarNotification): Long {
